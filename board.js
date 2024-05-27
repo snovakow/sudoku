@@ -4,10 +4,6 @@ import { pixAlign } from "./picker.js";
 export const markers = [];
 
 const canvas = document.createElement('canvas');
-canvas.style.position = 'absolute';
-canvas.style.bottom = '0px';
-canvas.style.left = '50%';
-canvas.style.transform = 'translateX(-50%)';
 
 const LINE_THICK = 8;
 const LINE_THICK_HALF = LINE_THICK * 0.5;
@@ -54,7 +50,7 @@ class Board {
 		ctx.strokeStyle = 'black';
 
 		const sizeTotal = canvas.width;
-		const size = sizeTotal - LINE_THICK;
+		const size = sizeTotal - LINE_THICK * window.devicePixelRatio;
 		const boxSize = size / BOX_SIDE;
 		const unitSize = size / GRID_SIDE;
 
@@ -66,7 +62,7 @@ class Board {
 		ctx.beginPath();
 		ctx.lineWidth = LINE_THICK * window.devicePixelRatio;
 		let base;
-		base = LINE_THICK_HALF;
+		base = LINE_THICK_HALF * window.devicePixelRatio;
 		for (let i = 0; i <= BOX_SIDE; i++, base += boxSize) {
 			const pix = pixAlign(base);
 
