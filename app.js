@@ -232,10 +232,6 @@ const pickerMarkerClick = (event) => {
 };
 pickerMarker.addEventListener('click', pickerMarkerClick);
 
-export const appInitialize = (version) => {
-	console.log("Version: " + version);
-}
-
 const onFocus = () => {
 	console.log("onFocus");
 	draw();

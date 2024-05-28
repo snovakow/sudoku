@@ -13,7 +13,7 @@ module.exports = {
 	},
 	plugins: [
 		new HtmlWebpackPlugin({
-			title: "Sudoku"
+			title: ""
 		})
 	],
 };

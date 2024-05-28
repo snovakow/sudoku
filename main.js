@@ -1,5 +1,20 @@
-import { appInitialize } from "./app.js";
-appInitialize("0.1.0");
+const appInitialize = (title, version, css) => {
+	document.title = title;
+
+	if (css) {
+		const link = document.createElement('link');
+		link.rel = "stylesheet";
+		link.href = css + "?" + version;
+		document.head.appendChild(link);
+	}
+
+	import("./app.js").then(module => {
+		// console.log(module);
+	});
+
+	console.log(title + " Version: " + version);
+}
+appInitialize("Sudoku", "0.1.1");
 
 document.body.style.color = 'black';
 document.body.style.backgroundColor = 'white';

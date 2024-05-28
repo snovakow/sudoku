@@ -130,6 +130,29 @@ const fillSingles = (grid, markers) => {
 			}
 		}
 	}
+	fillSingles2(grid, markers);
+}
+
+const fillSingles2 = (grid, markers) => {
+	for (let r = 0; r < 9; r++) {
+		for (let i = 0; i < 9; i++) {
+			let col = -1;
+			for (let c = 0; c < 9; c++) {
+				const marker = markers[r * 9 + c];
+				if (r === 0 && i === 0) console.log(marker[i]);
+				if (marker && marker[i]) {
+					if (col === -1) col = c;
+					else {
+						col = -1;
+						break;
+					}
+				}
+			}
+			if (col !== -1) {
+				grid.setSymbol(r, col, i + 1);
+			}
+		}
+	}
 }
 
 export { fillMarkers, fillSingles };
