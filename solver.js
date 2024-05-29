@@ -137,4 +137,76 @@ const fillMissingSingles = (grid, markers) => {
 	return false;
 }
 
+const fillGroups = (grid, markers) => {
+	for (let i = 0; i < 9; i++) {
+		for (let r = 0; r < 9; r++) {
+			let indexCol = -1;
+			for (let c = 0; c < 9; c++) {
+				const markerCol = markers[r * 9 + c];
+				if (markerCol && markerCol[i]) {
+					if (indexCol === -1) indexCol = c;
+					else {
+						indexCol = -1;
+						break;
+					}
+				}
+			}
+			if (indexCol !== -1) {
+				grid[r * 9 + indexCol] = i + 1;
+				delete markers[r * 9 + indexCol];
+				return true;
+			}
+		}
+
+		for (let c = 0; c < 9; c++) {
+			let indexRow = -1;
+			for (let r = 0; r < 9; r++) {
+				const markerRow = markers[r * 9 + c];
+				if (markerRow && markerRow[i]) {
+					if (indexRow === -1) indexRow = r;
+					else {
+						indexRow = -1;
+						break;
+					}
+				}
+			}
+			if (indexRow !== -1) {
+				grid[indexRow * 9 + c] = i + 1;
+				delete markers[indexRow * 9 + c];
+				return true;
+			}
+		}
+
+		for (let j = 0; j < 9; j++) {
+			const brow = Math.floor(j / 3) * 3;
+			const bcol = (j % 3) * 3;
+			let indexRow = -1;
+			let indexCol = -1;
+			for (let b = 0; b < 9; b++) {
+				const r = brow + Math.floor(b / 3);
+				const c = bcol + b % 3;
+				const markerBox = markers[r * 9 + c];
+				if (markerBox && markerBox[i]) {
+					if (indexRow === -1) {
+						indexRow = r;
+						indexCol = c;
+					} else {
+						indexRow = -1;
+						break;
+					}
+				}
+			}
+			if (indexRow !== -1) {
+				const index = indexRow * 9 + indexCol;
+
+				grid[index] = i + 1;
+				delete markers[index];
+				return true;
+			}
+		}
+
+	}
+	return false;
+}
+
 export { fillMarkers, fillSingles, fillMissingSingles };
