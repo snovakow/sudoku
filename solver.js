@@ -108,87 +108,33 @@ const fillMissingSingles = (grid, markers) => {
 		for (let j = 0; j < 9; j++) {
 			const brow = Math.floor(j / 3) * 3;
 			const bcol = (j % 3) * 3;
-			let indexBox = -1;
+			let indexRow = -1;
+			let indexCol = -1;
 			for (let b = 0; b < 9; b++) {
 				const r = brow + Math.floor(b / 3);
 				const c = bcol + b % 3;
 				const markerBox = markers[r * 9 + c];
 				if (markerBox && markerBox[i]) {
-					if (indexBox === -1) indexBox = r;
-					else {
-						indexBox = -1;
+					if (indexRow === -1) {
+						indexRow = r;
+						indexCol = c;
+					} else {
+						indexRow = -1;
 						break;
 					}
 				}
 			}
-			if (indexBox !== -1) {
-				const r = brow + Math.floor(indexBox / 3);
-				const c = bcol + indexBox % 3;
+			if (indexRow !== -1) {
+				const index = indexRow * 9 + indexCol;
 
-				grid[r * 9 + c] = i + 1;
-				delete markers[r * 9 + c];
+				grid[index] = i + 1;
+				delete markers[index];
 				return true;
 			}
 		}
 
-		return false;
 	}
-	for (let y = 0; y < 9; y++) {
-		for (let i = 0; i < 9; i++) {
-			// let indexCol = -1;
-			// for (let x = 0; x < 9; x++) {
-			// 	const markerRow = markers[y * 9 + x];
-			// 	if (markerRow && markerRow[i]) {
-			// 		if (indexCol === -1) indexCol = x;
-			// 		else {
-			// 			indexCol = -1;
-			// 			break;
-			// 		}
-			// 	}
-			// }
-			// if (indexCol !== -1) {
-			// 	grid.setSymbol(y, indexCol, i + 1);
-			// 	delete markers[y * 9 + indexCol];
-			// }
-
-			// let indexRow = -1;
-			// for (let x = 0; x < 9; x++) {
-			// 	const markerCol = markers[x * 9 + y];
-			// 	if (markerCol && markerCol[i]) {
-			// 		if (indexRow === -1) indexRow = y;
-			// 		else {
-			// 			indexRow = -1;
-			// 			break;
-			// 		}
-			// 	}
-			// }
-			// if (indexRow !== -1) {
-			// 	grid.setSymbol(indexRow, y, i + 1);
-			// 	delete markers[indexRow * 9 + y];
-			// }
-
-			// let indexBox = -1;
-			// for (let x = 0; x < 9; x++) {
-			// 	const xbase = Math.floor(x / 3) * 3 + (y % 3) * 3;
-			// 	const ybase = Math.floor(y % 3) * 3 + Math.floor(x / 3);
-			// 	const markerRow = markers[ybase * 9 + xbase];
-			// 	if (markerRow && markerRow[i]) {
-			// 		if (indexBox === -1) indexBox = ybase * 9 + xbase;
-			// 		else {
-			// 			indexBox = -1;
-			// 			break;
-			// 		}
-			// 	}
-			// }
-			// if (indexBox !== -1) {
-			// 	const xbase = Math.floor(y / 3) * 3 + indexBox % 3;
-			// 	const ybase = Math.floor(y % 3) * 3 + Math.floor(indexBox / 3);
-
-			// 	// grid[indexBox] = i + 1;
-			// 	// delete markers[indexBox];
-			// }
-		}
-	}
+	return false;
 }
 
 export { fillMarkers, fillSingles, fillMissingSingles };
