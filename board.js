@@ -111,7 +111,13 @@ class Board {
 			let coff = base;
 			for (let c = 0; c < GRID_SIDE; c++, coff += unitSize) {
 				const marker = markers[r * 9 + c];
+				let count = 0;
 				if (marker) {
+					for (let i = 0; i < 9; i++) {
+						if (marker[i]) count++;
+					}
+				}
+				if (count > 0) {
 					ctx.font = "100 " + pixAlign(unitSize * 0.7 * 1 / 3) + "px " + FONT;
 					// ctx.font = "100 " + unitSize * 0.75 * 1 / 3 + "px " + FONTS[fontCurrent];
 					// ctx.font = "100 " + unitSize * 0.8 * 1 / 3 + "px " + FONTS[fontCurrent];
