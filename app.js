@@ -1,6 +1,6 @@
 import { FONT, board, markers } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { fillMarkers, fillSingles } from "./solver.js";
+import { fillMarkers, fillSingles, fillMissingSingles } from "./solver.js";
 
 let selectedRow = 0;
 let selectedCol = 0;
@@ -167,7 +167,6 @@ const click = (event) => {
 
 	if (board.startGrid.getSymbol(row, col) !== 0) return;
 
-	console.log(row, col);
 	if (selected && selectedRow === row && selectedCol === col) {
 		selected = false;
 	} else {
@@ -226,7 +225,8 @@ const pickerMarkerClick = (event) => {
 		marker = [];
 		markers[selectedRow * 9 + selectedCol] = marker;
 	}
-	marker[index] = !marker[index];
+	if (marker[index]) delete marker[index];
+	else marker[index] = true;
 
 	draw();
 };
@@ -248,8 +248,11 @@ const orientationchange = (event) => {
 };
 addEventListener("orientationchange", orientationchange);
 
-const selector = createSelect(sudokus.keys(), (select) => {
-	board.setGrid(sudokus[select.selectedIndex]);
+const selector = createSelect(["-", ...sudokus.keys()], (select) => {
+	if (select.selectedIndex === 0) return;
+
+	markers.length = 0;
+	board.setGrid(sudokus[select.selectedIndex - 1]);
 	saveGrid();
 	draw();
 });
@@ -269,23 +272,37 @@ clearButton.addEventListener('click', () => {
 document.body.appendChild(clearButton);
 
 const singleButton = document.createElement('button');
-singleButton.appendChild(document.createTextNode(" 1 "));
+singleButton.appendChild(document.createTextNode("+"));
 singleButton.style.position = 'absolute';
-singleButton.style.width = '48px';
+singleButton.style.width = '32px';
 singleButton.style.height = '32px';
 singleButton.addEventListener('click', () => {
-	fillSingles(board.grid, markers);
+	let progress = false;
+	let count = 0;
+	do {
+		fillMarkers(board.grid, markers);
+		progress = fillSingles(board.grid, markers);
+		if (progress) {
+			count++;
+		} else {
+			progress = fillMissingSingles(board.grid, markers);
+			if (progress) count++;
+		}
+	} while (progress);
+
+	console.log("Removals: " + count);
+
 	draw();
 });
 document.body.appendChild(singleButton);
 
 const fillButton = document.createElement('button');
-fillButton.appendChild(document.createTextNode("+++"));
+fillButton.appendChild(document.createTextNode("x"));
 fillButton.style.position = 'absolute';
-fillButton.style.width = '48px';
+fillButton.style.width = '32px';
 fillButton.style.height = '32px';
 fillButton.addEventListener('click', () => {
-	markers.length = 0;
+	// markers.length = 0;
 	fillMarkers(board.grid, markers);
 	draw();
 });
@@ -293,12 +310,16 @@ document.body.appendChild(fillButton);
 
 selector.style.transform = 'translateX(-50%)';
 clearButton.style.transform = 'translateX(-50%)';
-clearButton.style.transform = 'translateX(-50%)';
 fillButton.style.transform = 'translateX(-50%)';
 singleButton.style.transform = 'translateX(-50%)';
 
+singleButton.style.touchAction = "manipulation";
+
 board.canvas.style.position = 'absolute';
 board.canvas.style.left = '50%';
+board.canvas.style.touchAction = "manipulation";
+picker.style.touchAction = "manipulation";
+pickerMarker.style.touchAction = "manipulation";
 
 const resize = () => {
 	let width = window.innerWidth;
@@ -310,22 +331,22 @@ const resize = () => {
 		board.canvas.style.top = '0%';
 		board.canvas.style.transform = 'translate(-50%, 0%)';
 
-		singleButton.style.bottom = '384px';
+		singleButton.style.bottom = '320px';
 		singleButton.style.left = '96px';
 
-		fillButton.style.bottom = '336px';
+		fillButton.style.bottom = '280px';
 		fillButton.style.left = '96px';
 
-		selector.style.bottom = '288px';
+		selector.style.bottom = '240px';
 		selector.style.left = '96px';
 
-		clearButton.style.bottom = '240px';
+		clearButton.style.bottom = '200px';
 		clearButton.style.left = '96px';
 	} else {
 		if (height - width < 192) {
 			board.canvas.style.top = '0%';
 		} else {
-			board.canvas.style.top = ((height-192) - width)*0.5 + 'px';
+			board.canvas.style.top = ((height - 192) - width) * 0.5 + 'px';
 		}
 
 		if (height - width < 384) {
