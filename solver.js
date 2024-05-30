@@ -183,17 +183,17 @@ const fillGroups = (grid, markers) => {
 			const remainder = len - i - 1;
 			const setUnit = sets[i];
 
-			const endLen = (0x1 << remainder) - 1;
-			for (let inc = 1; inc <= endLen; inc++) {
+			const endLen = 0x1 << remainder;
+			for (let inc = 1; inc < endLen; inc++) {
 				union.clear();
 				for (const x of setUnit.set) union.add(x);
 				let unionCount = 1;
 
 				let mask = 0x1;
-				for (let j = 0; j < remainder; j++) {
+				for (let j = 1; j <= remainder; j++) {
 					const state = inc & mask;
 					if (state > 0) {
-						const compare = sets[i + 1 + j];
+						const compare = sets[i + j];
 						for (const x of compare.set) union.add(x);
 						unionCount++;
 					}
