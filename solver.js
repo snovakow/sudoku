@@ -152,7 +152,7 @@ const fillGroups = (grid, markers) => {
 			if (set.size > 0) sets.push(set);
 		}
 		const len = sets.length;
-		for (let i = 0; i < len; i++) {
+		for (let i = 0; i < len - 1; i++) {
 			let count = 0;
 			const set = sets[i];
 			for (let j = i + 1; j < len; j++) {
@@ -162,16 +162,16 @@ const fillGroups = (grid, markers) => {
 				}
 			}
 			if (count > 0 && count + 1 === set.size && count + 1 < sets.length) {
-				console.log("Found Row ", set);
+				console.log("Found Row ", r, set);
 
 				for (let j = 0; j < len; j++) {
-					if(j===i) continue;
+					if (j === i) continue;
 
 					const compare = sets[j];
 					if (!compare.isSubsetOf(set)) {
-						
+
 					}
-				}	
+				}
 			}
 		}
 	}
@@ -203,6 +203,44 @@ const fillGroups = (grid, markers) => {
 				console.log("Found Col", set);
 			}
 		}
+	}
+
+	for (let b = 0; b < 9; b++) {
+		const sets = [];
+		for (let i = 0; i < 9; i++) {
+			// const marker = markers[r * 9 + c];
+			// if (!marker) continue;
+
+			// const set = new Set();
+			// for (let i = 0; i < 9; i++) {
+			// 	const symbol = marker[i];
+			// 	if (symbol) set.add(i);
+			// }
+			// if (set.size > 0) sets.push(set);
+		}
+		// const len = sets.length;
+		// for (let i = 0; i < len; i++) {
+		// 	let count = 0;
+		// 	const set = sets[i];
+		// 	for (let j = i + 1; j < len; j++) {
+		// 		const compare = sets[j];
+		// 		if (compare.isSubsetOf(set)) {
+		// 			count++;
+		// 		}
+		// 	}
+		// 	if (count > 0 && count + 1 === set.size && count + 1 < sets.length) {
+		// 		console.log("Found Row ", set);
+
+		// 		for (let j = 0; j < len; j++) {
+		// 			if(j===i) continue;
+
+		// 			const compare = sets[j];
+		// 			if (!compare.isSubsetOf(set)) {
+
+		// 			}
+		// 		}	
+		// 	}
+		// }
 	}
 
 	return false;
