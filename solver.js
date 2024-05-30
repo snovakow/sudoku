@@ -170,7 +170,9 @@ const fillGroups = (grid, markers) => {
 		for (let r = 0; r < 9; r++) {
 			const sets = [];
 			for (let c = 0; c < 9; c++) {
-				const marker = markerGroup.getRow(r, c);
+				let getGroup = 'getRow';
+				if (groupType === 1) getGroup = 'getCol';
+				const marker = markerGroup[getGroup](r, c);
 				if (!marker) continue;
 
 				const set = new Set();
@@ -206,7 +208,9 @@ const fillGroups = (grid, markers) => {
 						for (const setUnit of sets) {
 							const diff = setUnit.set.difference(union);
 							if (diff.size > 0) {
-								const marker = markerGroup.getRow(r, setUnit.index);
+								let getGroup = 'getRow';
+								if (groupType === 1) getGroup = 'getCol';
+								const marker = markerGroup[getGroup](r, setUnit.index);
 								if (!marker) continue;
 								for (const symbol of union) {
 									if (marker[symbol]) {
@@ -216,7 +220,7 @@ const fillGroups = (grid, markers) => {
 								}
 							}
 						}
-						// console.log("Found Row ", r, union);
+						// console.log("Found Group ", setUnit.index, union);
 					}
 				}
 			}
