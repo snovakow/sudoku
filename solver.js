@@ -137,11 +137,37 @@ const fillMissingSingles = (grid, markers) => {
 	return false;
 }
 
+class GridGroup {
+	constructor(group) {
+		this.group = group;
+	}
+	getRow(x, i) {
+		return this.group[x * 9 + i];
+	}
+	getCol(x, i) {
+		return this.group[i * 9 + x];
+	}
+	getBox(x, i) {
+		const row = Math.floor(x / 3) * 3 + Math.floor(i / 3);
+		const col = (x % 3) * 3 + (i % 3);
+		return this.group[row * 9 + col];
+	}
+}
+class SetUnit {
+	constructor(index, set) {
+		this.index = index;
+		this.set = set;
+	}
+}
+
 const fillGroups = (grid, markers) => {
+	const markerGroup = new GridGroup(markers);
+	const union = new Set();
+
 	for (let r = 0; r < 9; r++) {
 		const sets = [];
 		for (let c = 0; c < 9; c++) {
-			const marker = markers[r * 9 + c];
+			const marker = markerGroup.getRow(r, c);
 			if (!marker) continue;
 
 			const set = new Set();
@@ -149,61 +175,107 @@ const fillGroups = (grid, markers) => {
 				const symbol = marker[i];
 				if (symbol) set.add(i);
 			}
-			if (set.size > 0) sets.push(set);
+			if (set.size > 0) sets.push(new SetUnit(c, set));
 		}
 		const len = sets.length;
 		for (let i = 0; i < len - 1; i++) {
-			let count = 0;
-			const set = sets[i];
-			for (let j = i + 1; j < len; j++) {
-				const compare = sets[j];
-				if (compare.isSubsetOf(set)) {
-					count++;
-				}
-			}
-			if (count > 0 && count + 1 === set.size && count + 1 < sets.length) {
-				console.log("Found Row ", r, set);
+			const remainder = len - i - 1;
+			const setUnit = sets[i];
 
-				for (let j = 0; j < len; j++) {
-					if (j === i) continue;
-
-					const compare = sets[j];
-					if (!compare.isSubsetOf(set)) {
-
+			const endLen = (0x1 << remainder) - 1;
+			for (let inc = 1; inc <= endLen; inc++) {
+				union.clear();
+				for (const x of setUnit.set) union.add(x);	
+				let unionCount = 1;
+	
+				let mask = 0x1;
+				for (let j = 0; j < remainder; j++) {
+					const state = inc & mask;
+					if (state > 0) {
+						const compare = sets[i + 1 + j];
+						for (const x of compare.set) union.add(x);
+						unionCount++;
 					}
+					mask <<= 1;
 				}
+
+				if (unionCount === union.size && unionCount < sets.length) {
+					console.log("Found Row ", r, union);
+				}	
 			}
 		}
 	}
 
-	for (let c = 0; c < 9; c++) {
-		const sets = [];
-		for (let r = 0; r < 9; r++) {
-			const marker = markers[r * 9 + c];
-			if (!marker) continue;
+	// for (let r = 0; r < 9; r++) {
+	// 	const sets = [];
+	// 	for (let c = 0; c < 9; c++) {
+	// 		const marker = markerGroup.getCol(r, c);
+	// 		if (!marker) continue;
 
-			const set = new Set();
-			for (let i = 0; i < 9; i++) {
-				const symbol = marker[i];
-				if (symbol) set.add(i);
-			}
-			if (set.size > 0) sets.push(set);
-		}
-		const len = sets.length;
-		for (let i = 0; i < len; i++) {
-			let count = 0;
-			const set = sets[i];
-			for (let j = i + 1; j < len; j++) {
-				const compare = sets[j];
-				if (compare.isSubsetOf(set)) {
-					count++;
-				}
-			}
-			if (count > 0 && count + 1 === set.size && count + 1 < sets.length) {
-				console.log("Found Col", set);
-			}
-		}
-	}
+	// 		const set = new Set();
+	// 		for (let i = 0; i < 9; i++) {
+	// 			const symbol = marker[i];
+	// 			if (symbol) set.add(i);
+	// 		}
+	// 		if (set.size > 0) sets.push(new SetUnit(r, set));
+	// 	}
+	// 	const len = sets.length;
+	// 	for (let i = 0; i < len - 1; i++) {
+	// 		const remainder = len - i - 1;
+	// 		const setUnit = sets[i];
+
+	// 		const endLen = (0x1 << remainder) - 1;
+	// 		for (let inc = 1; inc <= endLen; inc++) {
+	// 			let mask = 0x1;
+
+	// 			union.clear();
+	// 			for (const x of setUnit.set) union.add(x);	
+	// 			let unionCount = 1;
+
+	// 			for (let j = 0; j < remainder; j++) {
+	// 				const state = inc & mask;
+	// 				if (state > 0) {
+	// 					const compare = sets[i + 1 + j];
+	// 					for (const x of compare.set) union.add(x);
+	// 					unionCount++;
+	// 				}
+	// 			}
+
+	// 			if (unionCount === union.size && unionCount < sets.length) {
+	// 				console.log("Found Column ", r, union);
+	// 			}	
+	// 		}
+	// 	}
+	// }
+
+	// for (let c = 0; c < 9; c++) {
+	// 	const sets = [];
+	// 	for (let r = 0; r < 9; r++) {
+	// 		const marker = markers[r * 9 + c];
+	// 		if (!marker) continue;
+
+	// 		const set = new Set();
+	// 		for (let i = 0; i < 9; i++) {
+	// 			const symbol = marker[i];
+	// 			if (symbol) set.add(i);
+	// 		}
+	// 		if (set.size > 0) sets.push(set);
+	// 	}
+	// 	const len = sets.length;
+	// 	for (let i = 0; i < len; i++) {
+	// 		let count = 0;
+	// 		const set = sets[i];
+	// 		for (let j = i + 1; j < len; j++) {
+	// 			const compare = sets[j];
+	// 			if (compare.isSubsetOf(set)) {
+	// 				count++;
+	// 			}
+	// 		}
+	// 		if (count > 0 && count + 1 === set.size && count + 1 < sets.length) {
+	// 			console.log("Found Col", set);
+	// 		}
+	// 	}
+	// }
 
 	for (let b = 0; b < 9; b++) {
 		const sets = [];
