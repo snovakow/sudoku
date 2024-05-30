@@ -1,6 +1,6 @@
 import { FONT, board, markers } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { fillMarkers, fillSingles, fillMissingSingles } from "./solver.js";
+import { fillMarkers, fillSingles, fillMissingSingles, fillGroups } from "./solver.js";
 
 let selectedRow = 0;
 let selectedCol = 0;
@@ -322,6 +322,8 @@ singleButton.style.position = 'absolute';
 singleButton.style.width = '32px';
 singleButton.style.height = '32px';
 singleButton.addEventListener('click', () => {
+	const time = performance.now();
+
 	let progress = false;
 	let count = 0;
 	do {
@@ -331,11 +333,19 @@ singleButton.addEventListener('click', () => {
 			count++;
 		} else {
 			progress = fillMissingSingles(board.grid, markers);
-			if (progress) count++;
+			if (progress) { 
+				count++;
+			} else {
+				progress = fillGroups(board.grid, markers);				
+				if (progress) count++;
+			}
 		}
 	} while (progress);
 
+	const now = performance.now();
+
 	console.log("Removals: " + count);
+	console.log("Time: " + (now - time) / 1000);
 
 	draw();
 });
