@@ -164,6 +164,7 @@ const fillGroups = (grid, markers) => {
 	const markerGroup = new GridGroup(markers);
 	const union = new Set();
 
+	let reduced = false;
 	for (let r = 0; r < 9; r++) {
 		const sets = [];
 		for (let c = 0; c < 9; c++) {
@@ -185,9 +186,9 @@ const fillGroups = (grid, markers) => {
 			const endLen = (0x1 << remainder) - 1;
 			for (let inc = 1; inc <= endLen; inc++) {
 				union.clear();
-				for (const x of setUnit.set) union.add(x);	
+				for (const x of setUnit.set) union.add(x);
 				let unionCount = 1;
-	
+
 				let mask = 0x1;
 				for (let j = 0; j < remainder; j++) {
 					const state = inc & mask;
@@ -200,11 +201,82 @@ const fillGroups = (grid, markers) => {
 				}
 
 				if (unionCount === union.size && unionCount < sets.length) {
-					console.log("Found Row ", r, union);
-				}	
+					for (const setUnit of sets) {
+						const diff = setUnit.set.difference(union);
+						if (diff.size > 0) {
+							const marker = markerGroup.getRow(r, setUnit.index);
+							if (!marker) continue;
+							for (const symbol of union) {
+								if (marker[symbol]) {
+									marker[symbol] = false;
+									reduced = true;
+								}
+							}
+						}
+					}
+					// console.log("Found Row ", r, union);
+				}
 			}
 		}
 	}
+
+	for (let r = 0; r < 9; r++) {
+		const sets = [];
+		for (let c = 0; c < 9; c++) {
+			const marker = markerGroup.getCol(r, c);
+			if (!marker) continue;
+
+			const set = new Set();
+			for (let i = 0; i < 9; i++) {
+				const symbol = marker[i];
+				if (symbol) set.add(i);
+			}
+			if (set.size > 0) sets.push(new SetUnit(c, set));
+		}
+		const len = sets.length;
+		for (let i = 0; i < len - 1; i++) {
+			const remainder = len - i - 1;
+			const setUnit = sets[i];
+
+			const endLen = 0x1 << remainder;
+			for (let inc = 1; inc < endLen; inc++) {
+				union.clear();
+				for (const x of setUnit.set) union.add(x);
+				let unionCount = 1;
+
+				let mask = 0x1;
+				for (let j = 1; j <= remainder; j++) {
+					const state = inc & mask;
+					if (state > 0) {
+						const compare = sets[i + j];
+						for (const x of compare.set) union.add(x);
+						unionCount++;
+					}
+					mask <<= 1;
+				}
+
+				if (unionCount === union.size && unionCount < sets.length) {
+					for (const setUnit of sets) {
+						const diff = setUnit.set.difference(union);
+						if (diff.size > 0) {
+							const marker = markerGroup.getCol(r, setUnit.index);
+							if (!marker) continue;
+							for (const symbol of union) {
+								if (marker[symbol]) {
+									marker[symbol] = false;
+									reduced = true;
+								}
+							}
+						}
+					}
+					// console.log("Found Col ", setUnit.index, symbol, union);
+				}
+			}
+		}
+	}
+
+	if (reduced) return true;
+	return false;
 
 	// for (let r = 0; r < 9; r++) {
 	// 	const sets = [];
