@@ -68,39 +68,39 @@ const fillSingles = (grid, markers) => {
 const fillMissingSingles = (grid, markers) => {
 	for (let i = 0; i < 9; i++) {
 		for (let r = 0; r < 9; r++) {
-			let indexCol = -1;
+			let index = -1;
 			for (let c = 0; c < 9; c++) {
 				const markerCol = markers[r * 9 + c];
 				if (markerCol && markerCol[i]) {
-					if (indexCol === -1) indexCol = c;
+					if (index === -1) index = c;
 					else {
-						indexCol = -1;
+						index = -1;
 						break;
 					}
 				}
 			}
-			if (indexCol !== -1) {
-				grid[r * 9 + indexCol] = i + 1;
-				delete markers[r * 9 + indexCol];
+			if (index !== -1) {
+				grid[r * 9 + index] = i + 1;
+				delete markers[r * 9 + index];
 				return true;
 			}
 		}
 
 		for (let c = 0; c < 9; c++) {
-			let indexRow = -1;
+			let index = -1;
 			for (let r = 0; r < 9; r++) {
 				const markerRow = markers[r * 9 + c];
 				if (markerRow && markerRow[i]) {
-					if (indexRow === -1) indexRow = r;
+					if (index === -1) index = r;
 					else {
-						indexRow = -1;
+						index = -1;
 						break;
 					}
 				}
 			}
-			if (indexRow !== -1) {
-				grid[indexRow * 9 + c] = i + 1;
-				delete markers[indexRow * 9 + c];
+			if (index !== -1) {
+				grid[index * 9 + c] = i + 1;
+				delete markers[index * 9 + c];
 				return true;
 			}
 		}
