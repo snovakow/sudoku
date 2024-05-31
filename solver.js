@@ -160,7 +160,7 @@ class SetUnit {
 	}
 }
 
-const fillGroups = (grid, markers) => {
+const fillGroups = (markers) => {
 	const markerGroup = new GridGroup(markers);
 	const union = new Set();
 
