@@ -192,16 +192,17 @@ const fillGroups = (markers) => {
 
 					let reduced = false;
 					if (unionCount === union.size && unionCount < sets.length) {
-						for (const setUnit of sets) {
-							const diff = setUnit.set.difference(union);
-							if (diff.size > 0) {
-								const marker = markerGroup[getGroup](x, setUnit.index);
-								if (!marker) continue;
-								for (const symbol of union) {
-									if (marker[symbol]) {
-										marker[symbol] = false;
-										reduced = true;
-									}
+						for (let shift = 0; shift < len; shift++) {
+							if ((setHitMask & (0x1 << shift)) > 0) continue;
+
+							const set = sets[shift];
+							const marker = markerGroup[getGroup](x, set.index);
+							if (!marker) continue;
+
+							for (const symbol of union) {
+								if (marker[symbol]) {
+									marker[symbol] = false;
+									reduced = true;
 								}
 							}
 						}
