@@ -70,8 +70,8 @@ const fillMissingSingles = (grid, markers) => {
 		for (let r = 0; r < 9; r++) {
 			let index = -1;
 			for (let c = 0; c < 9; c++) {
-				const markerCol = markers[r * 9 + c];
-				if (markerCol && markerCol[i]) {
+				const marker = markers[r * 9 + c];
+				if (marker && marker[i]) {
 					if (index === -1) index = c;
 					else {
 						index = -1;
@@ -89,8 +89,8 @@ const fillMissingSingles = (grid, markers) => {
 		for (let c = 0; c < 9; c++) {
 			let index = -1;
 			for (let r = 0; r < 9; r++) {
-				const markerRow = markers[r * 9 + c];
-				if (markerRow && markerRow[i]) {
+				const marker = markers[r * 9 + c];
+				if (marker && marker[i]) {
 					if (index === -1) index = r;
 					else {
 						index = -1;
