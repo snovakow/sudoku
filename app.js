@@ -269,26 +269,25 @@ singleButton.style.height = '32px';
 singleButton.addEventListener('click', () => {
 	const time = performance.now();
 
-	let missingSingles = false;
-	let groupSets = false;
+	let fills = 0;
+	let missingSingles = 0;
+	let groupSets = 0;
 
 	let progress = false;
-	let count = 0;
 	do {
 		fillMarkers(board.grid, markers);
 		progress = fillSingles(board.grid, markers);
 		if (progress) {
-			count++;
+			fills++;
 		} else {
 			progress = fillMissingSingles(board.grid, markers);
 			if (progress) {
-				missingSingles = true;
-				count++;
+				missingSingles++;
+				fills++;
 			} else {
-				progress = fillGroups(board.grid, markers);
+				progress = fillGroups(markers);
 				if (progress) {
-					groupSets = true;
-					count++;
+					groupSets++;
 				}
 			}
 		}
@@ -297,9 +296,9 @@ singleButton.addEventListener('click', () => {
 	const now = performance.now();
 
 	console.log("---");
-	console.log("Removals: " + count);
+	console.log("Removals: " + fills);
 	console.log("Missing Singles: " + missingSingles);
-	console.log("Group Sets: " + groupSets);
+	console.log("Marker Reductions: " + groupSets);
 	console.log("Time: " + (now - time) / 1000);
 
 	draw();
