@@ -113,8 +113,8 @@ const fillMissingSingles = (grid, markers) => {
 			for (let b = 0; b < 9; b++) {
 				const r = brow + Math.floor(b / 3);
 				const c = bcol + b % 3;
-				const markerBox = markers[r * 9 + c];
-				if (markerBox && markerBox[i]) {
+				const marker = markers[r * 9 + c];
+				if (marker && marker[i]) {
 					if (indexRow === -1) {
 						indexRow = r;
 						indexCol = c;
