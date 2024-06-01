@@ -71,6 +71,7 @@ const sudokus = [
 		[4, 0, 0, 0, 9, 0, 0, 0, 5],
 		[0, 5, 0, 0, 7, 0, 0, 9, 0],
 		[0, 0, 0, 6, 5, 8, 0, 2, 0],
+		"Isolate"
 	],
 	[
 		[0, 0, 0, 0, 4, 0, 2, 0, 0],
@@ -82,6 +83,7 @@ const sudokus = [
 		[8, 0, 0, 1, 0, 7, 0, 0, 4],
 		[0, 3, 6, 0, 0, 0, 0, 0, 8],
 		[0, 0, 2, 0, 3, 0, 0, 0, 0],
+		"Snake"
 	],
 	[ // 25.63%
 		[9, 0, 0, 0, 0, 0, 0, 0, 5],
@@ -93,6 +95,7 @@ const sudokus = [
 		[0, 0, 3, 0, 0, 0, 0, 0, 1],
 		[7, 0, 0, 0, 8, 0, 5, 3, 0],
 		[0, 0, 0, 0, 0, 5, 0, 0, 2],
+		"Iso 7 b5"
 	],
 	[ // 26%
 		[1, 0, 0, 0, 6, 0, 0, 0, 0],
@@ -104,6 +107,7 @@ const sudokus = [
 		[0, 0, 1, 3, 0, 5, 0, 9, 0],
 		[0, 0, 0, 8, 0, 0, 0, 0, 0],
 		[0, 9, 0, 0, 0, 0, 4, 0, 0],
+		"Iso 9 b1"
 	],
 	[ // 29%
 		[7, 0, 0, 9, 0, 0, 6, 0, 0],
@@ -115,6 +119,7 @@ const sudokus = [
 		[0, 4, 0, 0, 0, 9, 0, 0, 0],
 		[9, 0, 0, 0, 1, 0, 0, 7, 8],
 		[0, 0, 0, 0, 0, 0, 0, 0, 6],
+		"Iso 5 b2"
 	],
 	[ // 26%
 		[6, 0, 7, 9, 0, 1, 3, 0, 0],
@@ -126,6 +131,7 @@ const sudokus = [
 		[3, 0, 0, 0, 0, 7, 9, 0, 6],
 		[0, 0, 0, 0, 6, 0, 4, 0, 0],
 		[7, 0, 0, 3, 0, 0, 8, 0, 0],
+		"Snake"
 	],
 	[
 		[0, 5, 0, 0, 2, 0, 0, 0, 0],
@@ -137,6 +143,7 @@ const sudokus = [
 		[0, 6, 4, 0, 0, 8, 0, 0, 1],
 		[9, 0, 0, 0, 0, 0, 0, 0, 0],
 		[0, 0, 0, 0, 7, 0, 0, 2, 0],
+		"Wing"
 	],
 ];
 
@@ -260,7 +267,9 @@ const orientationchange = (event) => {
 };
 addEventListener("orientationchange", orientationchange);
 
-const selector = createSelect(["-", ...sudokus.keys()], (select) => {
+const names = [];
+for (const sudoku of sudokus) names.push(sudoku[9]);
+const selector = createSelect(["-", ...names], (select) => {
 	if (select.selectedIndex === 0) return;
 
 	markers.length = 0;
@@ -269,6 +278,7 @@ const selector = createSelect(["-", ...sudokus.keys()], (select) => {
 	draw();
 });
 selector.style.position = 'absolute';
+selector.style.width = '40px';
 
 const clearButton = document.createElement('button');
 clearButton.appendChild(document.createTextNode("X"));
