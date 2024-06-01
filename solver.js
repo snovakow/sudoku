@@ -217,4 +217,74 @@ const fillGroups = (markers) => {
 	return false;
 }
 
-export { fillMarkers, fillSingles, fillMissingSingles, fillGroups };
+const pairGroups = (markers) => {
+	const markerGroup = new GridGroup(markers);
+	const union = new Set();
+
+	const groupTypes = ['getRow', 'getCol', 'getBox'];
+	for (const getGroup of groupTypes) {
+		for (let x = 0; x < 9; x++) {
+			const sets = [];
+			for (let y = 0; y < 9; y++) {
+				const marker = markerGroup[getGroup](x, y);
+				if (!marker) continue;
+
+				const set = new Set();
+				for (let i = 0; i < 9; i++) {
+					const symbol = marker[i];
+					if (symbol) set.add(i);
+				}
+				if (set.size > 0) sets.push(new SetUnit(y, set));
+			}
+			const len = sets.length;
+			for (let i = 0; i < len - 1; i++) {
+				const remainder = len - i - 1;
+				const setUnit = sets[i];
+
+				const endLen = 0x1 << remainder;
+				for (let inc = 1; inc < endLen; inc++) {
+					union.clear();
+					for (const x of setUnit.set) union.add(x);
+					let unionCount = 1;
+					let setHitMask = 0x1 << i;
+
+					let mask = 0x1;
+					for (let j = i + 1; j < len; j++) {
+						const state = inc & mask;
+						if (state > 0) {
+							const compare = sets[j];
+							for (const x of compare.set) union.add(x);
+							unionCount++;
+							setHitMask |= 0x1 << j;
+						}
+						mask <<= 1;
+					}
+
+					let reduced = false;
+					if (unionCount === union.size && unionCount < sets.length) {
+						for (let shift = 0; shift < len; shift++) {
+							if ((setHitMask & (0x1 << shift)) > 0) continue;
+
+							const set = sets[shift];
+							const marker = markerGroup[getGroup](x, set.index);
+							if (!marker) continue;
+
+							for (const symbol of union) {
+								if (marker[symbol]) {
+									marker[symbol] = false;
+									reduced = true;
+								}
+							}
+						}
+						// console.log("Found Group " + getGroup);
+					}
+					if (reduced) return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+export { fillMarkers, fillSingles, fillMissingSingles, fillGroups, pairGroups };
