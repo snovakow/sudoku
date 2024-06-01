@@ -6,7 +6,7 @@ module.exports = {
 	entry: './main.js',
 	output: {
 		filename: '[chunkhash].js',
-		path: path.resolve(__dirname, './build'),
+		path: path.resolve(__dirname, '../../live/sudoku'),
 		chunkFilename: '[chunkhash].js',
 		clean: true,
 		publicPath: ''
