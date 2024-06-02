@@ -1,6 +1,6 @@
 import { FONT, board, markers } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { fillMarkers, fillSingles, fillMissingSingles, fillGroups } from "./solver.js";
+import { candidates, missingCells, nakedCells, hiddenCells, pairGroups } from "./solver.js";
 
 let selectedRow = 0;
 let selectedCol = 0;
@@ -83,43 +83,7 @@ const sudokus = [
 		[8, 0, 0, 1, 0, 7, 0, 0, 4],
 		[0, 3, 6, 0, 0, 0, 0, 0, 8],
 		[0, 0, 2, 0, 3, 0, 0, 0, 0],
-		"Snake"
-	],
-	[ // 25.63%
-		[9, 0, 0, 0, 0, 0, 0, 0, 5],
-		[0, 6, 0, 0, 7, 0, 0, 0, 0],
-		[0, 0, 2, 0, 0, 8, 4, 9, 0],
-		[0, 0, 0, 0, 0, 0, 0, 1, 0],
-		[0, 0, 9, 0, 0, 4, 3, 8, 0],
-		[2, 0, 0, 9, 0, 0, 0, 0, 0],
-		[0, 0, 3, 0, 0, 0, 0, 0, 1],
-		[7, 0, 0, 0, 8, 0, 5, 3, 0],
-		[0, 0, 0, 0, 0, 5, 0, 0, 2],
-		"Iso 7 b5"
-	],
-	[ // 26%
-		[1, 0, 0, 0, 6, 0, 0, 0, 0],
-		[0, 0, 3, 9, 0, 1, 0, 4, 0],
-		[2, 0, 0, 0, 0, 0, 0, 0, 7],
-		[0, 0, 0, 0, 8, 0, 0, 5, 0],
-		[0, 0, 6, 0, 4, 0, 0, 0, 0],
-		[3, 0, 0, 5, 0, 6, 2, 0, 0],
-		[0, 0, 1, 3, 0, 5, 0, 9, 0],
-		[0, 0, 0, 8, 0, 0, 0, 0, 0],
-		[0, 9, 0, 0, 0, 0, 4, 0, 0],
-		"Iso 9 b1"
-	],
-	[ // 29%
-		[7, 0, 0, 9, 0, 0, 6, 0, 0],
-		[0, 5, 0, 8, 0, 0, 0, 3, 7],
-		[0, 0, 0, 0, 3, 0, 4, 0, 0],
-		[0, 0, 2, 5, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 3, 0, 0],
-		[4, 0, 0, 0, 8, 0, 0, 1, 9],
-		[0, 4, 0, 0, 0, 9, 0, 0, 0],
-		[9, 0, 0, 0, 1, 0, 0, 7, 8],
-		[0, 0, 0, 0, 0, 0, 0, 0, 6],
-		"Iso 5 b2"
+		"X-Wing"
 	],
 	[ // 26%
 		[6, 0, 7, 9, 0, 1, 3, 0, 0],
@@ -143,7 +107,7 @@ const sudokus = [
 		[0, 6, 4, 0, 0, 8, 0, 0, 1],
 		[9, 0, 0, 0, 0, 0, 0, 0, 0],
 		[0, 0, 0, 0, 7, 0, 0, 2, 0],
-		"Wing"
+		"XY-Wing"
 	],
 ];
 
@@ -307,19 +271,22 @@ singleButton.addEventListener('click', () => {
 
 	let progress = false;
 	do {
-		fillMarkers(board.grid, markers);
-		progress = fillSingles(board.grid, markers);
+		candidates(board.grid, markers);
+		progress = missingCells(board.grid, markers);
 		if (progress) {
 			fills++;
 		} else {
-			progress = fillMissingSingles(board.grid, markers);
+			progress = nakedCells(board.grid, markers);
 			if (progress) {
 				missingSingles++;
 				fills++;
 			} else {
-				progress = fillGroups(markers);
+				progress = hiddenCells(markers);
 				if (progress) {
 					groupSets++;
+				} else {
+					progress = pairGroups(markers);
+					if (progress) fills++;
 				}
 			}
 		}
@@ -344,7 +311,7 @@ fillButton.style.width = '32px';
 fillButton.style.height = '32px';
 fillButton.addEventListener('click', () => {
 	// markers.length = 0;
-	fillMarkers(board.grid, markers);
+	candidates(board.grid, markers);
 	draw();
 });
 document.body.appendChild(fillButton);
