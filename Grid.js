@@ -3,7 +3,7 @@ const GRID_SIZE = 81;
 
 class Grid extends Uint8Array {
 	constructor() {
-		super(GRID_SIDE * GRID_SIDE);
+		super(GRID_SIZE);
 	}
 	getSymbol(r, c) {
 		return this[r * GRID_SIDE + c];
