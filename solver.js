@@ -1,3 +1,31 @@
+/* floor
+1000 10 x >> 2
+0111 10 flip 0xx0
+0110 10 flip 0xx0
+
+0101 01 x >> 2
+0100 01 x >> 2
+0011 01 | 00xx
+
+0010 00 x >> 2
+0001 00 x >> 2
+0000 00 x >> 2
+*/
+
+/* mod
+1000 10
+0101 10
+0010 10
+
+0111 01
+0100 01
+0001 01
+
+0110 00
+0011 00 
+0000 00
+*/
+
 const candidates = (grid, markers) => {
 	for (let i = 0; i < 81; i++) {
 		if (grid[i] === 0) {
@@ -391,4 +419,132 @@ const pairGroups = (markers) => {
 	return false;
 }
 
-export { candidates, missingCells, nakedCells, hiddenCells, pairGroups };
+const xWing = (markers) => {
+	const markerGroup = new GridGroup(markers);
+
+	class GroupPair {
+		constructor(x, i1, i2) {
+			this.x = x;
+			this.i1 = i1;
+			this.i2 = i2;
+		}
+	}
+
+	let reduced = false;
+
+	for (let i = 0; i < 9; i++) {
+		const pairs = [];
+		for (let x = 0; x < 9; x++) {
+			let y1 = -1;
+			let y2 = -1;
+			for (let y = 0; y < 9; y++) {
+				const marker = markerGroup.getRow(x, y);
+				if (!marker) continue;
+				if (marker[i]) {
+					if (y1 === -1) {
+						y1 = y;
+					} else if (y2 === -1) {
+						y2 = y;
+					} else {
+						y2 = -1;
+						break;
+					}
+				}
+			}
+			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2));
+		}
+
+		const len = pairs.length;
+		for (let p1 = 0, last = len - 1; p1 < last; p1++) {
+			const pair1 = pairs[p1];
+			for (let p2 = p1 + 1; p2 < len; p2++) {
+				const pair2 = pairs[p2];
+				if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
+					for (let x = 0; x < 9; x++) {
+						if (x === pair1.x || x === pair2.x) continue;
+
+						const marker1 = markerGroup.getCol(pair1.i1, x);
+						if (marker1) {
+							const symbol = marker1[i];
+							if (symbol) {
+								marker1[i] = false;
+								reduced = true;
+								console.log("X-Wing");
+							}
+						}
+
+						const marker2 = markerGroup.getCol(pair1.i2, x);
+						if (marker2) {
+							const symbol = marker2[i];
+							if (symbol) {
+								marker2[i] = false;
+								reduced = true;
+								console.log("X-Wing");
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for (let i = 0; i < 9; i++) {
+		const pairs = [];
+		for (let x = 0; x < 9; x++) {
+			let y1 = -1;
+			let y2 = -1;
+			for (let y = 0; y < 9; y++) {
+				const marker = markerGroup.getCol(x, y);
+				if (!marker) continue;
+				if (marker[i]) {
+					if (y1 === -1) {
+						y1 = y;
+					} else if (y2 === -1) {
+						y2 = y;
+					} else {
+						y2 = -1;
+						break;
+					}
+				}
+			}
+			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2));
+		}
+
+		const len = pairs.length;
+		for (let p1 = 0, last = len - 1; p1 < last; p1++) {
+			const pair1 = pairs[p1];
+			for (let p2 = p1 + 1; p2 < len; p2++) {
+				const pair2 = pairs[p2];
+				if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
+					for (let x = 0; x < 9; x++) {
+						if (x === pair1.x || x === pair2.x) continue;
+
+						const marker1 = markerGroup.getRow(pair1.i1, x);
+						if (marker1) {
+							const symbol = marker1[i];
+							if (symbol) {
+								marker1[i] = false;
+								reduced = true;
+								console.log("X-Wing");
+							}
+						}
+
+						const marker2 = markerGroup.getRow(pair1.i2, x);
+						if (marker2) {
+							const symbol = marker2[i];
+							if (symbol) {
+								marker2[i] = false;
+								reduced = true;
+								console.log("X-Wing");
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return reduced;
+}
+
+export { candidates, missingCells, nakedCells, hiddenCells, pairGroups, xWing };
