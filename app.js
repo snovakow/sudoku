@@ -1,55 +1,8 @@
 import { FONT, board, markers } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { candidates, missingCells, nakedCells, hiddenCells, pairGroups } from "./solver.js";
+import { candidates, missingCells, nakedCells, hiddenCells, pairGroups, xWing } from "./solver.js";
 
-let selectedRow = 0;
-let selectedCol = 0;
-let selected = false;
-
-document.body.appendChild(picker);
-document.body.appendChild(pickerMarker);
-
-document.body.style.userSelect = 'none';
-
-const draw = () => {
-	board.draw(selected, selectedRow, selectedCol);
-
-	const font = "100 " + pixAlign(64 * window.devicePixelRatio) + "px " + FONT;
-	pickerDraw(font);
-}
-
-const saveGrid = () => {
-	localStorage.setItem("startGrid", board.startGrid.toData());
-	localStorage.setItem("grid", board.grid.toData());
-
-	localStorage.setItem("markers", JSON.stringify(markers));
-};
-const loadGrid = () => {
-	const startGrid = localStorage.getItem("startGrid");
-
-	if (startGrid) {
-		board.startGrid.fromData(startGrid);
-
-		const grid = localStorage.getItem("grid");
-		if (grid) {
-			board.grid.fromData(grid);
-		}
-
-		const markersJSON = localStorage.getItem("markers");
-		if (markersJSON) {
-			const markersData = JSON.parse(markersJSON);
-			markers.length = 0;
-			for (const index in markersData) {
-				markers[index] = markersData[index];
-			}
-		}
-
-		return true;
-	}
-	return false;
-};
-
-const sudokus = [
+const sudokuSamples = [
 	// [
 	// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
 	// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -62,18 +15,6 @@ const sudokus = [
 	// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
 	// ],
 	[
-		[0, 4, 0, 3, 6, 7, 0, 0, 0],
-		[0, 1, 0, 0, 8, 0, 0, 6, 0],
-		[6, 0, 0, 0, 4, 0, 0, 0, 2],
-		[0, 0, 3, 8, 2, 0, 9, 0, 6],
-		[0, 8, 4, 0, 0, 0, 2, 5, 3],
-		[0, 0, 6, 0, 0, 0, 8, 0, 0],
-		[4, 0, 0, 0, 9, 0, 0, 0, 5],
-		[0, 5, 0, 0, 7, 0, 0, 9, 0],
-		[0, 0, 0, 6, 5, 8, 0, 2, 0],
-		"Isolate"
-	],
-	[
 		[0, 0, 0, 0, 4, 0, 2, 0, 0],
 		[2, 0, 0, 0, 0, 0, 6, 5, 0],
 		[9, 0, 0, 6, 0, 0, 0, 0, 7],
@@ -83,7 +24,7 @@ const sudokus = [
 		[8, 0, 0, 1, 0, 7, 0, 0, 4],
 		[0, 3, 6, 0, 0, 0, 0, 0, 8],
 		[0, 0, 2, 0, 3, 0, 0, 0, 0],
-		"X-Wing"
+		"XY-Wing"
 	],
 	[ // 26%
 		[6, 0, 7, 9, 0, 1, 3, 0, 0],
@@ -111,12 +52,8 @@ const sudokus = [
 	],
 ];
 
-const sudokus2 = 
-`85...24..72......9..4.........1.7..23.5...9...4...........8..7..17..........36.4.
-..53.....8......2..7..1.5..4....53...1..7...6..32...8..6.5....9..4....3......97..
+const sudokuStrings = `..53.....8......2..7..1.5..4....53...1..7...6..32...8..6.5....9..4....3......97..
 12..4......5.69.1...9...5.........7.7...52.9..3......2.9.6...5.4..9..8.1..3...9.4
-...57..3.1......2.7...234......8...4..7..4...49....6.5.42...3.....7..9....18.....
-7..1523........92....3.....1....47.8.......6............9...5.6.4.9.7...8....6.1.
 1....7.9..3..2...8..96..5....53..9...1..8...26....4...3......1..4......7..7...3..
 1...34.8....8..5....4.6..21.18......3..1.2..6......81.52..7.9....6..9....9.64...2
 ...92......68.3...19..7...623..4.1....1...7....8.3..297...8..91...5.72......64...
@@ -218,9 +155,22 @@ const sudokus2 =
 .5..9....1.....6.....3.8.....8.4...9514.......3....2..........4.8...6..77..15..6.
 .....2.......7...17..3...9.8..7......2.89.6...13..6....9..5.824.....891..........
 3...8.......7....51..............36...2..4....7...........6.13..452...........8..`.split('\n');
-if (!loadGrid()) board.setGrid(sudokus[0]);
 
-document.body.appendChild(board.canvas);
+let selectedRow = 0;
+let selectedCol = 0;
+let selected = false;
+
+document.body.appendChild(picker);
+document.body.appendChild(pickerMarker);
+
+document.body.style.userSelect = 'none';
+
+const draw = () => {
+	board.draw(selected, selectedRow, selectedCol);
+
+	const font = "100 " + pixAlign(64 * window.devicePixelRatio) + "px " + FONT;
+	pickerDraw(font);
+}
 
 const createSelect = (options, onChange) => {
 	const select = document.createElement('select');
@@ -240,6 +190,84 @@ const createSelect = (options, onChange) => {
 
 	return select;
 };
+
+const names = [];
+const sudokus = [...sudokuSamples];
+for (const sudoku of sudokuSamples) names.push(sudoku[9]);
+let nameIndex = 0;
+for (const sudoku of sudokuStrings) {
+	names.push(++nameIndex);
+	const convert = [];
+	for (let r = 0; r < 9; r++) {
+		const row = [];
+		convert.push(row);
+		for (let c = 0; c < 9; c++) {
+			const symbol = sudoku[r * 9 + c];
+			if (symbol === ".") row.push(0);
+			else row.push(parseInt(symbol));
+		}
+	}
+	sudokus.push(convert);
+}
+
+const selector = createSelect(["-", ...names], (select) => {
+	if (select.selectedIndex === 0) {
+		localStorage.removeItem("gridName");
+		return;
+	}
+
+	markers.length = 0;
+	selected = false;
+
+	const index = select.selectedIndex - 1;
+	board.setGrid(index < sudokus.length ? sudokus[index] : sudokuSamples[index - sudokus.length]);
+	saveGrid(select.selectedIndex);
+	draw();
+});
+selector.style.position = 'absolute';
+selector.style.width = '40px';
+
+const saveGrid = (selectedIndex = null) => {
+	if (selectedIndex !== null) localStorage.setItem("gridName", selectedIndex);
+	localStorage.setItem("startGrid", board.startGrid.toData());
+	localStorage.setItem("grid", board.grid.toData());
+
+	localStorage.setItem("markers", JSON.stringify(markers));
+};
+const loadGrid = () => {
+	const selectedIndex = localStorage.getItem("gridName");
+	if (selectedIndex !== null) {
+		const selectedInt = parseInt(selectedIndex);
+		if (selectedInt > 0 && selectedInt < selector.options.length) selector.selectedIndex = selectedInt;
+	}
+
+	const startGrid = localStorage.getItem("startGrid");
+
+	if (startGrid) {
+		board.startGrid.fromData(startGrid);
+
+		const grid = localStorage.getItem("grid");
+		if (grid) {
+			board.grid.fromData(grid);
+		}
+
+		const markersJSON = localStorage.getItem("markers");
+		if (markersJSON) {
+			const markersData = JSON.parse(markersJSON);
+			markers.length = 0;
+			for (const index in markersData) {
+				markers[index] = markersData[index];
+			}
+		}
+
+		return true;
+	}
+	return false;
+};
+
+loadGrid();
+
+document.body.appendChild(board.canvas);
 
 const click = (event) => {
 	// event.preventDefault();
@@ -294,7 +322,7 @@ const pickerClick = (event) => {
 	} else {
 		delete markers[selectedRow * 9 + selectedCol];
 		board.grid.setSymbol(selectedRow, selectedCol, index);
-		saveGrid();
+		saveGrid(selector.selectedIndex);
 	}
 
 	draw();
@@ -338,19 +366,6 @@ const orientationchange = (event) => {
 };
 addEventListener("orientationchange", orientationchange);
 
-const names = [];
-for (const sudoku of sudokus) names.push(sudoku[9]);
-const selector = createSelect(["-", ...names], (select) => {
-	if (select.selectedIndex === 0) return;
-
-	markers.length = 0;
-	board.setGrid(sudokus[select.selectedIndex - 1]);
-	saveGrid();
-	draw();
-});
-selector.style.position = 'absolute';
-selector.style.width = '40px';
-
 const clearButton = document.createElement('button');
 clearButton.appendChild(document.createTextNode("X"));
 clearButton.style.position = 'absolute';
@@ -358,6 +373,7 @@ clearButton.style.width = '32px';
 clearButton.style.height = '32px';
 clearButton.addEventListener('click', () => {
 	markers.length = 0;
+	selected = false;
 	board.resetGrid();
 	saveGrid();
 	draw();
@@ -393,7 +409,12 @@ singleButton.addEventListener('click', () => {
 					groupSets++;
 				} else {
 					progress = pairGroups(markers);
-					if (progress) fills++;
+					if (progress) {
+						fills++;
+					} else {
+						progress = xWing(markers);
+						if (progress) fills++;
+					}
 				}
 			}
 		}
