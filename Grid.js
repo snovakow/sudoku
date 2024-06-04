@@ -20,6 +20,245 @@ class Grid extends Uint8Array {
 	fromData(data) {
 		for (let i = 0; i < GRID_SIZE; i++) this[i] = parseInt(data[i]);
 	}
+	compress() {
+		let pointer = 0;
+		const bits = new Uint8Array(168);
+
+		for (let r = 0; r < 8; r++) {
+			const add = [true, true, true, true, true, true, true, true, true];
+
+			const compressForSymbol = (symbol) => {
+				let index = 0;
+				for (let i = 0; i < 9; i++) {
+					if (symbol === i) {
+						add[symbol] = false;
+						return index;
+					}
+					if (add[symbol]) index++;
+				}
+			};
+
+			let index = 0;
+
+			const symbol1 = this[r * 9 + index] - 1; // 9 0x1000
+			const slot1_4bit = compressForSymbol(symbol1);
+			let byte0 = slot1_4bit << 4; // 1-4
+
+			index++;
+
+			const symbol2 = this[r * 9 + index] - 1; // 8 0x111
+			const slot2_3bit = compressForSymbol(symbol2);
+			byte0 |= slot2_3bit << 1; // 5-7
+
+			index++;
+
+			const symbol3 = this[r * 9 + index] - 1; // 7 0x110
+			const slot3_3bit = compressForSymbol(symbol3);
+			byte0 |= slot3_3bit >> 2; // 8-8
+			let byte1 = (slot3_3bit & 0x3) << 6; // 1-2
+
+			index++;
+
+			const symbol4 = this[r * 9 + index] - 1; // 6 0x101
+			const slot4_3bit = compressForSymbol(symbol4);
+			byte1 |= (slot4_3bit & 0x3) << 3; // 3-5
+
+			index++;
+
+			const symbol5 = this[r * 9 + index] - 1; // 5 0x100
+			const slot5_3bit = compressForSymbol(symbol5);
+			byte1 |= slot5_3bit; // 6-8
+
+			index++;
+
+			const symbol6 = this[r * 9 + index] - 1; // 4 0x11
+			const slot6_2bit = compressForSymbol(symbol6);
+			let byte2 = slot6_2bit << 6; // 1-2
+
+			index++;
+
+			const symbol7 = this[r * 9 + index] - 1; // 3 0x10
+			const slot7_2bit = compressForSymbol(symbol7);
+			byte2 |= slot7_2bit << 4; // 3-4
+
+			index++;
+
+			const symbol8 = this[r * 9 + index] - 1; // 2 0x1
+			const slot8_1bit = compressForSymbol(symbol8);
+			byte2 |= slot8_1bit << 3; // 5
+
+			index++;
+
+			bits[pointer] = (byte0 & 0x80) >> 7;
+			bits[pointer + 1] = (byte0 & 0x40) >> 6;
+			bits[pointer + 2] = (byte0 & 0x20) >> 5;
+			bits[pointer + 3] = (byte0 & 0x10) >> 4;
+			bits[pointer + 4] = (byte0 & 0x08) >> 3;
+			bits[pointer + 5] = (byte0 & 0x04) >> 2;
+			bits[pointer + 6] = (byte0 & 0x02) >> 1;
+			bits[pointer + 7] = byte0 & 0x01;
+
+			pointer += 8;
+
+			bits[pointer] = (byte1 & 0x80) >> 7;
+			bits[pointer + 1] = (byte1 & 0x40) >> 6;
+			bits[pointer + 2] = (byte1 & 0x20) >> 5;
+			bits[pointer + 3] = (byte1 & 0x10) >> 4;
+			bits[pointer + 4] = (byte1 & 0x08) >> 3;
+			bits[pointer + 5] = (byte1 & 0x04) >> 2;
+			bits[pointer + 6] = (byte1 & 0x02) >> 1;
+			bits[pointer + 7] = byte1 & 0x01;
+
+			pointer += 8;
+
+			bits[pointer] = (byte2 & 0x80) >> 4;
+			bits[pointer + 1] = (byte2 & 0x40) >> 3;
+			bits[pointer + 2] = (byte2 & 0x20) >> 2;
+			bits[pointer + 3] = (byte2 & 0x10) >> 1;
+			bits[pointer + 4] = byte2 & 0x08;
+
+			pointer += 5;
+		}
+
+		pointer = 0;
+		const compressed = new Uint8Array(21);
+		for (let i = 0; i < 21; i++) {
+			let byte = bits[pointer] << 7;
+			byte |= bits[pointer + 1] << 6;
+			byte |= bits[pointer + 2] << 5;
+			byte |= bits[pointer + 3] << 4;
+			byte |= bits[pointer + 4] << 3;
+			byte |= bits[pointer + 5] << 2;
+			byte |= bits[pointer + 6] << 1;
+			byte |= bits[pointer + 7];
+
+			compressed[i] = byte;
+
+			pointer += 8;
+		}
+
+		console.log(pointer, "b64: ", Math.ceil(pointer / 6), Math.ceil((pointer + 81) / 6), "bytes: ", Math.ceil(pointer / 8), Math.ceil((pointer + 81) / 8));
+
+		// const base64 = Base64.fromUint8Array(compressed);
+		// return base64;
+	}
+	decompress(compressed) {
+		const bytes = Base64.toUint8Array(compressed);
+
+		const bits = new Uint8Array(168);
+
+		let pointer = 0;
+		for (let i = 0; i < 21; i++) {
+			const byte = bytes[i];
+
+			bits[pointer] = (byte & 0x80) >> 7;
+			bits[pointer + 1] = (byte & 0x40) >> 6;
+			bits[pointer + 2] = (byte & 0x20) >> 5;
+			bits[pointer + 3] = (byte & 0x10) >> 4;
+			bits[pointer + 4] = (byte & 0x08) >> 3;
+			bits[pointer + 5] = (byte & 0x04) >> 2;
+			bits[pointer + 6] = (byte & 0x02) >> 1;
+			bits[pointer + 7] = byte & 0x01;
+
+			pointer += 8;
+		}
+
+		pointer = 0;
+		for (let r = 0; r < 8; r++) {
+			const add = [true, true, true, true, true, true, true, true, true];
+
+			const symbolForIndex = (index) => {
+				let symbol = 0;
+				for (let i = 0; i < 9; i++) {
+					if (index === i) {
+						add[index] = false;
+						return symbol;
+					}
+					if (add[index]) symbol++;
+					return symbol;
+				}
+			};
+
+			let byte0 = bits[pointer] << 7;
+			byte0 |= bits[pointer + 1] << 6;
+			byte0 |= bits[pointer + 2] << 5;
+			byte0 |= bits[pointer + 3] << 4;
+			byte0 |= bits[pointer + 4] << 3;
+			byte0 |= bits[pointer + 5] << 2;
+			byte0 |= bits[pointer + 6] << 1;
+			byte0 |= bits[pointer + 7];
+
+			pointer += 8;
+
+			let byte1 = bits[pointer] << 7;
+			byte1 |= bits[pointer + 1] << 6;
+			byte1 |= bits[pointer + 2] << 5;
+			byte1 |= bits[pointer + 3] << 4;
+			byte1 |= bits[pointer + 4] << 3;
+			byte1 |= bits[pointer + 5] << 2;
+			byte1 |= bits[pointer + 6] << 1;
+			byte1 |= bits[pointer + 7];
+
+			pointer += 8;
+
+			let byte2 = bits[pointer] << 4;
+			byte2 |= bits[pointer + 1] << 3;
+			byte2 |= bits[pointer + 2] << 2;
+			byte2 |= bits[pointer + 3] << 1;
+			byte2 |= bits[pointer + 4];
+
+			pointer += 5;
+
+			const slot1_4bit = byte0 >> 4;
+			// const symbol1 = this[r * 9 + index] - 1; // 9 0x1000
+			// const slot1_4bit = compressForSymbol(symbol1);
+			// let byte0 = slot1_4bit << 4; // 1-4
+
+			const slot2_3bit = (byte0 >> 1) & 0x07;
+			// const symbol2 = this[r * 9 + index] - 1; // 8 0x111
+			// const slot2_3bit = compressForSymbol(symbol2);
+			// byte0 |= (slot2_3bit << 1); // 5-7
+
+			const slot3_3bit = ((byte0 & 0x01) << 2) | (byte1 >> 6);
+			// const symbol3 = this[r * 9 + index] - 1; // 7 0x110
+			// const slot3_3bit = compressForSymbol(symbol3);
+			// byte0 |= (slot3_3bit >> 2); // 8-8
+			// let byte1 = ((slot3_3bit & 0x3) << 6); // 1-2
+
+			const slot4_3bit = (byte1 >> 3) & 0x07;
+			// const symbol4 = this[r * 9 + index] - 1; // 6 0x101
+			// const slot4_3bit = compressForSymbol(symbol4);
+			// byte1 |= ((slot4_3bit & 0x3) << 3); // 3-5
+
+			const slot5_3bit = byte1 & 0x07;
+			// const symbol5 = this[r * 9 + index] - 1; // 5 0x100
+			// const slot5_3bit = compressForSymbol(symbol5);
+			// byte1 |= slot5_3bit; // 6-8
+
+			const slot6_2bit = byte2 >> 6;
+			// const symbol6 = this[r * 9 + index] - 1; // 4 0x11
+			// const slot6_2bit = compressForSymbol(symbol6);
+			// let byte2 = (slot6_2bit << 6); // 1-2
+
+			const slot7_2bit = (byte2 >> 4) & 0x03;
+			// const symbol7 = this[r * 9 + index] - 1; // 3 0x10
+			// const slot7_2bit = compressForSymbol(symbol7);
+			// byte2 |= (slot7_2bit << 4); // 3-4
+
+			const slot8_1bit = (byte2 >> 3) & 0x01;
+			// const symbol8 = this[r * 9 + index] - 1; // 2 0x1
+			// const slot8_1bit = compressForSymbol(symbol8);
+			// byte2 |= (slot8_1bit << 3); // 5
+		}
+	}
 }
+
+// const g = new Grid();
+// for (const i in g) {
+// 	g[i] = (i % 9) + 1;
+// }
+// const base64 = g.compress();
+// console.log(base64, base64.length);
+// g.decompress(base64);
 
 export { Grid };

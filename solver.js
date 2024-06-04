@@ -1,15 +1,18 @@
 /* floor
-1000 10 x >> 2
-0111 10 flip 0xx0
-0110 10 flip 0xx0
+b1 = (x>>3) | (x&0x2>>1 & x&0x4>>2)
+b2 = !b1 | ()
+1000 10
+0111 10
+0110 10
 
-0101 01 x >> 2
-0100 01 x >> 2
-0011 01 | 00xx
+0101 01
+0100 01
+0011 01
 
-0010 00 x >> 2
-0001 00 x >> 2
-0000 00 x >> 2
+0010 00
+0001 00
+0000 00
+
 */
 
 /* mod
@@ -22,9 +25,36 @@
 0001 01
 
 0110 00
-0011 00 
+0011 00
 0000 00
+
 */
+
+const floor = (x) => {
+
+}
+
+const rowForIndex = (x) => {
+	return Math.floor(x / 9);
+}
+const colForIndex = (x) => {
+	return x % 9;
+}
+const boxForIndex = (x) => {
+	return Math.floor(x / 27) * 3 + Math.floor((x % 9) / 3);
+}
+
+const indexForRow = (x, i) => {
+	return x * 9 + i;
+}
+const indexForCol = (x, i) => {
+	return i * 9 + x;
+}
+const indexForBox = (x, i) => {
+	const row = Math.floor(x / 3) * 3 + Math.floor(i / 3);
+	const col = (x % 3) * 3 + (i % 3);
+	return row * 9 + col;
+}
 
 const candidates = (grid, markers) => {
 	for (let i = 0; i < 81; i++) {
@@ -93,24 +123,14 @@ const missingCells = (grid, markers) => {
 	return false;
 }
 
-const rowForLoc = (x) => {
-	return Math.floor(x / 9);
-}
-const colForLoc = (x) => {
-	return x % 9;
-}
-const boxLoc = (x) => {
-	return Math.floor(x / 27) * 3 + Math.floor((x % 9) / 3);
-}
-
 class GridGroup {
-	static rowLoc(x, i) {
+	static rowIndex(x, i) {
 		return x * 9 + i;
 	}
-	static colLoc(x, i) {
+	static colIndex(x, i) {
 		return i * 9 + x;
 	}
-	static boxLoc(x, i) {
+	static boxIndex(x, i) {
 		const row = Math.floor(x / 3) * 3 + Math.floor(i / 3);
 		const col = (x % 3) * 3 + (i % 3);
 		return row * 9 + col;
@@ -147,7 +167,7 @@ const nakedCells = (grid, markers) => {
 			this.loc = loc;
 		}
 	}
-	const groupTypes = [new Type('getRow', 'rowLoc'), new Type('getCol', 'colLoc'), new Type('getBox', 'boxLoc')];
+	const groupTypes = [new Type('getRow', 'rowIndex'), new Type('getCol', 'colIndex'), new Type('getBox', 'boxIndex')];
 
 	for (const groupType of groupTypes) {
 		const getGroup = groupType.group;
@@ -281,17 +301,17 @@ const pairGroups = (markers) => {
 			}
 
 			if (y2 >= 0) {
-				const loc1 = GridGroup.boxLoc(x, y1);
-				const loc2 = GridGroup.boxLoc(x, y2);
+				const loc1 = GridGroup.boxIndex(x, y1);
+				const loc2 = GridGroup.boxIndex(x, y2);
 
-				const colLoc1 = colForLoc(loc1);
-				const colLoc2 = colForLoc(loc2);
-				if (colLoc1 === colLoc2) {
+				const colIndex1 = colForIndex(loc1);
+				const colIndex2 = colForIndex(loc2);
+				if (colIndex1 === colIndex2) {
 					let reduced = false;
 
 					for (let j = 0; j < 9; j++) {
 						if (Math.floor(x / 3) === Math.floor(j / 3)) continue;
-						const outer = markerGroup.getCol(colLoc1, j);
+						const outer = markerGroup.getCol(colIndex1, j);
 						if (!outer) continue;
 						const symbol = outer[i];
 						if (symbol) {
@@ -302,14 +322,14 @@ const pairGroups = (markers) => {
 					if (reduced) return true;
 				}
 
-				const rowLoc1 = rowForLoc(loc1);
-				const rowLoc2 = rowForLoc(loc2);
-				if (rowLoc1 === rowLoc2) {
+				const rowIndex1 = rowForIndex(loc1);
+				const rowIndex2 = rowForIndex(loc2);
+				if (rowIndex1 === rowIndex2) {
 					let reduced = false;
 
 					for (let j = 0; j < 9; j++) {
 						if ((x % 3) === Math.floor(j / 3)) continue;
-						const outer = markerGroup.getRow(rowLoc1, j);
+						const outer = markerGroup.getRow(rowIndex1, j);
 						if (!outer) continue;
 						const symbol = outer[i];
 						if (symbol) {
@@ -344,16 +364,16 @@ const pairGroups = (markers) => {
 			}
 
 			if (y2 >= 0) {
-				const loc1 = GridGroup.rowLoc(x, y1);
-				const loc2 = GridGroup.rowLoc(x, y2);
+				const loc1 = GridGroup.rowIndex(x, y1);
+				const loc2 = GridGroup.rowIndex(x, y2);
 
-				const boxLoc1 = boxLoc(loc1);
-				const boxLoc2 = boxLoc(loc2);
-				if (boxLoc1 === boxLoc2) {
+				const boxIndex1 = boxForIndex(loc1);
+				const boxIndex2 = boxForIndex(loc2);
+				if (boxIndex1 === boxIndex2) {
 					let reduced = false;
 
 					for (let j = 0; j < 9; j++) {
-						if ((boxLoc1 % 3) === Math.floor(j / 3)) continue;
+						if ((boxIndex1 % 3) === Math.floor(j / 3)) continue;
 						const outer = markerGroup.getRow(x, j);
 						if (!outer) continue;
 						const symbol = outer[i];
@@ -390,16 +410,16 @@ const pairGroups = (markers) => {
 			}
 
 			if (y2 >= 0) {
-				const loc1 = GridGroup.colLoc(x, y1);
-				const loc2 = GridGroup.colLoc(x, y2);
+				const loc1 = GridGroup.colIndex(x, y1);
+				const loc2 = GridGroup.colIndex(x, y2);
 
-				const boxLoc1 = boxLoc(loc1);
-				const boxLoc2 = boxLoc(loc2);
-				if (boxLoc1 === boxLoc2) {
+				const boxIndex1 = boxForIndex(loc1);
+				const boxIndex2 = boxForIndex(loc2);
+				if (boxIndex1 === boxIndex2) {
 					let reduced = false;
 
 					for (let j = 0; j < 9; j++) {
-						if (Math.floor(boxLoc1 / 3) === Math.floor(j / 3)) continue;
+						if (Math.floor(boxIndex1 / 3) === Math.floor(j / 3)) continue;
 						const outer = markerGroup.getCol(x, j);
 						if (!outer) continue;
 						const symbol = outer[i];
@@ -547,4 +567,335 @@ const xWing = (markers) => {
 	return reduced;
 }
 
-export { candidates, missingCells, nakedCells, hiddenCells, pairGroups, xWing };
+const xyWing = (markers) => {
+	const markerGroup = new GridGroup(markers);
+
+	class Pair {
+		constructor(index, s1, s2) {
+			this.index = index;
+			this.s1 = s1;
+			this.s2 = s2;
+		}
+	}
+
+	// map pairs
+	const pairs = [];
+	for (let i = 0; i < 81; i++) {
+		const marker = markers[i];
+		if (!marker) continue;
+		let s1 = -1;
+		let s2 = -1;
+		for (let s = 0; s < 9; s++) {
+			if (!marker[s]) continue;
+			if (s1 === -1) {
+				s1 = s;
+			} else if (s2 === -1) {
+				s2 = s;
+			} else {
+				s2 = -1;
+				break;
+			}
+		}
+		if (s2 !== -1) {
+			pairs.push(new Pair(i, s1, s2));
+		}
+	}
+
+	const pairLen = pairs.length;
+	const union = new Set();
+	for (let i1 = 0; i1 < pairLen - 2; i1++) {
+		const pair1 = pairs[i1];
+		union.clear();
+		union.add(pair1.s1);
+		union.add(pair1.s2);
+
+		for (let i2 = i1 + 1; i2 < pairLen - 1; i2++) {
+			const pair2 = pairs[i2];
+
+			if (pair1.s1 === pair2.s1 && pair1.s2 === pair2.s2) continue;
+
+			if (union.size === 0) {
+				union.add(pair1.s1);
+				union.add(pair1.s2);
+			}
+			union.add(pair2.s1);
+			union.add(pair2.s2);
+
+			// if (union.size !== 3) continue
+
+			for (let i3 = i2 + 1; i3 < pairLen; i3++) {
+				const pair3 = pairs[i3];
+
+				if (pair1.s1 === pair3.s1 && pair1.s2 === pair3.s2) continue;
+				if (pair2.s1 === pair3.s1 && pair2.s2 === pair3.s2) continue;
+
+				union.clear();
+				if (union.size === 0) {
+					union.add(pair1.s1);
+					union.add(pair1.s2);
+					union.add(pair2.s1);
+					union.add(pair2.s2);
+					if (union.size !== 3) continue
+				}
+
+				union.add(pair3.s1);
+				if (union.size !== 3) continue
+				union.add(pair3.s2);
+				if (union.size !== 3) continue;
+
+				const row1 = rowForIndex(pair1.index);
+				const row2 = rowForIndex(pair2.index);
+				const row3 = rowForIndex(pair3.index);
+				const col1 = colForIndex(pair1.index);
+				const col2 = colForIndex(pair2.index);
+				const col3 = colForIndex(pair3.index);
+				const box1 = boxForIndex(pair1.index);
+				const box2 = boxForIndex(pair2.index);
+				const box3 = boxForIndex(pair3.index);
+
+				if (row1 === row2 && row2 === row3) continue;
+				if (col1 === col2 && col2 === col3) continue;
+				if (box1 === box2 && box2 === box3) continue;
+
+				let reduced = false;
+
+				if (row1 === row2 || col1 === col2 || box1 === box2) {
+					if (row1 === row3 || col1 === col3 || box1 === box3) {
+						const hits = new Set();
+						hits.add(pair2.s1);
+						hits.add(pair2.s2);
+						hits.add(pair3.s1);
+						hits.add(pair3.s2);
+
+						hits.delete(pair1.s1);
+						hits.delete(pair1.s2);
+
+						let hit = -1;
+						for (const s of hits) {
+							hit = s;
+						}
+
+						if (box2 !== box3) {
+							for (let x = 0; x < 9; x++) {
+								const index = indexForCol(col2, x);
+								const b = boxForIndex(index);
+								if (box3 === b) {
+									const m = markerGroup.group[index];
+									if (m?.[hit]) {
+										m[hit] = false;
+										reduced = true;
+										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+									}
+								}
+							}
+							for (let x = 0; x < 9; x++) {
+								const index = indexForRow(row2, x);
+								const b = boxForIndex(index);
+								if (box3 === b) {
+									const m = markerGroup.group[index];
+									if (m?.[hit]) {
+										m[hit] = false;
+										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+										reduced = true;
+									}
+								}
+							}
+							for (let x = 0; x < 9; x++) {
+								const index = indexForCol(col3, x);
+								const b = boxForIndex(index);
+								if (box2 === b) {
+									const m = markerGroup.group[index];
+									if (m?.[hit]) {
+										m[hit] = false;
+										reduced = true;
+										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+									}
+								}
+							}
+							for (let x = 0; x < 9; x++) {
+								const index = indexForRow(row3, x);
+								const b = boxForIndex(index);
+								if (box2 === b) {
+									const m = markerGroup.group[index];
+									if (m?.[hit]) {
+										m[hit] = false;
+										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+										reduced = true;
+									}
+								}
+							}
+						}
+					}
+				}
+				if (row1 === row2 || col1 === col2 || box1 === box2) {
+					if (row2 === row3 || col2 === col3 || box2 === box3) {
+						const hits = new Set();
+						hits.add(pair1.s1);
+						hits.add(pair1.s2);
+						hits.add(pair3.s1);
+						hits.add(pair3.s2);
+
+						hits.delete(pair2.s1);
+						hits.delete(pair2.s2);
+
+						let hit = -1;
+						for (const s of hits) {
+							hit = s;
+						}
+
+						if (box1 !== box3) {
+							for (let x = 0; x < 9; x++) {
+								const index = indexForCol(col1, x);
+								const b = boxForIndex(index);
+								if (box3 === b) {
+									const m = markerGroup.group[index];
+									if (m?.[hit]) {
+										m[hit] = false;
+										reduced = true;
+										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+									}
+								}
+							}
+							for (let x = 0; x < 9; x++) {
+								const index = indexForRow(row1, x);
+								const b = boxForIndex(index);
+								if (box3 === b) {
+									const m = markerGroup.group[index];
+									if (m?.[hit]) {
+										m[hit] = false;
+										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+										reduced = true;
+									}
+								}
+							}
+							for (let x = 0; x < 9; x++) {
+								const index = indexForCol(col3, x);
+								const b = boxForIndex(index);
+								if (box1 === b) {
+									const m = markerGroup.group[index];
+									if (m?.[hit]) {
+										m[hit] = false;
+										reduced = true;
+
+										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+									}
+								}
+							}
+							for (let x = 0; x < 9; x++) {
+								const index = indexForRow(row3, x);
+								const b = boxForIndex(index);
+								if (box1 === b) {
+									const m = markerGroup.group[index];
+									if (m?.[hit]) {
+										m[hit] = false;
+										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+										reduced = true;
+									}
+								}
+							}
+						}
+					}
+				}
+				if (row1 === row3 || col1 === col3 || box1 === box3) {
+					if (row2 === row3 || col2 === col3 || box2 === box3) {
+						const hits = new Set();
+						hits.add(pair1.s1);
+						hits.add(pair1.s2);
+						hits.add(pair2.s1);
+						hits.add(pair2.s2);
+
+						hits.delete(pair3.s1);
+						hits.delete(pair3.s2);
+
+						let hit = -1;
+						for (const s of hits) {
+							hit = s;
+						}
+
+						if (box1 !== box2) {
+							for (let x = 0; x < 9; x++) {
+								const index = indexForCol(col1, x);
+								const b = boxForIndex(index);
+								if (box2 === b) {
+									const m = markerGroup.group[index];
+									if (m?.[hit]) {
+										m[hit] = false;
+										reduced = true;
+										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+									}
+								}
+							}
+							for (let x = 0; x < 9; x++) {
+								const index = indexForRow(row1, x);
+								const b = boxForIndex(index);
+								if (box2 === b) {
+									const m = markerGroup.group[index];
+									if (m?.[hit]) {
+										m[hit] = false;
+										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+										reduced = true;
+									}
+								}
+							}
+							for (let x = 0; x < 9; x++) {
+								const index = indexForCol(col2, x);
+								const b = boxForIndex(index);
+								if (box1 === b) {
+									const m = markerGroup.group[index];
+									if (m?.[hit]) {
+										m[hit] = false;
+										reduced = true;
+										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+									}
+								}
+							}
+							for (let x = 0; x < 9; x++) {
+								const index = indexForRow(row2, x);
+								const b = boxForIndex(index);
+								if (box1 === b) {
+									const m = markerGroup.group[index];
+									if (m?.[hit]) {
+										m[hit] = false;
+										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+										reduced = true;
+									}
+								}
+							}
+						}
+					}
+				}
+				// console.log(reduced);
+				if (reduced) return reduced;
+
+				union.clear();
+			}
+		}
+	}
+	return false;
+}
+
+export { candidates, missingCells, nakedCells, hiddenCells, pairGroups, xWing, xyWing };
