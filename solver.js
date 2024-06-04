@@ -1,10 +1,7 @@
-/* floor
-
-Math.floor(x/3);
+/* floor Math.floor(x/3)
 
 b1 1xxx | x1&1x
 b2 (xx0x | xxx1) & x1^1x
-b2 (xx0x | xxxx) & x1^1x
 
 1000 10
 0111 10
@@ -17,19 +14,21 @@ b2 (xx0x | xxxx) & x1^1x
 0010 00
 0001 00
 0000 00
-
 */
 
 const floor = (x) => {
-	const x1 = (x >> 1) & 0x1;
-	const x2 = (x >> 2) & 0x1;
-	const b1 = (x >> 3) | (x1 & x2);
-	// const b2 = ~x1 | (x & 0x1);
-	const b2 = ~x1 | x;
-	return (b1 << 1) | (b2 & (x1 ^ x2));
+	const x2 = x >> 1;
+	const x3 = x >> 2;
+	const b1 = (x >> 3) | (x2 & x3);
+	const b2 = (~x2 | x) & (x2 ^ x3);
+	return (b1 << 1) | b2;
 }
 
-/* mod
+/* mod x%3
+
+b1 1xxx | ((x2 ^ x1) & (x2 ^ x3))
+b2 x111 | (~x2 & (x1 ^ x3))
+
 1000 10
 0101 10
 0010 10
@@ -42,6 +41,17 @@ const floor = (x) => {
 0011 00
 0000 00
 */
+
+const mod = (x) => {
+	const x1 = x & 0x1;
+	const x2 = (x >> 1) & 0x1;
+	const x3 = x >> 2;
+
+	const b1 = (x >> 3) | ((x1 ^ x2) & (x2 ^ x3));
+	const b2 = ~x2 & (x1 ^ x3);
+	return (b1 << 1) | (b2 | (x1 & x2 & x3));
+}
+// for (let i = 0; i < 9; i++) console.log(mod(i), floor(i));
 
 const rowForIndex = (x) => {
 	return Math.floor(x / 9);
@@ -167,38 +177,38 @@ class GridGroup {
 	}
 }
 
+class Type {
+	constructor(group, index) {
+		this.group = group;
+		this.index = index;
+	}
+}
+
 const nakedCells = (grid, markers) => {
 	const markerGroup = new GridGroup(markers);
-
-	class Type {
-		constructor(group, loc) {
-			this.group = group;
-			this.loc = loc;
-		}
-	}
 	const groupTypes = [new Type('getRow', 'rowIndex'), new Type('getCol', 'colIndex'), new Type('getBox', 'boxIndex')];
 
 	for (const groupType of groupTypes) {
 		const getGroup = groupType.group;
-		const getLoc = groupType.loc;
+		const groupIndex = groupType.index;
 
 		for (let i = 0; i < 9; i++) {
 			for (let x = 0; x < 9; x++) {
-				let index = -1;
+				let symbol = -1;
 				for (let y = 0; y < 9; y++) {
 					const marker = markerGroup[getGroup](x, y);
 					if (marker && marker[i]) {
-						if (index === -1) index = y;
+						if (symbol === -1) symbol = y;
 						else {
-							index = -1;
+							symbol = -1;
 							break;
 						}
 					}
 				}
-				if (index !== -1) {
-					const loc = GridGroup[getLoc](x, index);
-					grid[loc] = i + 1;
-					delete markers[loc];
+				if (symbol !== -1) {
+					const index = GridGroup[groupIndex](x, symbol);
+					grid[index] = i + 1;
+					delete markers[index];
 					return true;
 				}
 			}
@@ -310,11 +320,11 @@ const pairGroups = (markers) => {
 			}
 
 			if (y2 >= 0) {
-				const loc1 = GridGroup.boxIndex(x, y1);
-				const loc2 = GridGroup.boxIndex(x, y2);
+				const index1 = GridGroup.boxIndex(x, y1);
+				const index2 = GridGroup.boxIndex(x, y2);
 
-				const colIndex1 = colForIndex(loc1);
-				const colIndex2 = colForIndex(loc2);
+				const colIndex1 = colForIndex(index1);
+				const colIndex2 = colForIndex(index2);
 				if (colIndex1 === colIndex2) {
 					let reduced = false;
 
@@ -331,8 +341,8 @@ const pairGroups = (markers) => {
 					if (reduced) return true;
 				}
 
-				const rowIndex1 = rowForIndex(loc1);
-				const rowIndex2 = rowForIndex(loc2);
+				const rowIndex1 = rowForIndex(index1);
+				const rowIndex2 = rowForIndex(index2);
 				if (rowIndex1 === rowIndex2) {
 					let reduced = false;
 
@@ -352,96 +362,58 @@ const pairGroups = (markers) => {
 
 		}
 
-		// Row - Remove Box
-		for (let x = 0; x < 9; x++) {
-			let y1 = -1;
-			let y2 = -1;
+		const groupTypes = [new Type('getRow', 'rowIndex'), new Type('getCol', 'colIndex')];
 
-			for (let y = 0; y < 9; y++) {
-				const marker = markerGroup.getRow(x, y);
-				if (!marker) continue;
+		for (const groupType of groupTypes) {
+			const getGroup = groupType.group;
+			const groupIndex = groupType.index;
 
-				const symbol = marker[i];
-				if (!symbol) continue;
+			for (let x = 0; x < 9; x++) {
+				let y1 = -1;
+				let y2 = -1;
 
-				if (y1 === -1) y1 = y;
-				else if (y2 === -1) y2 = y;
-				else {
-					y2 = -1;
-					break;
-				}
-			}
+				for (let y = 0; y < 9; y++) {
+					const marker = markerGroup[getGroup](x, y);
+					if (!marker) continue;
 
-			if (y2 >= 0) {
-				const loc1 = GridGroup.rowIndex(x, y1);
-				const loc2 = GridGroup.rowIndex(x, y2);
+					const symbol = marker[i];
+					if (!symbol) continue;
 
-				const boxIndex1 = boxForIndex(loc1);
-				const boxIndex2 = boxForIndex(loc2);
-				if (boxIndex1 === boxIndex2) {
-					let reduced = false;
-
-					for (let j = 0; j < 9; j++) {
-						if ((boxIndex1 % 3) === Math.floor(j / 3)) continue;
-						const outer = markerGroup.getRow(x, j);
-						if (!outer) continue;
-						const symbol = outer[i];
-						if (symbol) {
-							outer[i] = false;
-							reduced = true;
-							console.log("Row");
-						}
+					if (y1 === -1) y1 = y;
+					else if (y2 === -1) y2 = y;
+					else {
+						y2 = -1;
+						break;
 					}
-					if (reduced) return true;
 				}
-			}
 
-		}
+				if (y2 >= 0) {
+					const index1 = GridGroup[groupIndex](x, y1);
+					const index2 = GridGroup[groupIndex](x, y2);
 
-		// Col - Remove Box
-		for (let x = 0; x < 9; x++) {
-			let y1 = -1;
-			let y2 = -1;
+					const boxIndex1 = boxForIndex(index1);
+					const boxIndex2 = boxForIndex(index2);
+					if (boxIndex1 === boxIndex2) {
+						let reduced = false;
 
-			for (let y = 0; y < 9; y++) {
-				const marker = markerGroup.getCol(x, y);
-				if (!marker) continue;
-
-				const symbol = marker[i];
-				if (!symbol) continue;
-
-				if (y1 === -1) y1 = y;
-				else if (y2 === -1) y2 = y;
-				else {
-					y2 = -1;
-					break;
-				}
-			}
-
-			if (y2 >= 0) {
-				const loc1 = GridGroup.colIndex(x, y1);
-				const loc2 = GridGroup.colIndex(x, y2);
-
-				const boxIndex1 = boxForIndex(loc1);
-				const boxIndex2 = boxForIndex(loc2);
-				if (boxIndex1 === boxIndex2) {
-					let reduced = false;
-
-					for (let j = 0; j < 9; j++) {
-						if (Math.floor(boxIndex1 / 3) === Math.floor(j / 3)) continue;
-						const outer = markerGroup.getCol(x, j);
-						if (!outer) continue;
-						const symbol = outer[i];
-						if (symbol) {
-							outer[i] = false;
-							reduced = true;
-							console.log("Col");
+						for (let j = 0; j < 9; j++) {
+							if (getGroup === 'getRow' && (boxIndex1 % 3) === Math.floor(j / 3)) continue;
+							if (getGroup === 'getCol' && Math.floor(boxIndex1 / 3) === Math.floor(j / 3)) continue;
+							if (Math.floor(boxIndex1 / 3) === Math.floor(j / 3)) continue;
+							const outer = markerGroup[getGroup](x, j);
+							if (!outer) continue;
+							const symbol = outer[i];
+							if (symbol) {
+								outer[i] = false;
+								reduced = true;
+								console.log(getGroup);
+							}
 						}
+						if (reduced) return true;
 					}
-					if (reduced) return true;
 				}
-			}
 
+			}
 		}
 	}
 
