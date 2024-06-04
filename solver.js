@@ -16,13 +16,14 @@ b2 (xx0x | xxx1) & x1^1x
 0000 00
 */
 
-const floor = (x) => {
+const test = true;
+const floor3 = test ? (x) => {
 	const x2 = x >> 1;
 	const x3 = x >> 2;
 	const b1 = (x >> 3) | (x2 & x3);
 	const b2 = (~x2 | x) & (x2 ^ x3);
 	return (b1 << 1) | b2;
-}
+} : x => Math.floor(x / 3);
 
 /* mod x%3
 
@@ -42,7 +43,7 @@ b2 x111 | (~x2 & (x1 ^ x3))
 0000 00
 */
 
-const mod = (x) => {
+const mod3 = test ? (x) => {
 	const x1 = x & 0x1;
 	const x2 = (x >> 1) & 0x1;
 	const x3 = x >> 2;
@@ -50,8 +51,8 @@ const mod = (x) => {
 	const b1 = (x >> 3) | ((x1 ^ x2) & (x2 ^ x3));
 	const b2 = ~x2 & (x1 ^ x3);
 	return (b1 << 1) | (b2 | (x1 & x2 & x3));
-}
-// for (let i = 0; i < 9; i++) console.log(mod(i), floor(i));
+} : x => x % 3;
+// for (let i = 0; i < 9; i++) console.log(mod3(i), floor3(i));
 
 const rowForIndex = (x) => {
 	return Math.floor(x / 9);
@@ -60,7 +61,7 @@ const colForIndex = (x) => {
 	return x % 9;
 }
 const boxForIndex = (x) => {
-	return Math.floor(x / 27) * 3 + Math.floor((x % 9) / 3);
+	return Math.floor(x / 27) * 3 + floor3(x % 9);
 }
 
 const indexForRow = (x, i) => {
@@ -70,8 +71,8 @@ const indexForCol = (x, i) => {
 	return i * 9 + x;
 }
 const indexForBox = (x, i) => {
-	const row = Math.floor(x / 3) * 3 + Math.floor(i / 3);
-	const col = (x % 3) * 3 + (i % 3);
+	const row = floor3(x) * 3 + floor3(i);
+	const col = mod3(x) * 3 + mod3(i);
 	return row * 9 + col;
 }
 
@@ -103,9 +104,9 @@ const candidates = (grid, markers) => {
 				const rsymbol = grid.getSymbol(r, i);
 				const csymbol = grid.getSymbol(i, c);
 
-				const rbase = Math.floor(r / 3) * 3;
-				const cbase = Math.floor(c / 3) * 3;
-				const bsymbol = grid.getSymbol(rbase + Math.floor(i / 3), cbase + i % 3);
+				const rbase = floor3(r) * 3;
+				const cbase = floor3(c) * 3;
+				const bsymbol = grid.getSymbol(rbase + floor3(i), cbase + mod3(i));
 
 				if (rsymbol > 0) marker[rsymbol - 1] = false;
 				if (csymbol > 0) marker[csymbol - 1] = false;
@@ -150,8 +151,8 @@ class GridGroup {
 		return i * 9 + x;
 	}
 	static boxIndex(x, i) {
-		const row = Math.floor(x / 3) * 3 + Math.floor(i / 3);
-		const col = (x % 3) * 3 + (i % 3);
+		const row = floor3(x) * 3 + floor3(i);
+		const col = mod3(x) * 3 + mod3(i);
 		return row * 9 + col;
 	}
 
@@ -171,8 +172,8 @@ class GridGroup {
 		this.group[i * 9 + x] = symbol;
 	}
 	getBox(x, i) {
-		const row = Math.floor(x / 3) * 3 + Math.floor(i / 3);
-		const col = (x % 3) * 3 + (i % 3);
+		const row = floor3(x) * 3 + floor3(i);
+		const col = mod3(x) * 3 + mod3(i);
 		return this.group[row * 9 + col];
 	}
 }
@@ -329,7 +330,7 @@ const pairGroups = (markers) => {
 					let reduced = false;
 
 					for (let j = 0; j < 9; j++) {
-						if (Math.floor(x / 3) === Math.floor(j / 3)) continue;
+						if (floor3(x) === floor3(j)) continue;
 						const outer = markerGroup.getCol(colIndex1, j);
 						if (!outer) continue;
 						const symbol = outer[i];
@@ -347,7 +348,7 @@ const pairGroups = (markers) => {
 					let reduced = false;
 
 					for (let j = 0; j < 9; j++) {
-						if ((x % 3) === Math.floor(j / 3)) continue;
+						if (mod3(x) === floor3(j)) continue;
 						const outer = markerGroup.getRow(rowIndex1, j);
 						if (!outer) continue;
 						const symbol = outer[i];
@@ -397,9 +398,9 @@ const pairGroups = (markers) => {
 						let reduced = false;
 
 						for (let j = 0; j < 9; j++) {
-							if (getGroup === 'getRow' && (boxIndex1 % 3) === Math.floor(j / 3)) continue;
-							if (getGroup === 'getCol' && Math.floor(boxIndex1 / 3) === Math.floor(j / 3)) continue;
-							if (Math.floor(boxIndex1 / 3) === Math.floor(j / 3)) continue;
+							if (getGroup === 'getRow' && mod3(boxIndex1) === floor3(j)) continue;
+							if (getGroup === 'getCol' && floor3(boxIndex1) === floor3(j)) continue;
+							if (floor3(boxIndex1) === floor3(j)) continue;
 							const outer = markerGroup[getGroup](x, j);
 							if (!outer) continue;
 							const symbol = outer[i];
