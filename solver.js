@@ -245,7 +245,8 @@ const hiddenCells = (markers) => { // single double any
 	const markerGroup = new GridGroup(markers);
 	const union = new Set();
 
-	for (const getGroup of groupTypes) {
+	for (const groupType of groupTypes) {
+		const getGroup = groupType.group;
 		for (let x = 0; x < 9; x++) {
 			const sets = [];
 			for (let y = 0; y < 9; y++) {
@@ -379,6 +380,7 @@ const pairGroups = (markers) => {
 		}
 
 		for (const groupType of groupTypes) {
+			if (groupType.type === TypeBox) continue;
 			const getGroup = groupType.group;
 			const groupIndex = groupType.index;
 
