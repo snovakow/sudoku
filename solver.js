@@ -1,6 +1,11 @@
 /* floor
-b1 = (x>>3) | (x&0x2>>1 & x&0x4>>2)
-b2 = !b1 | ()
+
+Math.floor(x/3);
+
+b1 1xxx | x1&1x
+b2 (xx0x | xxx1) & x1^1x
+b2 (xx0x | xxxx) & x1^1x
+
 1000 10
 0111 10
 0110 10
@@ -15,6 +20,15 @@ b2 = !b1 | ()
 
 */
 
+const floor = (x) => {
+	const x1 = (x >> 1) & 0x1;
+	const x2 = (x >> 2) & 0x1;
+	const b1 = (x >> 3) | (x1 & x2);
+	// const b2 = ~x1 | (x & 0x1);
+	const b2 = ~x1 | x;
+	return (b1 << 1) | (b2 & (x1 ^ x2));
+}
+
 /* mod
 1000 10
 0101 10
@@ -27,12 +41,7 @@ b2 = !b1 | ()
 0110 00
 0011 00
 0000 00
-
 */
-
-const floor = (x) => {
-
-}
 
 const rowForIndex = (x) => {
 	return Math.floor(x / 9);
