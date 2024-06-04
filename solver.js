@@ -411,8 +411,8 @@ const pairGroups = (markers) => {
 						let reduced = false;
 
 						for (let j = 0; j < 9; j++) {
-							if (getGroup === 'getRow' && mod3(boxIndex1) === floor3(j)) continue;
-							if (getGroup === 'getCol' && floor3(boxIndex1) === floor3(j)) continue;
+							if (groupType.type === TypeRow && mod3(boxIndex1) === floor3(j)) continue;
+							if (groupType.type === TypeCol && floor3(boxIndex1) === floor3(j)) continue;
 							if (floor3(boxIndex1) === floor3(j)) continue;
 							const outer = markerGroup[getGroup](x, j);
 							if (!outer) continue;
