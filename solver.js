@@ -387,7 +387,6 @@ const pairGroups = (markers) => {
 							for (let j = 0; j < 9; j++) {
 								if (groupType.type === TypeRow && mod3(boxIndex1) === floor3(j)) continue;
 								if (groupType.type === TypeCol && floor3(boxIndex1) === floor3(j)) continue;
-								if (floor3(boxIndex1) === floor3(j)) continue;
 								const outer = markerGroup[getGroup](x, j);
 								if (!outer) continue;
 								const symbol = outer[i];

@@ -14,7 +14,7 @@ const appInitialize = (title, version, css) => {
 
 	console.log(title + " Version: " + version);
 }
-appInitialize("Sudoku", "0.2.6");
+appInitialize("Sudoku", "0.2.7");
 
 document.body.style.color = 'black';
 document.body.style.backgroundColor = 'white';
