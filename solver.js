@@ -339,6 +339,10 @@ const pairGroups = (markers) => {
 					const index1 = GridGroup[groupIndex](x, y1);
 					const index2 = GridGroup[groupIndex](x, y2);
 
+					for (const compareGroupType of groupTypes) {
+						const compareGetGroup = groupType.group;
+						const compareGroupIndex = groupType.index;
+					}
 					if (groupType.type === TypeBox) {
 						const colIndex1 = colForIndex(index1);
 						const colIndex2 = colForIndex(index2);
