@@ -315,72 +315,7 @@ const pairGroups = (markers) => {
 	const markerGroup = new GridGroup(markers);
 
 	for (let i = 0; i < 9; i++) {
-
-		// Box - Remove Col Row
-		for (let x = 0; x < 9; x++) {
-			let y1 = -1;
-			let y2 = -1;
-
-			for (let y = 0; y < 9; y++) {
-				const marker = markerGroup.getBox(x, y);
-				if (!marker) continue;
-
-				const symbol = marker[i];
-				if (!symbol) continue;
-
-				if (y1 === -1) y1 = y;
-				else if (y2 === -1) y2 = y;
-				else {
-					y2 = -1;
-					break;
-				}
-			}
-
-			if (y2 >= 0) {
-				const index1 = GridGroup.boxIndex(x, y1);
-				const index2 = GridGroup.boxIndex(x, y2);
-
-				const colIndex1 = colForIndex(index1);
-				const colIndex2 = colForIndex(index2);
-				if (colIndex1 === colIndex2) {
-					let reduced = false;
-
-					for (let j = 0; j < 9; j++) {
-						if (floor3(x) === floor3(j)) continue;
-						const outer = markerGroup.getCol(colIndex1, j);
-						if (!outer) continue;
-						const symbol = outer[i];
-						if (symbol) {
-							outer[i] = false;
-							reduced = true;
-						}
-					}
-					if (reduced) return true;
-				}
-
-				const rowIndex1 = rowForIndex(index1);
-				const rowIndex2 = rowForIndex(index2);
-				if (rowIndex1 === rowIndex2) {
-					let reduced = false;
-
-					for (let j = 0; j < 9; j++) {
-						if (mod3(x) === floor3(j)) continue;
-						const outer = markerGroup.getRow(rowIndex1, j);
-						if (!outer) continue;
-						const symbol = outer[i];
-						if (symbol) {
-							outer[i] = false;
-							reduced = true;
-						}
-					}
-					if (reduced) return true;
-				}
-			}
-
-		}
-
 		for (const groupType of groupTypes) {
-			if (groupType.type === TypeBox) continue;
 			const getGroup = groupType.group;
 			const groupIndex = groupType.index;
 
@@ -407,25 +342,63 @@ const pairGroups = (markers) => {
 					const index1 = GridGroup[groupIndex](x, y1);
 					const index2 = GridGroup[groupIndex](x, y2);
 
-					const boxIndex1 = boxForIndex(index1);
-					const boxIndex2 = boxForIndex(index2);
-					if (boxIndex1 === boxIndex2) {
-						let reduced = false;
+					if (groupType.type === TypeBox) {
+						const colIndex1 = colForIndex(index1);
+						const colIndex2 = colForIndex(index2);
+						if (colIndex1 === colIndex2) {
+							let reduced = false;
 
-						for (let j = 0; j < 9; j++) {
-							if (groupType.type === TypeRow && mod3(boxIndex1) === floor3(j)) continue;
-							if (groupType.type === TypeCol && floor3(boxIndex1) === floor3(j)) continue;
-							if (floor3(boxIndex1) === floor3(j)) continue;
-							const outer = markerGroup[getGroup](x, j);
-							if (!outer) continue;
-							const symbol = outer[i];
-							if (symbol) {
-								outer[i] = false;
-								reduced = true;
-								console.log(getGroup);
+							for (let j = 0; j < 9; j++) {
+								if (floor3(x) === floor3(j)) continue;
+								const outer = markerGroup.getCol(colIndex1, j);
+								if (!outer) continue;
+								const symbol = outer[i];
+								if (symbol) {
+									outer[i] = false;
+									reduced = true;
+								}
 							}
+							if (reduced) return true;
 						}
-						if (reduced) return true;
+
+						const rowIndex1 = rowForIndex(index1);
+						const rowIndex2 = rowForIndex(index2);
+						if (rowIndex1 === rowIndex2) {
+							let reduced = false;
+
+							for (let j = 0; j < 9; j++) {
+								if (mod3(x) === floor3(j)) continue;
+								const outer = markerGroup.getRow(rowIndex1, j);
+								if (!outer) continue;
+								const symbol = outer[i];
+								if (symbol) {
+									outer[i] = false;
+									reduced = true;
+								}
+							}
+							if (reduced) return true;
+						}
+					} else {
+						const boxIndex1 = boxForIndex(index1);
+						const boxIndex2 = boxForIndex(index2);
+						if (boxIndex1 === boxIndex2) {
+							let reduced = false;
+
+							for (let j = 0; j < 9; j++) {
+								if (groupType.type === TypeRow && mod3(boxIndex1) === floor3(j)) continue;
+								if (groupType.type === TypeCol && floor3(boxIndex1) === floor3(j)) continue;
+								if (floor3(boxIndex1) === floor3(j)) continue;
+								const outer = markerGroup[getGroup](x, j);
+								if (!outer) continue;
+								const symbol = outer[i];
+								if (symbol) {
+									outer[i] = false;
+									reduced = true;
+									console.log(getGroup);
+								}
+							}
+							if (reduced) return true;
+						}
 					}
 				}
 
