@@ -332,10 +332,7 @@ const pairGroups = (markers) => {
 
 					if (y1 === -1) y1 = y;
 					else if (y2 === -1) y2 = y;
-					else {
-						y2 = -1;
-						break;
-					}
+					else { y2 = -1; break; }
 				}
 
 				if (y2 >= 0) {
