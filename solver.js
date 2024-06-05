@@ -339,6 +339,28 @@ const pairGroups = (markers) => {
 					const index1 = GridGroup[groupIndex](x, y1);
 					const index2 = GridGroup[groupIndex](x, y2);
 
+					const reduce = (type) => {
+						const typeIndex1 = boxForIndex(index1);
+						const typeIndex2 = boxForIndex(index2);
+						if (typeIndex1 === typeIndex2) {
+							let reduced = false;
+
+							for (let j = 0; j < 9; j++) {
+								if (groupType.type === TypeRow && mod3(typeIndex1) === floor3(j)) continue;
+								if (groupType.type === TypeCol && floor3(typeIndex1) === floor3(j)) continue;
+								const outer = markerGroup[getGroup](x, j);
+								if (!outer) continue;
+								const symbol = outer[i];
+								if (symbol) {
+									outer[i] = false;
+									reduced = true;
+									console.log(getGroup);
+								}
+							}
+							if (reduced) return true;
+						}
+					}
+
 					if (groupType.type === TypeBox) {
 						const colIndex1 = colForIndex(index1);
 						const colIndex2 = colForIndex(index2);
@@ -376,25 +398,7 @@ const pairGroups = (markers) => {
 							if (reduced) return true;
 						}
 					} else {
-						const boxIndex1 = boxForIndex(index1);
-						const boxIndex2 = boxForIndex(index2);
-						if (boxIndex1 === boxIndex2) {
-							let reduced = false;
-
-							for (let j = 0; j < 9; j++) {
-								if (groupType.type === TypeRow && mod3(boxIndex1) === floor3(j)) continue;
-								if (groupType.type === TypeCol && floor3(boxIndex1) === floor3(j)) continue;
-								const outer = markerGroup[getGroup](x, j);
-								if (!outer) continue;
-								const symbol = outer[i];
-								if (symbol) {
-									outer[i] = false;
-									reduced = true;
-									console.log(getGroup);
-								}
-							}
-							if (reduced) return true;
-						}
+						reduce();
 					}
 				}
 
