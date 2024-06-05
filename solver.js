@@ -144,6 +144,10 @@ const missingCells = (grid, markers) => {
 }
 
 class GridGroup {
+	static rowForIndex = rowForIndex;
+	static colForIndex = colForIndex;
+	static boxForIndex = boxForIndex;
+
 	static rowIndex(x, i) {
 		return x * 9 + i;
 	}
@@ -339,12 +343,15 @@ const pairGroups = (markers) => {
 					const index1 = GridGroup[groupIndex](x, y1);
 					const index2 = GridGroup[groupIndex](x, y2);
 
+					let reduced = false;
 					const reduce = (type) => {
-						const typeIndex1 = boxForIndex(index1);
+						let groupForIndex = 'boxForIndex';
+						if (type === TypeRow) {
+						}
+						let hit = false;
+						const typeIndex1 = GridGroup[groupForIndex](index1);
 						const typeIndex2 = boxForIndex(index2);
 						if (typeIndex1 === typeIndex2) {
-							let reduced = false;
-
 							for (let j = 0; j < 9; j++) {
 								if (groupType.type === TypeRow && mod3(typeIndex1) === floor3(j)) continue;
 								if (groupType.type === TypeCol && floor3(typeIndex1) === floor3(j)) continue;
@@ -353,20 +360,18 @@ const pairGroups = (markers) => {
 								const symbol = outer[i];
 								if (symbol) {
 									outer[i] = false;
-									reduced = true;
+									hit = true;
 									console.log(getGroup);
 								}
 							}
-							if (reduced) return true;
 						}
+						return hit;
 					}
 
 					if (groupType.type === TypeBox) {
 						const colIndex1 = colForIndex(index1);
 						const colIndex2 = colForIndex(index2);
 						if (colIndex1 === colIndex2) {
-							let reduced = false;
-
 							for (let j = 0; j < 9; j++) {
 								if (floor3(x) === floor3(j)) continue;
 								const outer = markerGroup.getCol(colIndex1, j);
@@ -377,14 +382,11 @@ const pairGroups = (markers) => {
 									reduced = true;
 								}
 							}
-							if (reduced) return true;
 						}
 
 						const rowIndex1 = rowForIndex(index1);
 						const rowIndex2 = rowForIndex(index2);
 						if (rowIndex1 === rowIndex2) {
-							let reduced = false;
-
 							for (let j = 0; j < 9; j++) {
 								if (mod3(x) === floor3(j)) continue;
 								const outer = markerGroup.getRow(rowIndex1, j);
@@ -398,8 +400,10 @@ const pairGroups = (markers) => {
 							if (reduced) return true;
 						}
 					} else {
-						reduce();
+						reduced = reduce(TypeBox);
 					}
+
+					if (reduced) return true;
 				}
 
 			}
