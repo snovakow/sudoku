@@ -196,54 +196,15 @@ class Grid extends Uint8Array {
 			pointer += 5;
 
 			const symbols = [];
-			const slot1_4bit = byte0 >> 4;
-			symbols[0] = symbolForCompress(slot1_4bit);
-			// const symbol1 = this[r * 9 + index] - 1; // 9 0x1000
-			// const slot1_4bit = compressForSymbol(symbol1);
-			// let byte0 = slot1_4bit << 4; // 1-4
 
-			const slot2_3bit = (byte0 >> 1) & 0x07;
-			symbols[1] = symbolForCompress(slot2_3bit);
-			// const symbol2 = this[r * 9 + index] - 1; // 8 0x111
-			// const slot2_3bit = compressForSymbol(symbol2);
-			// byte0 |= (slot2_3bit << 1); // 5-7
-
-			const slot3_3bit = ((byte0 & 0x01) << 2) | (byte1 >> 6);
-			symbols[2] = symbolForCompress(slot3_3bit);
-			// const symbol3 = this[r * 9 + index] - 1; // 7 0x110
-			// const slot3_3bit = compressForSymbol(symbol3);
-			// byte0 |= (slot3_3bit >> 2); // 8-8
-			// let byte1 = ((slot3_3bit & 0x3) << 6); // 1-2
-
-			const slot4_3bit = (byte1 >> 3) & 0x07;
-			symbols[3] = symbolForCompress(slot4_3bit);
-			// const symbol4 = this[r * 9 + index] - 1; // 6 0x101
-			// const slot4_3bit = compressForSymbol(symbol4);
-			// byte1 |= ((slot4_3bit & 0x3) << 3); // 3-5
-
-			const slot5_3bit = byte1 & 0x07;
-			symbols[4] = symbolForCompress(slot5_3bit);
-			// const symbol5 = this[r * 9 + index] - 1; // 5 0x100
-			// const slot5_3bit = compressForSymbol(symbol5);
-			// byte1 |= slot5_3bit; // 6-8
-
-			const slot6_2bit = byte2 >> 6;
-			symbols[5] = symbolForCompress(slot6_2bit);
-			// const symbol6 = this[r * 9 + index] - 1; // 4 0x11
-			// const slot6_2bit = compressForSymbol(symbol6);
-			// let byte2 = (slot6_2bit << 6); // 1-2
-
-			const slot7_2bit = (byte2 >> 4) & 0x03;
-			symbols[6] = symbolForCompress(slot7_2bit);
-			// const symbol7 = this[r * 9 + index] - 1; // 3 0x10
-			// const slot7_2bit = compressForSymbol(symbol7);
-			// byte2 |= (slot7_2bit << 4); // 3-4
-
-			const slot8_1bit = (byte2 >> 3) & 0x01;
-			symbols[7] = symbolForCompress(slot8_1bit);
-			// const symbol8 = this[r * 9 + index] - 1; // 2 0x1
-			// const slot8_1bit = compressForSymbol(symbol8);
-			// byte2 |= (slot8_1bit << 3); // 5
+			symbols[0] = symbolForCompress(byte0 >> 4);
+			symbols[1] = symbolForCompress((byte0 >> 1) & 0x07);
+			symbols[2] = symbolForCompress(((byte0 & 0x01) << 2) | (byte1 >> 6));
+			symbols[3] = symbolForCompress((byte1 >> 3) & 0x07);
+			symbols[4] = symbolForCompress(byte1 & 0x07);
+			symbols[5] = symbolForCompress(byte2 >> 6);
+			symbols[6] = symbolForCompress((byte2 >> 4) & 0x03);
+			symbols[7] = symbolForCompress((byte2 >> 3) & 0x01);
 
 			const missing = [true, true, true, true, true, true, true, true, true];
 			for (const symbol of symbols) {
