@@ -368,8 +368,6 @@ const pairGroups = (markers) => {
 						}
 						return hit;
 					}
-						if (type === TypeRow) compareForIndex = 'rowForIndex';
-						else if (type === TypeCol) compareForIndex = 'colForIndex';
 
 					if (groupType.type === TypeBox) {
 						const colIndex1 = colForIndex(index1);
