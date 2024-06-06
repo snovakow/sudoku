@@ -323,30 +323,50 @@ const hiddenCells = (markers) => { // single double any
 const pairGroups = (markers) => {
 	const markerGroup = new GridGroup(markers);
 
-	const reduce = (index1, index2, fromType, toType) => {
-		const fromForIndex = (fromType === TypeRow) ? 'rowForIndex' : ((fromType === TypeCol) ? 'colForIndex' : 'boxForIndex');
-		const toGetGroup = (toType === TypeRow) ? 'getRow' : ((toType === TypeCol) ? 'getCol' : 'getBox');
+	const reduce = (x, i, index1, index2, groupType, lineType) => {
+		let groupForIndex;
+		if (groupType === TypeBox) {
+			groupForIndex = 'colForIndex';
+			// const colIndex1 = colForIndex(index1);
+			// const colIndex2 = colForIndex(index2);
+			// if (floor3(x) === floor3(j)) continue;
+			// const outer = markerGroup.getCol(colIndex1, j);
+
+			groupForIndex = 'rowForIndex';
+			// const rowIndex1 = rowForIndex(index1);
+			// const rowIndex2 = rowForIndex(index2);
+			// if (mod3(x) === floor3(j)) continue;
+			// const outer = markerGroup.getRow(rowIndex1, j);
+		} else {
+			groupForIndex = 'boxForIndex';
+			// const boxIndex1 = boxForIndex(index1);
+			// const boxIndex2 = boxForIndex(index2);
+			// if (groupType === TypeRow && mod3(boxIndex1) === floor3(j)) continue;
+			// if (groupType === TypeCol && floor3(boxIndex1) === floor3(j)) continue;
+			// const outer = markerGroup[getGroup](x, j);
+		}
+		let lineGetGroup = (lineType === TypeRow) ? 'getRow' : 'getCol';
 
 		let hit = false;
-		const typeIndex1 = GridGroup[fromForIndex](index1);
-		const typeIndex2 = GridGroup[fromForIndex](index2);
+		const typeIndex1 = GridGroup[groupForIndex](index1);
+		const typeIndex2 = GridGroup[groupForIndex](index2);
 		if (typeIndex1 === typeIndex2) {
 			for (let j = 0; j < 9; j++) {
-				if (fromType.type === TypeBox) {
-					if (toType.type === TypeRow && mod3(typeIndex1) === floor3(j)) continue;
-					else if (toType.type === TypeCol && floor3(typeIndex1) === floor3(j)) continue;
+				if (groupType.type === TypeBox) {
+					if (lineType.type === TypeRow && mod3(x) === floor3(j)) continue;
+					else if (lineType.type === TypeCol && floor3(x) === floor3(j)) continue;
 				} else {
-					if (toType.type === TypeRow && mod3(x) === floor3(j)) continue;
-					else if (toType.type === TypeCol && floor3(x) === floor3(j)) continue;
+					if (lineType.type === TypeRow && mod3(typeIndex1) === floor3(j)) continue;
+					else if (lineType.type === TypeCol && floor3(typeIndex1) === floor3(j)) continue;
 				}
 
-				const outer = markerGroup.GridGroup[toGetGroup](typeIndex1, j);
+				const outer = markerGroup[lineGetGroup](typeIndex1, j);
 				if (!outer) continue;
 				const symbol = outer[i];
 				if (symbol) {
 					outer[i] = false;
 					hit = true;
-					console.log(getGroup);
+					console.log("pairGroups");
 				}
 			}
 		}
@@ -382,10 +402,10 @@ const pairGroups = (markers) => {
 					let reduced = false;
 
 					if (groupType.type === TypeBox) {
-						reduced = reduce(index1, index2, TypeRow, TypeRow);
-						reduced = reduce(index1, index2, TypeCol, TypeCol);
+						reduced = reduce(x, i, index1, index2, groupType.type, TypeRow);
+						reduced = reduce(x, i, index1, index2, groupType.type, TypeCol);
 					} else {
-						reduced = reduce(index1, index2, TypeBox, groupType.type);
+						reduced = reduce(x, i, index1, index2, groupType.type, groupType.type);
 					}
 
 					if (reduced) return true;
