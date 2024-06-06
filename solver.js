@@ -345,12 +345,14 @@ const pairGroups = (markers) => {
 
 					let reduced = false;
 					const reduce = (type) => {
-						let groupForIndex = 'boxForIndex';
+						let compareForIndex = 'boxForIndex';
 						if (type === TypeRow) {
 						}
+						if (type === TypeCol) {
+						}
 						let hit = false;
-						const typeIndex1 = GridGroup[groupForIndex](index1);
-						const typeIndex2 = boxForIndex(index2);
+						const typeIndex1 = GridGroup[compareForIndex](index1);
+						const typeIndex2 = GridGroup[compareForIndex](index2);
 						if (typeIndex1 === typeIndex2) {
 							for (let j = 0; j < 9; j++) {
 								if (groupType.type === TypeRow && mod3(typeIndex1) === floor3(j)) continue;
