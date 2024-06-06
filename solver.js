@@ -425,13 +425,17 @@ const xWing = (markers) => {
 
 	let reduced = false;
 
+	const groupTypes = [groupTypeRow, groupTypeCol];
+	const groupType = groupTypeRow;
+	const getGroup = groupType.group;
+	const compareGroup = (groupType.type === TypeRow) ? groupTypeCol.group : groupTypeRow.group;
 	for (let i = 0; i < 9; i++) {
 		const pairs = [];
 		for (let x = 0; x < 9; x++) {
 			let y1 = -1;
 			let y2 = -1;
 			for (let y = 0; y < 9; y++) {
-				const marker = markerGroup.getRow(x, y);
+				const marker = markerGroup[getGroup](x, y);
 				if (!marker) continue;
 				if (marker[i]) {
 					if (y1 === -1) y1 = y;
@@ -451,7 +455,7 @@ const xWing = (markers) => {
 					for (let x = 0; x < 9; x++) {
 						if (x === pair1.x || x === pair2.x) continue;
 
-						const marker1 = markerGroup.getCol(pair1.i1, x);
+						const marker1 = markerGroup[compareGroup](pair1.i1, x);
 						if (marker1) {
 							const symbol = marker1[i];
 							if (symbol) {
@@ -461,7 +465,7 @@ const xWing = (markers) => {
 							}
 						}
 
-						const marker2 = markerGroup.getCol(pair1.i2, x);
+						const marker2 = markerGroup[compareGroup](pair1.i2, x);
 						if (marker2) {
 							const symbol = marker2[i];
 							if (symbol) {
