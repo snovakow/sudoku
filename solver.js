@@ -476,57 +476,6 @@ const xWing = (markers) => {
 		}
 	}
 
-	for (let i = 0; i < 9; i++) {
-		const pairs = [];
-		for (let x = 0; x < 9; x++) {
-			let y1 = -1;
-			let y2 = -1;
-			for (let y = 0; y < 9; y++) {
-				const marker = markerGroup.getCol(x, y);
-				if (!marker) continue;
-				if (marker[i]) {
-					if (y1 === -1) y1 = y;
-					else if (y2 === -1) y2 = y;
-					else { y2 = -1; break; }
-				}
-			}
-			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2));
-		}
-
-		const len = pairs.length;
-		for (let p1 = 0, last = len - 1; p1 < last; p1++) {
-			const pair1 = pairs[p1];
-			for (let p2 = p1 + 1; p2 < len; p2++) {
-				const pair2 = pairs[p2];
-				if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
-					for (let x = 0; x < 9; x++) {
-						if (x === pair1.x || x === pair2.x) continue;
-
-						const marker1 = markerGroup.getRow(pair1.i1, x);
-						if (marker1) {
-							const symbol = marker1[i];
-							if (symbol) {
-								marker1[i] = false;
-								reduced = true;
-								console.log("X-Wing");
-							}
-						}
-
-						const marker2 = markerGroup.getRow(pair1.i2, x);
-						if (marker2) {
-							const symbol = marker2[i];
-							if (symbol) {
-								marker2[i] = false;
-								reduced = true;
-								console.log("X-Wing");
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
 	return reduced;
 }
 
