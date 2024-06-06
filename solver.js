@@ -346,10 +346,6 @@ const pairGroups = (markers) => {
 					let reduced = false;
 					const reduce = (type) => {
 						let compareForIndex = 'boxForIndex';
-						if (type === TypeRow) {
-						}
-						if (type === TypeCol) {
-						}
 						let hit = false;
 						const typeIndex1 = GridGroup[compareForIndex](index1);
 						const typeIndex2 = GridGroup[compareForIndex](index2);
@@ -369,6 +365,8 @@ const pairGroups = (markers) => {
 						}
 						return hit;
 					}
+						if (type === TypeRow) compareForIndex = 'rowForIndex';
+						else if (type === TypeCol) compareForIndex = 'colForIndex';
 
 					if (groupType.type === TypeBox) {
 						const colIndex1 = colForIndex(index1);
