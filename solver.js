@@ -435,14 +435,9 @@ const xWing = (markers) => {
 				const marker = markerGroup.getRow(x, y);
 				if (!marker) continue;
 				if (marker[i]) {
-					if (y1 === -1) {
-						y1 = y;
-					} else if (y2 === -1) {
-						y2 = y;
-					} else {
-						y2 = -1;
-						break;
-					}
+					if (y1 === -1) y1 = y;
+					else if (y2 === -1) y2 = y;
+					else { y2 = -1; break; }
 				}
 			}
 			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2));
@@ -491,14 +486,9 @@ const xWing = (markers) => {
 				const marker = markerGroup.getCol(x, y);
 				if (!marker) continue;
 				if (marker[i]) {
-					if (y1 === -1) {
-						y1 = y;
-					} else if (y2 === -1) {
-						y2 = y;
-					} else {
-						y2 = -1;
-						break;
-					}
+					if (y1 === -1) y1 = y;
+					else if (y2 === -1) y2 = y;
+					else { y2 = -1; break; }
 				}
 			}
 			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2));
