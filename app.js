@@ -547,12 +547,12 @@ clearButton.addEventListener('click', () => {
 });
 document.body.appendChild(clearButton);
 
-const singleButton = document.createElement('button');
-singleButton.appendChild(document.createTextNode("x"));
-singleButton.style.position = 'absolute';
-singleButton.style.width = '32px';
-singleButton.style.height = '32px';
-singleButton.addEventListener('click', () => {
+const markerButton = document.createElement('button');
+markerButton.appendChild(document.createTextNode("x"));
+markerButton.style.position = 'absolute';
+markerButton.style.width = '32px';
+markerButton.style.height = '32px';
+markerButton.addEventListener('click', () => {
 	const time = performance.now();
 
 	let fills = 0;
@@ -602,7 +602,7 @@ singleButton.addEventListener('click', () => {
 
 	draw();
 });
-document.body.appendChild(singleButton);
+document.body.appendChild(markerButton);
 
 const saveButton = document.createElement('button');
 saveButton.appendChild(document.createTextNode("+"));
@@ -610,7 +610,6 @@ saveButton.style.position = 'absolute';
 saveButton.style.width = '32px';
 saveButton.style.height = '32px';
 saveButton.addEventListener('click', () => {
-	for (let i = 0; i < 81; i++) board.startGrid[i] = board.grid[i];
 	saveGrid();
 });
 document.body.appendChild(saveButton);
@@ -618,9 +617,9 @@ document.body.appendChild(saveButton);
 selector.style.transform = 'translateX(-50%)';
 clearButton.style.transform = 'translateX(-50%)';
 saveButton.style.transform = 'translateX(-50%)';
-singleButton.style.transform = 'translateX(-50%)';
+markerButton.style.transform = 'translateX(-50%)';
 
-singleButton.style.touchAction = "manipulation";
+markerButton.style.touchAction = "manipulation";
 
 board.canvas.style.position = 'absolute';
 board.canvas.style.left = '50%';
@@ -638,14 +637,14 @@ const resize = () => {
 		board.canvas.style.top = '0%';
 		board.canvas.style.transform = 'translate(-50%, 0%)';
 
-		singleButton.style.bottom = '280px';
-		singleButton.style.left = '96px';
+		markerButton.style.bottom = '324px';
+		markerButton.style.left = '96px';
 
-		saveButton.style.bottom = '320px';
-		saveButton.style.left = '96px';
-
-		selector.style.bottom = '240px';
+		selector.style.bottom = '288px';
 		selector.style.left = '96px';
+
+		saveButton.style.bottom = '240px';
+		saveButton.style.left = '96px';
 
 		clearButton.style.bottom = '200px';
 		clearButton.style.left = '96px';
@@ -662,14 +661,14 @@ const resize = () => {
 
 		board.canvas.style.transform = 'translate(-50%, 0%)';
 
-		saveButton.style.bottom = '88px';
-		saveButton.style.left = '50%';
+		markerButton.style.bottom = '128px';
+		markerButton.style.left = '50%';
 
-		singleButton.style.bottom = '128px';
-		singleButton.style.left = '50%';
-
-		selector.style.bottom = '48px';
+		selector.style.bottom = '96px';
 		selector.style.left = '50%';
+
+		saveButton.style.bottom = '48px';
+		saveButton.style.left = '50%';
 
 		clearButton.style.bottom = '8px';
 		clearButton.style.left = '50%';
