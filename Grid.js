@@ -41,43 +41,29 @@ class Grid extends Uint8Array {
 
 			let index = r * 9;
 
-			const slot1_4bit = compressForSymbol(this[index]);
+			const slot1_4bit = compressForSymbol(this[index++]);
 			let byte0 = slot1_4bit << 4; // 1-4
 
-			index++;
-
-			const slot2_3bit = compressForSymbol(this[index]);
+			const slot2_3bit = compressForSymbol(this[index++]);
 			byte0 |= slot2_3bit << 1; // 5-7
 
-			index++;
-
-			const slot3_3bit = compressForSymbol(this[index]);
+			const slot3_3bit = compressForSymbol(this[index++]);
 			byte0 |= slot3_3bit >> 2; // 8-8
 			let byte1 = (slot3_3bit & 0x03) << 6; // 1-2
 
-			index++;
-
-			const slot4_3bit = compressForSymbol(this[index]);
+			const slot4_3bit = compressForSymbol(this[index++]);
 			byte1 |= slot4_3bit << 0x03; // 3-5
 
-			index++;
-
-			const slot5_3bit = compressForSymbol(this[index]);
+			const slot5_3bit = compressForSymbol(this[index++]);
 			byte1 |= slot5_3bit; // 6-8
 
-			index++;
-
-			const slot6_2bit = compressForSymbol(this[index]);
+			const slot6_2bit = compressForSymbol(this[index++]);
 			let byte2 = slot6_2bit << 6; // 1-2
 
-			index++;
-
-			const slot7_2bit = compressForSymbol(this[index]);
+			const slot7_2bit = compressForSymbol(this[index++]);
 			byte2 |= slot7_2bit << 4; // 3-4
 
-			index++;
-
-			const slot8_1bit = compressForSymbol(this[index]);
+			const slot8_1bit = compressForSymbol(this[index]); // don't need last increment
 			byte2 |= slot8_1bit << 3; // 5
 
 			bits[pointer] = (byte0 & 0x80) >> 7;
