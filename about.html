@@ -113,7 +113,7 @@ b2 x111 | (~x2 & (x1 ^ x3))
 0000 00
 */
 
-const mod3 = test ? (x) => {
+const mod3 = (x) => {
 	const x1 = x & 0x1;
 	const x2 = (x >> 1) & 0x1;
 	const x3 = x >> 2;
