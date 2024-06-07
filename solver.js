@@ -204,15 +204,11 @@ class Type {
 		this.type = type;
 	}
 }
-
-const groupTypeRow = new Type(TypeRow);
-const groupTypeCol = new Type(TypeCol);
-const groupTypeBox = new Type(TypeBox);
+const groupTypes = [new Type(TypeRow), new Type(TypeCol), new Type(TypeBox)];
 
 const nakedCells = (grid, markers) => {
 	const markerGroup = new GridGroup(markers);
 
-	const groupTypes = [groupTypeRow, groupTypeCol, groupTypeBox];
 	for (const groupType of groupTypes) {
 		const getGroup = groupType.group;
 		const groupIndex = groupType.index;
@@ -253,7 +249,6 @@ const hiddenCells = (markers) => { // single double any
 	const markerGroup = new GridGroup(markers);
 	const union = new Set();
 
-	const groupTypes = [groupTypeRow, groupTypeCol, groupTypeBox];
 	for (const groupType of groupTypes) {
 		const getGroup = groupType.group;
 		for (let x = 0; x < 9; x++) {
