@@ -606,11 +606,11 @@ saveButton.style.height = '32px';
 saveButton.addEventListener('click', () => {
 	saveGrid();
 });
-document.body.appendChild(saveButton);
+document.body.appendChild(generateButton);
 
 selector.style.transform = 'translateX(-50%)';
 clearButton.style.transform = 'translateX(-50%)';
-saveButton.style.transform = 'translateX(-50%)';
+generateButton.style.transform = 'translateX(-50%)';
 markerButton.style.transform = 'translateX(-50%)';
 
 markerButton.style.touchAction = "manipulation";
@@ -637,8 +637,8 @@ const resize = () => {
 		selector.style.bottom = '288px';
 		selector.style.left = '96px';
 
-		saveButton.style.bottom = '240px';
-		saveButton.style.left = '96px';
+		generateButton.style.bottom = '240px';
+		generateButton.style.left = '96px';
 
 		clearButton.style.bottom = '200px';
 		clearButton.style.left = '96px';
@@ -661,8 +661,8 @@ const resize = () => {
 		selector.style.bottom = '96px';
 		selector.style.left = '50%';
 
-		saveButton.style.bottom = '48px';
-		saveButton.style.left = '50%';
+		generateButton.style.bottom = '48px';
+		generateButton.style.left = '50%';
 
 		clearButton.style.bottom = '8px';
 		clearButton.style.left = '50%';
