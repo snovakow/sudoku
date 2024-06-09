@@ -1,6 +1,6 @@
 import { FONT, board, markers } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { candidates, missingCells, nakedCells, hiddenCells, pairGroups, xWing, xyWing } from "./solver.js";
+import { candidates, missingCells, nakedCells, hiddenCells, pairGroups, xWing, xyWing, generate } from "./solver.js";
 
 const sudokuSamples = [
 	// [
@@ -553,8 +553,6 @@ markerButton.style.position = 'absolute';
 markerButton.style.width = '32px';
 markerButton.style.height = '32px';
 markerButton.addEventListener('click', () => {
-	const time = performance.now();
-
 	let fills = 0;
 	let missingSingles = 0;
 	let groupSets = 0;
@@ -592,14 +590,10 @@ markerButton.addEventListener('click', () => {
 		}
 	} while (progress);
 
-	const now = performance.now();
-
 	console.log("---");
 	console.log("Removals: " + fills);
 	console.log("Missing Singles: " + missingSingles);
 	console.log("Marker Reductions: " + groupSets);
-	console.log("Time: " + (now - time) / 1000);
-
 	draw();
 });
 document.body.appendChild(markerButton);
