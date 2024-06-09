@@ -598,13 +598,13 @@ markerButton.addEventListener('click', () => {
 });
 document.body.appendChild(markerButton);
 
-const saveButton = document.createElement('button');
-saveButton.appendChild(document.createTextNode("+"));
-saveButton.style.position = 'absolute';
-saveButton.style.width = '32px';
-saveButton.style.height = '32px';
-saveButton.addEventListener('click', () => {
 	saveGrid();
+const generateButton = document.createElement('button');
+generateButton.appendChild(document.createTextNode("+"));
+generateButton.style.position = 'absolute';
+generateButton.style.width = '32px';
+generateButton.style.height = '32px';
+generateButton.addEventListener('click', () => {
 });
 document.body.appendChild(generateButton);
 
