@@ -208,8 +208,8 @@ class Grid extends Uint8Array {
 		for (let c = 0; c < 9; c++) {
 			const missing = [true, true, true, true, true, true, true, true, true];
 			for (let r = 0; r < 8; r++) {
-					const symbol = rows[r][c];
-					missing[symbol] = false;
+				const symbol = rows[r][c];
+				missing[symbol] = false;
 			}
 			for (let i = 0; i < 9; i++) {
 				if (missing[i]) {
@@ -233,14 +233,14 @@ const g = new Grid();
 // for (const i in g) {
 // 	g[i] = (i % 9) + 1;
 // }
-let start = 0;
-for (let x = 0; x < 9; x++) {
-	for (let y = 0; y < 9; y++) {
-		g[x * 9 + y] = 1 + ((start + y) % 9);
-	}
-	start++;
-}
-const compressed = g.compress();
-g.decompress(compressed);
+// let start = 0;
+// for (let x = 0; x < 9; x++) {
+// 	for (let y = 0; y < 9; y++) {
+// 		g[x * 9 + y] = 1 + ((start + y) % 9);
+// 	}
+// 	start++;
+// }
+// const compressed = g.compress();
+// g.decompress(compressed);
 
 export { Grid };
