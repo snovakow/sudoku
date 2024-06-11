@@ -54,14 +54,14 @@ const mod3 = test ? (x) => {
 } : x => x % 3;
 // for (let i = 0; i < 9; i++) console.log(mod3(i), floor3(i));
 
-const rowForIndex = (x) => {
-	return Math.floor(x / 9);
+const rowForIndex = (i) => {
+	return Math.floor(i / 9);
 }
-const colForIndex = (x) => {
-	return x % 9;
+const colForIndex = (i) => {
+	return i % 9;
 }
-const boxForIndex = (x) => {
-	return Math.floor(x / 27) * 3 + floor3(x % 9);
+const boxForIndex = (i) => {
+	return Math.floor(i / 27) * 3 + floor3(i % 9);
 }
 
 const indexForRow = (x, i) => {
@@ -148,17 +148,9 @@ class GridGroup {
 	static colForIndex = colForIndex;
 	static boxForIndex = boxForIndex;
 
-	static rowIndex(x, i) {
-		return x * 9 + i;
-	}
-	static colIndex(x, i) {
-		return i * 9 + x;
-	}
-	static boxIndex(x, i) {
-		const row = floor3(x) * 3 + floor3(i);
-		const col = mod3(x) * 3 + mod3(i);
-		return row * 9 + col;
-	}
+	static rowIndex = indexForRow;
+	static colIndex = indexForCol;
+	static boxIndex = indexForBox;
 
 	constructor(group) {
 		this.group = group;
