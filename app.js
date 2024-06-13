@@ -566,6 +566,8 @@ markerButton.style.position = 'absolute';
 markerButton.style.width = '32px';
 markerButton.style.height = '32px';
 markerButton.addEventListener('click', () => {
+	// candidates2(board.grid, markers);
+
 	let fills = 0;
 	let missingSingles = 0;
 	let groupSets = 0;
@@ -611,13 +613,100 @@ markerButton.addEventListener('click', () => {
 });
 document.body.appendChild(markerButton);
 
-	saveGrid();
+let solveTries = 0;
+const solve = (reset) => {
+	if (reset) {
+		for (let i = 0; i < 81; i++) board.grid[i] = 0;
+		for (let i = 0; i < 81; i++) delete markers[i];
+	}
+
+	candidates(board.grid, markers);
+	generate();
+
+	while (generate(markers)) {
+
+		let fills = 0;
+		let missingSingles = 0;
+		let groupSets = 0;
+
+		let progress = false;
+		do {
+			candidates(board.grid, markers);
+			progress = missingCells(board.grid, markers);
+			if (progress) {
+				fills++;
+			} else {
+				progress = nakedCells(board.grid, markers);
+				if (progress) {
+					missingSingles++;
+					fills++;
+				} else {
+					progress = hiddenCells(markers);
+					if (progress) {
+						groupSets++;
+					} else {
+						progress = pairGroups(markers);
+						if (progress) {
+							fills++;
+							// } else {
+							// 	progress = xWing(markers);
+							// 	if (progress) {
+							// 		fills++;
+							// 	} else {
+							// 		progress = xyWing(markers);
+							// 		if (progress) fills++;
+							// 	}
+						}
+					}
+				}
+			}
+		} while (progress);
+
+		// console.log("---");
+		// console.log("Removals: " + fills);
+		// console.log("Missing Singles: " + missingSingles);
+		// console.log("Marker Reductions: " + groupSets);
+	}
+
+	solveTries++;
+	for (const cell of board.grid) {
+		if (cell === 0) {
+			// console.log("fail");
+			return false;
+		}
+	}
+	return true;
+}
+
 const generateButton = document.createElement('button');
 generateButton.appendChild(document.createTextNode("+"));
 generateButton.style.position = 'absolute';
 generateButton.style.width = '32px';
 generateButton.style.height = '32px';
 generateButton.addEventListener('click', () => {
+	const time = performance.now();
+	solveTries = 0;
+
+	let solved;
+	do solved = solve(true); while (!solved);
+
+	const now = performance.now();
+	console.log(`Tries: ${solveTries} Time: ${(now - time) / 1000}`);
+
+	for (let i = 0; i < 81; i++) board.startGrid[i] = board.grid[i];
+
+	const grid = new Int8Array(81);
+	const markers = new Uint16Array(81);
+
+	for (let i = 0; i < 81; i++) {
+		const symbol = board.grid[i];
+		grid[i] = symbol - 1;
+		if(symbol === -1) markers[i] = 0x0;
+		else markers[i] = 0x01ff;
+	}
+
+	draw();
+	saveGrid();
 });
 document.body.appendChild(generateButton);
 
