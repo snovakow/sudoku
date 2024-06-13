@@ -693,7 +693,7 @@ generateButton.addEventListener('click', () => {
 	const now = performance.now();
 	console.log(`Tries: ${solveTries} Time: ${(now - time) / 1000}`);
 
-	for (let i = 0; i < 81; i++) board.startGrid[i] = board.grid[i];
+	// for (let i = 0; i < 81; i++) board.startGrid[i] = board.grid[i];
 
 	const grid = new Int8Array(81);
 	const markers = new Uint16Array(81);
@@ -706,7 +706,7 @@ generateButton.addEventListener('click', () => {
 	}
 
 	draw();
-	saveGrid();
+	// saveGrid();
 });
 document.body.appendChild(generateButton);
 
