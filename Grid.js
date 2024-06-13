@@ -147,6 +147,9 @@ export class Sudoku {
 	solveOpenSingles() {
 
 	}
+	solveLoneSingles() {
+
+	}
 }
 const sudoku = new Sudoku();
 
