@@ -1,3 +1,161 @@
+// 00 01 02|03 04 05|06 07 08
+// 09 10 11|12 13 14|15 16 17
+// 18 19 20|21 22 23|24 25 26
+// --------|--------|--------
+// 27 28 29|30 31 32|33 34 35
+// 36 37 38|39 40 41|42 43 44
+// 45 46 47|48 49 50|51 52 53
+// --------|--------|--------
+// 54 55 56|57 58 59|60 61 62
+// 63 64 65|66 67 68|69 70 71
+// 72 73 74|75 76 77|78 79 80
+
+const indices = Uint8Array.of(
+	0, 1, 2, 3, 4, 5, 6, 7, 8,
+	9, 10, 11, 12, 13, 14, 15, 16, 17,
+	18, 19, 20, 21, 22, 23, 24, 25, 26,
+	27, 28, 29, 30, 31, 32, 33, 34, 35,
+	36, 37, 38, 39, 40, 41, 42, 43, 44,
+	45, 46, 47, 48, 49, 50, 51, 52, 53,
+	54, 55, 56, 57, 58, 59, 60, 61, 62,
+	63, 64, 65, 66, 67, 68, 69, 70, 71,
+	72, 73, 74, 75, 76, 77, 78, 79, 80
+);
+
+const row1 = Uint8Array.of(0, 1, 2, 3, 4, 5, 6, 7, 8);
+const row2 = Uint8Array.of(9, 10, 11, 12, 13, 14, 15, 16, 17);
+const row3 = Uint8Array.of(18, 19, 20, 21, 22, 23, 24, 25, 26);
+const row4 = Uint8Array.of(27, 28, 29, 30, 31, 32, 33, 34, 35);
+const row5 = Uint8Array.of(36, 37, 38, 39, 40, 41, 42, 43, 44);
+const row6 = Uint8Array.of(45, 46, 47, 48, 49, 50, 51, 52, 53);
+const row7 = Uint8Array.of(54, 55, 56, 57, 58, 59, 60, 61, 62);
+const row8 = Uint8Array.of(63, 64, 65, 66, 67, 68, 69, 70, 71);
+const row9 = Uint8Array.of(72, 73, 74, 75, 76, 77, 78, 79, 80);
+
+const col1 = Uint8Array.of(0, 9, 18, 27, 36, 45, 54, 63, 72);
+const col2 = Uint8Array.of(1, 10, 19, 28, 37, 46, 55, 64, 73);
+const col3 = Uint8Array.of(2, 11, 20, 29, 38, 47, 56, 65, 74);
+const col4 = Uint8Array.of(3, 12, 21, 30, 39, 48, 57, 66, 75);
+const col5 = Uint8Array.of(4, 13, 22, 31, 40, 49, 58, 67, 76);
+const col6 = Uint8Array.of(5, 14, 23, 32, 41, 50, 59, 68, 77);
+const col7 = Uint8Array.of(6, 15, 24, 33, 42, 51, 60, 69, 78);
+const col8 = Uint8Array.of(7, 16, 25, 34, 43, 52, 61, 70, 79);
+const col9 = Uint8Array.of(8, 17, 26, 35, 44, 53, 62, 71, 80);
+
+const box1 = Uint8Array.of(0, 1, 2, 9, 10, 11, 18, 19, 20);
+const box2 = Uint8Array.of(3, 4, 5, 12, 13, 14, 21, 22, 23);
+const box3 = Uint8Array.of(6, 7, 8, 15, 16, 17, 24, 25, 26);
+const box4 = Uint8Array.of(27, 28, 29, 36, 37, 38, 45, 45, 47);
+const box5 = Uint8Array.of(30, 31, 32, 39, 40, 41, 48, 49, 50);
+const box6 = Uint8Array.of(33, 34, 35, 42, 43, 44, 51, 52, 53);
+const box7 = Uint8Array.of(54, 55, 56, 63, 64, 65, 72, 73, 74);
+const box8 = Uint8Array.of(57, 58, 59, 66, 67, 68, 75, 76, 77);
+const box9 = Uint8Array.of(60, 61, 62, 69, 70, 71, 78, 79, 80);
+
+const rows = [row1, row2, row3, row4, row5, row6, row7, row8, row9];
+const cols = [col1, col2, col3, col4, col5, col6, col7, col8, col9];
+const boxs = [box1, box2, box3, box4, box5, box6, box7, box8, box9];
+
+class Cell {
+	constructor(index, row, col, box) {
+		this.symbol = 0xff; // Int8: -1 or 0-9
+		this.markers = 0x01ff; // Uint16: 9 bit penic mark mask
+
+		this.index = index;
+
+		this.row = Math.floor(index / 9);
+		this.col = index % 9;
+		this.box = Math.floor(this.row / 3) * 3 + Math.floor(this.col / 3);
+
+		const set = new Set();
+		for (const i of rows[this.row]) set.add(i);
+		for (const i of cols[this.col]) set.add(i);
+		for (const i of boxs[this.box]) set.add(i);
+		set.delete(index);
+
+		this.groupSet = set;
+		this.groups = [];
+
+		Object.freeze(this.index);
+		Object.freeze(this.row);
+		Object.freeze(this.col);
+		Object.freeze(this.box);
+		Object.freeze(this.groupSet);
+	}
+}
+
+export class Sudoku {
+	constructor() {
+		this.cells = [];
+		for (const index of indices) {
+			this.cells[index] = new Cell(index);
+		}
+		for (const cell of this.cells) {
+			for (const index of cell.groupSet) {
+				cell.groups.push(this.cells[index]);
+			}
+			Object.freeze(cell.groups);
+		}
+	}
+	fromOld(grid, markers) {
+		for (const cell of this.cells) {
+			const symbol = grid[cell.index];
+			let marker = markers[cell.index];
+			if (symbol === 0) {
+				// cell.symbol = 0xff;
+				// if (!marker) {
+				// 	cell.markers = 0x01ff;
+				// 	marker = [true, true, true, true, true, true, true, true, true];
+				// 	markers[cell.index] = marker;
+				// }	
+			} else {
+				cell.symbol = symbol - 1;
+				cell.markers = 0x0000;
+			}
+		}
+	}
+	toOld(grid, markers) {
+		for (const cell of this.cells) {
+			grid[cell.index] = (cell.symbol === 0xff) ? 0 : cell.symbol + 1;
+
+			if (cell.symbol === 0xff) {
+				// 	if (markers[cell.index]) {
+				markers[cell.index] = [
+					cell.markers & 0x0001 ? true : false,
+					(cell.markers >> 1) & 0x0001 ? true : false,
+					(cell.markers >> 2) & 0x0001 ? true : false,
+					(cell.markers >> 3) & 0x0001 ? true : false,
+					(cell.markers >> 4) & 0x0001 ? true : false,
+					(cell.markers >> 5) & 0x0001 ? true : false,
+					(cell.markers >> 6) & 0x0001 ? true : false,
+					(cell.markers >> 7) & 0x0001 ? true : false,
+					cell.markers >> 8 ? true : false
+				];
+				// }
+			}
+		}
+	}
+	setPencilMarks() {
+		for (const cell of this.cells) {
+			const symbol = cell.symbol;
+			if (symbol !== 0xff) continue;
+			for (const compare of cell.groups) {
+				if (compare.symbol !== 0xff) cell.markers &= ~(0x0001 << compare.symbol);
+			}
+		}
+	}
+	solveOpenSingles() {
+
+	}
+}
+const sudoku = new Sudoku();
+
+export const candidates = (grid, markers) => {
+	sudoku.fromOld(grid, markers);
+	sudoku.setPencilMarks();
+	sudoku.toOld(grid, markers);
+}
+
 const GRID_SIDE = 9;
 const GRID_SIZE = 81;
 
