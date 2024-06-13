@@ -692,3 +692,148 @@ const resize = () => {
 resize();
 
 window.addEventListener('resize', resize);
+
+const bitSequence = new Uint8Array(146);
+let bitIndex = 0;
+let remainder = 0;
+const combosToBits = (x, combos) => {
+	combos -= remainder;
+	let bitCount = 0;
+	if (combos & 0x08) {
+		bitSequence[bitIndex] = x & 0x01;
+		x >>= 1;
+		bitIndex++;
+
+		bitSequence[bitIndex] = x & 0x01;
+		x >>= 1;
+		bitIndex++;
+
+		bitSequence[bitIndex] = x & 0x01;
+		bitIndex++;
+
+		remainder = combos - 0x08;
+	} else if (combos & 0x04) {
+		bitSequence[bitIndex] = x & 0x01;
+		x >>= 1;
+		bitIndex++;
+
+		bitSequence[bitIndex] = x & 0x01;
+		bitIndex++;
+
+		remainder = combos - 0x04;
+	} else if (combos & 0x02) {
+		bitCount = 1;
+		bitSequence[bitIndex] = x;
+		bitIndex++;
+
+		remainder = combos - 0x02;
+	}
+}
+let string = "";
+const setRandom = (combos) => {
+	const random = Math.floor(Math.random() * combos);
+	string += random + " ";
+	combosToBits(random, combos);
+}
+
+combosToBits(0, 5);
+combosToBits(1, 5);
+combosToBits(3, 5);
+combosToBits(4, 5);
+combosToBits(0, 5);
+combosToBits(4, 5);
+
+// setRandom(10);
+// setRandom(9);
+// setRandom(8);
+// setRandom(7);
+// setRandom(6);
+// setRandom(5);
+// setRandom(4);
+// setRandom(3);
+// setRandom(2);
+
+// setRandom(7);
+// setRandom(6);
+// setRandom(5);
+// setRandom(7);
+// setRandom(6);
+// setRandom(5);
+// setRandom(4);
+// setRandom(3);
+// setRandom(2);
+
+// setRandom(4);
+// setRandom(3);
+// setRandom(2);
+// setRandom(4);
+// setRandom(3);
+// setRandom(2);
+// setRandom(4);
+// setRandom(3);
+// setRandom(2);
+
+// setRandom(7);
+// setRandom(6);
+// setRandom(5);
+// setRandom(4);
+// setRandom(3);
+// setRandom(2);
+
+// setRandom(7);
+// setRandom(6);
+// setRandom(5);
+// setRandom(4);
+// setRandom(3);
+// setRandom(2);
+
+// setRandom(4);
+// setRandom(3);
+// setRandom(2);
+// setRandom(4);
+// setRandom(3);
+// setRandom(2);
+
+// setRandom(7);
+// setRandom(6);
+// setRandom(5);
+// setRandom(4);
+// setRandom(3);
+// setRandom(2);
+
+// setRandom(6);
+// setRandom(5);
+// setRandom(3);
+// setRandom(4);
+// setRandom(3);
+// setRandom(2);
+
+// setRandom(5);
+// setRandom(4);
+// setRandom(2);
+// setRandom(4);
+// setRandom(3);
+// setRandom(2);
+
+// setRandom(4);
+// setRandom(4);
+// setRandom(4);
+// setRandom(2);
+// setRandom(2);
+// setRandom(2);
+
+// setRandom(3);
+// setRandom(3);
+// setRandom(3);
+// setRandom(2);
+// setRandom(2);
+// setRandom(2);
+
+// setRandom(2);
+// setRandom(2);
+// setRandom(2);
+// setRandom(2);
+// setRandom(2);
+// setRandom(2);
+console.log(bitIndex);
+console.log(bitSequence.join(''));
