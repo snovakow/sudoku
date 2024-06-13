@@ -1,3 +1,4 @@
+import { candidates as candidates2 } from "./Grid.js";
 import { FONT, board, markers } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
 import { candidates, missingCells, nakedCells, hiddenCells, pairGroups, xWing, xyWing, generate } from "./solver.js";
