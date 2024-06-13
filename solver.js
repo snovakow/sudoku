@@ -865,4 +865,50 @@ const xyWing = (markers) => {
 	return false;
 }
 
-export { candidates, missingCells, nakedCells, hiddenCells, pairGroups, xWing, xyWing };
+const indices = new Uint8Array(81);
+for (let i = 0; i < 81; i++) indices[i] = i;
+
+const generate = (markers) => {
+	if (!markers) {
+		for (let i = 0; i < 81; i++) {
+			const position = Math.floor(Math.random() * 81);
+			if (position !== i) {
+				const tmp = indices[position];
+				indices[position] = i;
+				indices[i] = tmp;
+			}
+		}
+		return;
+	}
+
+	for (let i = 0; i < 81; i++) {
+		const index = indices[i];
+		const marker = markers[index];
+		if (!marker) continue;
+		let found = -1;
+
+		const random = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+		for (let i = 0; i < 9; i++) {
+			const position = Math.floor(Math.random() * 9);
+			if (position !== i) {
+				const tmp = random[position];
+				random[position] = i;
+				random[i] = tmp;
+			}
+		}
+
+		for (const x of random) {
+			if (marker[x]) {
+				if (found >= 0) {
+					for (let y = 0; y < 9; y++) marker[y] = false;
+					marker[found] = true;
+					return true;
+				}
+				found = x;
+			}
+		}
+	}
+	return false;
+}
+
+export { candidates, generate, missingCells, nakedCells, hiddenCells, pairGroups, xWing, xyWing };
