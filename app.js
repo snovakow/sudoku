@@ -1,4 +1,4 @@
-import { candidates as candidates2 } from "./Grid.js";
+import { Cell } from "./Grid.js";
 import { FONT, board, markers } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
 import { candidates, missingCells, nakedCells, hiddenCells, pairGroups, xWing, xyWing, generate } from "./solver.js";
@@ -567,7 +567,7 @@ markerButton.style.width = '32px';
 markerButton.style.height = '32px';
 markerButton.addEventListener('click', () => {
 	// candidates2(board.grid, markers);
-
+	const t = performance.now();
 	let fills = 0;
 	let missingSingles = 0;
 	let groupSets = 0;
@@ -575,15 +575,18 @@ markerButton.addEventListener('click', () => {
 	let progress = false;
 	do {
 		candidates(board.grid, markers);
+		// Open Singles
 		progress = missingCells(board.grid, markers);
 		if (progress) {
 			fills++;
 		} else {
+			// Lone Singles
 			progress = nakedCells(board.grid, markers);
 			if (progress) {
 				missingSingles++;
 				fills++;
 			} else {
+				// Hidden Singles
 				progress = hiddenCells(markers);
 				if (progress) {
 					groupSets++;
@@ -605,7 +608,7 @@ markerButton.addEventListener('click', () => {
 		}
 	} while (progress);
 
-	console.log("---");
+	console.log("--- " + Math.floor(performance.now() - t)/1000);
 	console.log("Removals: " + fills);
 	console.log("Missing Singles: " + missingSingles);
 	console.log("Marker Reductions: " + groupSets);
@@ -701,7 +704,7 @@ generateButton.addEventListener('click', () => {
 	for (let i = 0; i < 81; i++) {
 		const symbol = board.grid[i];
 		grid[i] = symbol - 1;
-		if(symbol === -1) markers[i] = 0x0;
+		if (symbol === -1) markers[i] = 0x0;
 		else markers[i] = 0x01ff;
 	}
 
@@ -924,5 +927,5 @@ combosToBits(4, 5);
 // setRandom(2);
 // setRandom(2);
 // setRandom(2);
-console.log(bitIndex);
-console.log(bitSequence.join(''));
+// console.log(bitIndex);
+// console.log(bitSequence.join(''));
