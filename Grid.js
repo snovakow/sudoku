@@ -56,11 +56,48 @@ const rows = [row1, row2, row3, row4, row5, row6, row7, row8, row9];
 const cols = [col1, col2, col3, col4, col5, col6, col7, col8, col9];
 const boxs = [box1, box2, box3, box4, box5, box6, box7, box8, box9];
 
-class Cell {
-	constructor(index, row, col, box) {
-		this.symbol = 0xff; // Int8: -1 or 0-9
-		this.markers = 0x01ff; // Uint16: 9 bit penic mark mask
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
+class Set9 {
+	constructor() {
+		this.mask = 0x0; // Uint16 0x01ff: 9 bit penic mark mask
+		this.size = 0;
+	}
+	*[Symbol.iterator]() {
+		const mask = this.mask;
+		if (mask & 0x1 === 0x1) yield 0;
+		if ((mask >> 0x1) & 0x1 === 0x1) yield 1;
+		if ((mask >> 0x2) & 0x1 === 0x1) yield 2;
+		if ((mask >> 0x3) & 0x1 === 0x1) yield 3;
+		if ((mask >> 0x4) & 0x1 === 0x1) yield 4;
+		if ((mask >> 0x5) & 0x1 === 0x1) yield 5;
+		if ((mask >> 0x6) & 0x1 === 0x1) yield 6;
+		if ((mask >> 0x7) & 0x1 === 0x1) yield 7;
+		if (mask >> 0x8 === 0x1) yield 8;
+	}
+	add(value) {
+		const mask = this.mask;
+		this.mask |= 0x1 << value;
+		if (mask !== this.mask) this.size++;
+		return this;
+	}
+	clear() {
+		this.mask = 0x0;
+		this.size = 0;
+	}
+	has(value) {
+		return ((this.mask >> value) & 0x1) === 0x1;
+	}
+	delete(value) {
+		const mask = this.mask;
+		this.mask &= ~(0x1 << value);
+		if (mask === this.mask) return false;
+		this.size--;
+		return true;
+	}
+}
 
+class BaseCell {
+	constructor(index) {
 		this.index = index;
 
 		this.row = Math.floor(index / 9);
@@ -72,31 +109,227 @@ class Cell {
 		for (const i of cols[this.col]) set.add(i);
 		for (const i of boxs[this.box]) set.add(i);
 		set.delete(index);
-
-		this.groupSet = set;
-		this.groups = [];
+		this.groups = set;
 
 		Object.freeze(this.index);
 		Object.freeze(this.row);
 		Object.freeze(this.col);
 		Object.freeze(this.box);
-		Object.freeze(this.groupSet);
+		Object.freeze(this.groups);
+	}
+}
+
+const baseCells = [];
+for (const index of indices) {
+	const cell = new BaseCell(index);
+
+	Object.freeze(cell);
+	baseCells[index] = cell;
+}
+Object.freeze(baseCells);
+
+class Marks {
+	constructor() {
+		this.mask = 0x01ff;
+		this.size = 9;
+		this.remainder = 36; // 0+1+2+3+4+5+6+7+8
+	}
+	has(value) {
+		return ((this.mask >> value) & 0x1) === 0x1;
+	}
+	delete(value) {
+		const mask = this.mask;
+		this.mask &= ~(0x1 << value);
+		if (mask === this.mask) return false;
+		this.size--;
+		this.remainder -= value;
+		return true;
+	}
+	clear() {
+		this.mask = 0x0;
+		this.size = 0;
+	}
+}
+
+export class Cell {
+	constructor(index) {
+		const baseCell = baseCells[index];
+
+		this.symbol = 0xff; // Int8: -1 or 0-9
+		this.markers = new Marks();
+
+		this.index = baseCell.index;
+
+		this.row = baseCell.row;
+		this.col = baseCell.col;
+		this.box = baseCell.box;
+
+		this.groups = baseCell.groups;
 	}
 }
 
 export class Sudoku {
 	constructor() {
 		this.cells = [];
-		for (const index of indices) {
-			this.cells[index] = new Cell(index);
-		}
-		for (const cell of this.cells) {
-			for (const index of cell.groupSet) {
-				cell.groups.push(this.cells[index]);
-			}
-			Object.freeze(cell.groups);
+		for (const baseCell of baseCells) {
+			this.cells[baseCell.index] = new Cell(baseCell.index);
 		}
 	}
+	setClues(clues) {
+		let index = 0;
+		for (const row of clues) {
+			for (const clue of row) {
+				const cell = this.cells[index];
+				if (clue !== 0) cell.symbol = clue - 1;
+				index++;
+			}
+		}
+	}
+	setPencilMarks() {
+		for (const cell of this.cells) {
+			const symbol = cell.symbol;
+			if (symbol === 0xff) continue;
+			for (const index of cell.groups) {
+				const compare = this.cells[index];
+				if (compare.symbol === 0xff) compare.markers.delete(symbol);
+			}
+		}
+	}
+	fillCell(cell, symbol) {
+		cell.symbol = symbol;
+		cell.markers.mask = 0x0;
+		cell.markers.size = 0;
+		for (const index of cell.groups) {
+			const compare = this.cells[index];
+			if (compare.symbol === 0xff) compare.markers.delete(symbol);
+		}
+	}
+	solveLoneSingles() {
+		for (const cell of this.cells) {
+			if (cell.symbol !== 0xff) continue;
+			if (cell.markers.size === 1) {
+				console.log(cell.markers.remainder, cell.markers.mask);
+				// this.fillCell(cell, cell.markers.remainder);
+				// return true;
+			}
+		}
+		return false;
+	}
+	solveHiddenSingles() {
+		const symbols = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+		for (const symbol of symbols) {
+			for (const x of rows) {
+				let single = null;
+				for (const index of x) {
+					const cell = this.cells[index];
+					if (cell.symbol === symbol) {
+						single = null;
+						break;
+					}
+					if (cell.symbol !== 0xff) continue;
+
+					if (cell.markers.has(symbol)) {
+						if (single) {
+							single = null;
+							break;
+						} else {
+							single = cell;
+						}
+					}
+				}
+				if (single) {
+					console.log(single);
+					this.fillCell(single, symbol);
+					return true;
+				}
+			}
+
+			for (const x of cols) {
+				let single = null;
+				for (const index of x) {
+					const cell = this.cells[index];
+					if (cell.symbol === symbol) {
+						single = null;
+						break;
+					}
+					if (cell.symbol !== 0xff) continue;
+
+					if (cell.markers.has(symbol)) {
+						if (single) {
+							single = null;
+							break;
+						} else {
+							single = cell;
+						}
+					}
+				}
+				if (single) {
+					console.log(single);
+					this.fillCell(single, symbol);
+					return true;
+				}
+			}
+
+			for (const box of boxs) {
+				let single = null;
+				for (const index of box) {
+					const cell = this.cells[index];
+					if (cell.symbol === symbol) {
+						single = null;
+						break;
+					}
+					if (cell.symbol !== 0xff) continue;
+
+					if (cell.markers.has(symbol)) {
+						if (single) {
+							single = null;
+							break;
+						} else {
+							single = cell;
+						}
+					}
+				}
+				if (single) {
+					console.log(single);
+					this.fillCell(single, symbol);
+					return true;
+				}
+			}
+		}
+		// const groups = [rows, cols, boxs];
+		// const symbols = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+		// for (const symbol of symbols) {
+		// 	for (const group of groups) {
+		// 		for (const x of group) {
+		// 			let single = null;
+		// 			for (const index of x) {
+		// 				const cell = this.cells[index];
+		// 				if (cell.symbol === symbol) {
+		// 					single = null;
+		// 					break;
+		// 				}
+		// 				if (cell.symbol !== 0xff) continue;
+
+		// 				if (cell.markers.has(symbol)) {
+		// 					if (single) {
+		// 						single = null;
+		// 						break;
+		// 					} else {
+		// 						single = cell;
+		// 					}
+		// 				}
+		// 			}
+		// 			if (single) {
+		// 				console.log(single);
+		// 				this.fillCell(single, symbol);
+		// 				return true;
+		// 			}
+		// 		}
+		// 	}
+		// }
+		return false;
+	}
+
 	fromOld(grid, markers) {
 		for (const cell of this.cells) {
 			const symbol = grid[cell.index];
@@ -110,7 +343,7 @@ export class Sudoku {
 				// }	
 			} else {
 				cell.symbol = symbol - 1;
-				cell.markers = 0x0000;
+				cell.markers = 0x01ff;
 			}
 		}
 	}
@@ -121,41 +354,68 @@ export class Sudoku {
 			if (cell.symbol === 0xff) {
 				// 	if (markers[cell.index]) {
 				markers[cell.index] = [
-					cell.markers & 0x0001 ? true : false,
-					(cell.markers >> 1) & 0x0001 ? true : false,
-					(cell.markers >> 2) & 0x0001 ? true : false,
-					(cell.markers >> 3) & 0x0001 ? true : false,
-					(cell.markers >> 4) & 0x0001 ? true : false,
-					(cell.markers >> 5) & 0x0001 ? true : false,
-					(cell.markers >> 6) & 0x0001 ? true : false,
-					(cell.markers >> 7) & 0x0001 ? true : false,
-					cell.markers >> 8 ? true : false
+					cell.markers & 0x0001 ? false : true,
+					(cell.markers >> 1) & 0x0001 ? false : true,
+					(cell.markers >> 2) & 0x0001 ? false : true,
+					(cell.markers >> 3) & 0x0001 ? false : true,
+					(cell.markers >> 4) & 0x0001 ? false : true,
+					(cell.markers >> 5) & 0x0001 ? false : true,
+					(cell.markers >> 6) & 0x0001 ? false : true,
+					(cell.markers >> 7) & 0x0001 ? false : true,
+					cell.markers >> 8 ? false : true
 				];
 				// }
 			}
 		}
 	}
-	setPencilMarks() {
-		for (const cell of this.cells) {
-			const symbol = cell.symbol;
-			if (symbol !== 0xff) continue;
-			for (const compare of cell.groups) {
-				if (compare.symbol !== 0xff) cell.markers &= ~(0x0001 << compare.symbol);
-			}
-		}
-	}
-	solveOpenSingles() {
-
-	}
-	solveLoneSingles() {
-
-	}
 }
 const sudoku = new Sudoku();
+sudoku.cells[0].symbol = 0;
+
+const clues = [
+	[6, 0, 7, 9, 0, 1, 3, 0, 0],
+	[9, 0, 3, 0, 7, 0, 0, 0, 0],
+	[0, 5, 0, 0, 3, 0, 0, 0, 0],
+	[0, 0, 0, 1, 2, 0, 6, 8, 0],
+	[0, 0, 2, 5, 8, 9, 0, 0, 0],
+	[5, 0, 0, 0, 0, 0, 0, 0, 0],
+	[3, 0, 0, 0, 0, 7, 9, 0, 6],
+	[0, 0, 0, 0, 6, 0, 4, 0, 0],
+	[7, 0, 0, 3, 0, 0, 8, 0, 0],
+]
+sudoku.setClues(clues);
+sudoku.setPencilMarks();
+let progress = false;
+
+const startTime = performance.now();
+let loneSingles = 0;
+let hiddenSingles = 0;
+do {
+	progress = sudoku.solveLoneSingles();
+	if (progress) {
+		loneSingles++;
+	} else {
+		progress = sudoku.solveHiddenSingles();
+		hiddenSingles++;
+	}
+} while (progress);
+
+console.log("Lone Singles: " + loneSingles);
+console.log("Hidden Singles: " + hiddenSingles);
+console.log(("Time: " + (performance.now() - startTime) / 1000));
+for (let r = 0; r < 9; r++) {
+	let row = "";
+	for (let c = 0; c < 9; c++) {
+		const cell = sudoku.cells[r * 9 + c];
+		row += cell.symbol === 0xff ? "_" : cell.symbol + 1;
+		if (c % 3 === 2) row += "|";
+	}
+	console.log(row);
+	if (r % 3 === 2) console.log("---+---+---");
+}
 
 export const candidates = (grid, markers) => {
 	sudoku.fromOld(grid, markers);
-	sudoku.setPencilMarks();
 	sudoku.toOld(grid, markers);
 }
 
