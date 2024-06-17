@@ -130,6 +130,9 @@ Object.freeze(baseCells);
 
 class Marks {
 	constructor() {
+		this.clear();
+	}
+	clear() {
 		this.mask = 0x01ff;
 		this.size = 9;
 		this.remainder = 36; // 0+1+2+3+4+5+6+7+8
@@ -145,26 +148,76 @@ class Marks {
 		this.remainder -= value;
 		return true;
 	}
-	clear() {
-		this.mask = 0x0;
-		this.size = 0;
-	}
 }
 
 export class Cell {
+	#symbol = null; // 0-9
+
+	#index;
+	#mask;
+	#size;
+	#remainder;
+
+	#row;
+	#col;
+	#box;
+
 	constructor(index) {
+		this.#index = index;
+
+		this.clear();
+
 		const baseCell = baseCells[index];
-
-		this.symbol = 0xff; // Int8: -1 or 0-9
-		this.markers = new Marks();
-
-		this.index = baseCell.index;
-
-		this.row = baseCell.row;
-		this.col = baseCell.col;
-		this.box = baseCell.box;
+		this.#row = baseCell.row;
+		this.#col = baseCell.col;
+		this.#box = baseCell.box;
 
 		this.groups = baseCell.groups;
+	}
+	get symbol() {
+		return this.#symbol;
+	}
+	set symbol(x) {
+		this.#symbol = x;
+		this.#mask = 0x0;
+		this.#size = 0;
+		// this.#remainder = 36;
+	}
+
+	get index() {
+		return this.#index;
+	}
+	get size() {
+		return this.#size;
+	}
+	get remainder() {
+		return this.#remainder;
+	}
+	get row() {
+		return this.#row;
+	}
+	get col() {
+		return this.#col;
+	}
+	get box() {
+		return this.#box;
+	}
+	clear() {
+		this.#symbol = null;
+		this.#mask = 0x01ff;
+		this.#size = 9;
+		this.#remainder = 36; // 0+1+2+3+4+5+6+7+8
+	}
+	has(value) {
+		return ((this.#mask >> value) & 0x1) === 0x1;
+	}
+	delete(value) {
+		const mask = this.#mask;
+		this.#mask &= ~(0x1 << value);
+		if (mask === this.#mask) return false;
+		this.#size--;
+		this.#remainder -= value;
+		return true;
 	}
 }
 
@@ -188,27 +241,25 @@ export class Sudoku {
 	setPencilMarks() {
 		for (const cell of this.cells) {
 			const symbol = cell.symbol;
-			if (symbol === 0xff) continue;
+			if (symbol === null) continue;
 			for (const index of cell.groups) {
 				const compare = this.cells[index];
-				if (compare.symbol === 0xff) compare.markers.delete(symbol);
+				if (compare.symbol === null) compare.delete(symbol);
 			}
 		}
 	}
 	fillCell(cell, symbol) {
 		cell.symbol = symbol;
-		cell.markers.mask = 0x0;
-		cell.markers.size = 0;
 		for (const index of cell.groups) {
 			const compare = this.cells[index];
-			if (compare.symbol === 0xff) compare.markers.delete(symbol);
+			if (compare.symbol === null) compare.delete(symbol);
 		}
 	}
 	solveLoneSingles() {
 		for (const cell of this.cells) {
-			if (cell.symbol !== 0xff) continue;
-			if (cell.markers.size === 1) {
-				console.log(cell.markers.remainder, cell.markers.mask);
+			if (cell.symbol !== null) continue;
+			if (cell.size === 1) {
+				console.log(cell.remainder, cell.mask);
 				// this.fillCell(cell, cell.markers.remainder);
 				// return true;
 			}
@@ -226,9 +277,9 @@ export class Sudoku {
 						single = null;
 						break;
 					}
-					if (cell.symbol !== 0xff) continue;
+					if (cell.symbol !== null) continue;
 
-					if (cell.markers.has(symbol)) {
+					if (cell.has(symbol)) {
 						if (single) {
 							single = null;
 							break;
@@ -252,9 +303,9 @@ export class Sudoku {
 						single = null;
 						break;
 					}
-					if (cell.symbol !== 0xff) continue;
+					if (cell.symbol !== null) continue;
 
-					if (cell.markers.has(symbol)) {
+					if (cell.has(symbol)) {
 						if (single) {
 							single = null;
 							break;
@@ -278,9 +329,9 @@ export class Sudoku {
 						single = null;
 						break;
 					}
-					if (cell.symbol !== 0xff) continue;
+					if (cell.symbol !== null) continue;
 
-					if (cell.markers.has(symbol)) {
+					if (cell.has(symbol)) {
 						if (single) {
 							single = null;
 							break;
@@ -308,9 +359,9 @@ export class Sudoku {
 		// 					single = null;
 		// 					break;
 		// 				}
-		// 				if (cell.symbol !== 0xff) continue;
+		// 				if (cell.symbol !== null) continue;
 
-		// 				if (cell.markers.has(symbol)) {
+		// 				if (cell.has(symbol)) {
 		// 					if (single) {
 		// 						single = null;
 		// 						break;
@@ -349,9 +400,9 @@ export class Sudoku {
 	}
 	toOld(grid, markers) {
 		for (const cell of this.cells) {
-			grid[cell.index] = (cell.symbol === 0xff) ? 0 : cell.symbol + 1;
+			grid[cell.index] = (cell.symbol === null) ? 0 : cell.symbol + 1;
 
-			if (cell.symbol === 0xff) {
+			if (cell.symbol === null) {
 				// 	if (markers[cell.index]) {
 				markers[cell.index] = [
 					cell.markers & 0x0001 ? false : true,
@@ -407,7 +458,7 @@ for (let r = 0; r < 9; r++) {
 	let row = "";
 	for (let c = 0; c < 9; c++) {
 		const cell = sudoku.cells[r * 9 + c];
-		row += cell.symbol === 0xff ? "_" : cell.symbol + 1;
+		row += cell.symbol === null ? "_" : cell.symbol + 1;
 		if (c % 3 === 2) row += "|";
 	}
 	console.log(row);
