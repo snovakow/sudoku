@@ -23,9 +23,9 @@ const indexForBox = (x, i) => {
 	return row * 9 + col;
 }
 
-const candidates = (grid, markers) => {
+const candidates = (cells, markers) => {
 	for (let i = 0; i < 81; i++) {
-		if (grid[i] === 0) {
+		if (cells[i].symbol === null) {
 			const marker = markers[i];
 			if (marker) {
 				for (let i = 0; i < 9; i++) {
@@ -38,8 +38,8 @@ const candidates = (grid, markers) => {
 	}
 	for (let r = 0; r < 9; r++) {
 		for (let c = 0; c < 9; c++) {
-			const symbol = grid.getSymbol(r, c);
-			if (symbol > 0) continue;
+			const symbol = cells.getSymbol(r, c);
+			if (symbol !== null) continue;
 
 			const index = r * 9 + c;
 			const marker = markers[index];
@@ -48,24 +48,25 @@ const candidates = (grid, markers) => {
 			}
 
 			for (let i = 0; i < 9; i++) {
-				const rsymbol = grid.getSymbol(r, i);
-				const csymbol = grid.getSymbol(i, c);
+				const rsymbol = cells.getSymbol(r, i);
+				const csymbol = cells.getSymbol(i, c);
 
 				const rbase = floor3(r) * 3;
 				const cbase = floor3(c) * 3;
-				const bsymbol = grid.getSymbol(rbase + floor3(i), cbase + mod3(i));
+				const bsymbol = cells.getSymbol(rbase + floor3(i), cbase + mod3(i));
 
-				if (rsymbol > 0) marker[rsymbol - 1] = false;
-				if (csymbol > 0) marker[csymbol - 1] = false;
-				if (bsymbol > 0) marker[bsymbol - 1] = false;
+				if (rsymbol !== null) marker[rsymbol] = false;
+				if (csymbol !== null) marker[csymbol] = false;
+				if (bsymbol !== null) marker[bsymbol] = false;
 			}
 		}
 	}
 }
 
-const missingCells = (grid, markers) => {
+const openSingles = (cells, markers) => {
 	for (let i = 0; i < 81; i++) {
-		if (grid[i] === 0) {
+		const cell = cells[i];
+		if (cell.symbol === null) {
 			let symbol = -1;
 			const marker = markers[i];
 			if (!marker) continue;
@@ -82,7 +83,7 @@ const missingCells = (grid, markers) => {
 			}
 			if (symbol >= 0) {
 				delete markers[i];
-				grid[i] = symbol + 1;
+				cell.setSymbol(symbol);
 				return true;
 			}
 		}
@@ -145,7 +146,7 @@ class Type {
 }
 const groupTypes = [new Type(TypeRow), new Type(TypeCol), new Type(TypeBox)];
 
-const nakedCells = (grid, markers) => {
+const loneSingles = (cells, markers) => {
 	const markerGroup = new GridGroup(markers);
 
 	for (const groupType of groupTypes) {
@@ -167,7 +168,7 @@ const nakedCells = (grid, markers) => {
 				}
 				if (symbol !== -1) {
 					const index = GridGroup[groupIndex](x, symbol);
-					grid[index] = i + 1;
+					cells[index].setSymbol(i);
 					delete markers[index];
 					return true;
 				}
@@ -184,7 +185,7 @@ class SetUnit {
 	}
 }
 
-const hiddenCells = (markers) => { // single double any
+const hiddenSingles = (markers) => { // single double any
 	const markerGroup = new GridGroup(markers);
 	const union = new Set();
 
@@ -918,4 +919,4 @@ const generate = (markers) => {
 	return false;
 }
 
-export { candidates, generate, missingCells, nakedCells, hiddenCells, pairGroups, xWing, xyWing };
+export { candidates, generate, openSingles, loneSingles, hiddenSingles, pairGroups, xWing, xyWing };

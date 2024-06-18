@@ -151,72 +151,59 @@ class Marks {
 }
 
 export class Cell {
-	#symbol = null; // 0-9
-
-	#index;
-	#mask;
-	#size;
-	#remainder;
-
-	#row;
-	#col;
-	#box;
-
 	constructor(index) {
-		this.#index = index;
+		this.index = index;
+		this.symbol = null; // 0-9
+	}
+	getStore() {
+		return this.symbol === null ? 0 : this.symbol + 1;
+	}
+	fromStore(x) {
+		x = parseInt(x);
+		this.symbol = x === 0 ? null : x - 1;
+	}
+	setSymbol(symbol) {
+		this.symbol = symbol;
+	}
+}
 
-		this.clear();
+export class CellMarker extends Cell {
+	constructor(index) {
+		super(index);
+
+		this.mask = 0x01ff;
+		this.size = 9;
+		this.remainder = 36; // 0+1+2+3+4+5+6+7+8
 
 		const baseCell = baseCells[index];
-		this.#row = baseCell.row;
-		this.#col = baseCell.col;
-		this.#box = baseCell.box;
+		this.row = baseCell.row;
+		this.col = baseCell.col;
+		this.box = baseCell.box;
 
 		this.groups = baseCell.groups;
 	}
-	get symbol() {
-		return this.#symbol;
-	}
-	set symbol(x) {
-		this.#symbol = x;
-		this.#mask = 0x0;
-		this.#size = 0;
-		// this.#remainder = 36;
-	}
-
-	get index() {
-		return this.#index;
-	}
-	get size() {
-		return this.#size;
-	}
-	get remainder() {
-		return this.#remainder;
-	}
-	get row() {
-		return this.#row;
-	}
-	get col() {
-		return this.#col;
-	}
-	get box() {
-		return this.#box;
-	}
-	clear() {
-		this.#symbol = null;
-		this.#mask = 0x01ff;
-		this.#size = 9;
-		this.#remainder = 36; // 0+1+2+3+4+5+6+7+8
+	setSymbol(symbol) {
+		super.setSymbol(symbol);
+		this.symbol = symbol;
+		if (symbol === null) {
+			this.mask = 0x01ff;
+			this.size = 9;
+			this.remainder = 36;
+		} else {
+			// this.mask = 0x0;
+			// this.size = 0;
+			// this.remainder = symbol;
+		}
 	}
 	has(value) {
-		return ((this.#mask >> value) & 0x1) === 0x1;
+		return ((this.mask >> value) & 0x1) === 0x1;
 	}
 	delete(value) {
-		const mask = this.#mask;
-		this.#mask &= ~(0x1 << value);
-		if (mask === this.#mask) return false;
-		this.#size--;
-		this.#remainder -= value;
+		const mask = this.mask;
+		this.mask &= ~(0x1 << value);
+		if (mask === this.mask) return false;
+		this.size--;
+		this.remainder -= value;
 		return true;
 	}
 }
@@ -420,77 +407,83 @@ export class Sudoku {
 		}
 	}
 }
-const sudoku = new Sudoku();
-sudoku.cells[0].symbol = 0;
+// const sudoku = new Sudoku();
+// sudoku.cells[0].symbol = 0;
 
-const clues = [
-	[6, 0, 7, 9, 0, 1, 3, 0, 0],
-	[9, 0, 3, 0, 7, 0, 0, 0, 0],
-	[0, 5, 0, 0, 3, 0, 0, 0, 0],
-	[0, 0, 0, 1, 2, 0, 6, 8, 0],
-	[0, 0, 2, 5, 8, 9, 0, 0, 0],
-	[5, 0, 0, 0, 0, 0, 0, 0, 0],
-	[3, 0, 0, 0, 0, 7, 9, 0, 6],
-	[0, 0, 0, 0, 6, 0, 4, 0, 0],
-	[7, 0, 0, 3, 0, 0, 8, 0, 0],
-]
-sudoku.setClues(clues);
-sudoku.setPencilMarks();
-let progress = false;
+// const clues = [
+// 	[6, 0, 7, 9, 0, 1, 3, 0, 0],
+// 	[9, 0, 3, 0, 7, 0, 0, 0, 0],
+// 	[0, 5, 0, 0, 3, 0, 0, 0, 0],
+// 	[0, 0, 0, 1, 2, 0, 6, 8, 0],
+// 	[0, 0, 2, 5, 8, 9, 0, 0, 0],
+// 	[5, 0, 0, 0, 0, 0, 0, 0, 0],
+// 	[3, 0, 0, 0, 0, 7, 9, 0, 6],
+// 	[0, 0, 0, 0, 6, 0, 4, 0, 0],
+// 	[7, 0, 0, 3, 0, 0, 8, 0, 0],
+// ]
+// sudoku.setClues(clues);
+// sudoku.setPencilMarks();
+// let progress = false;
 
-const startTime = performance.now();
-let loneSingles = 0;
-let hiddenSingles = 0;
-do {
-	progress = sudoku.solveLoneSingles();
-	if (progress) {
-		loneSingles++;
-	} else {
-		progress = sudoku.solveHiddenSingles();
-		hiddenSingles++;
-	}
-} while (progress);
+// const startTime = performance.now();
+// let loneSingles = 0;
+// let hiddenSingles = 0;
+// do {
+// 	progress = sudoku.solveLoneSingles();
+// 	if (progress) {
+// 		loneSingles++;
+// 	} else {
+// 		progress = sudoku.solveHiddenSingles();
+// 		hiddenSingles++;
+// 	}
+// } while (progress);
 
-console.log("Lone Singles: " + loneSingles);
-console.log("Hidden Singles: " + hiddenSingles);
-console.log(("Time: " + (performance.now() - startTime) / 1000));
-for (let r = 0; r < 9; r++) {
-	let row = "";
-	for (let c = 0; c < 9; c++) {
-		const cell = sudoku.cells[r * 9 + c];
-		row += cell.symbol === null ? "_" : cell.symbol + 1;
-		if (c % 3 === 2) row += "|";
-	}
-	console.log(row);
-	if (r % 3 === 2) console.log("---+---+---");
-}
+// console.log("Lone Singles: " + loneSingles);
+// console.log("Hidden Singles: " + hiddenSingles);
+// console.log(("Time: " + (performance.now() - startTime) / 1000));
+// for (let r = 0; r < 9; r++) {
+// 	let row = "";
+// 	for (let c = 0; c < 9; c++) {
+// 		const cell = sudoku.cells[r * 9 + c];
+// 		row += cell.symbol === null ? "_" : cell.symbol + 1;
+// 		if (c % 3 === 2) row += "|";
+// 	}
+// 	console.log(row);
+// 	if (r % 3 === 2) console.log("---+---+---");
+// }
 
-export const candidates = (grid, markers) => {
-	sudoku.fromOld(grid, markers);
-	sudoku.toOld(grid, markers);
-}
+// export const candidates = (grid, markers) => {
+// 	sudoku.fromOld(grid, markers);
+// 	sudoku.toOld(grid, markers);
+// }
 
 const GRID_SIDE = 9;
 const GRID_SIZE = 81;
 
-class Grid extends Uint8Array {
+class Grid extends Array {
 	constructor() {
 		super(GRID_SIZE);
 	}
 	getSymbol(r, c) {
-		return this[r * GRID_SIDE + c];
+		return this[r * GRID_SIDE + c].symbol;
 	}
 	setSymbol(r, c, symbol) {
-		this[r * GRID_SIDE + c] = symbol;
+		this[r * GRID_SIDE + c].setSymbol(symbol);
 	}
 
 	toData() {
 		let data = "";
-		for (let i = 0; i < GRID_SIZE; i++) data += this[i];
+		for (let i = 0; i < GRID_SIZE; i++) {
+			const symbol = this[i].symbol;
+			data += (symbol === null ? 0 : symbol + 1);
+		}
 		return data;
 	}
 	fromData(data) {
-		for (let i = 0; i < GRID_SIZE; i++) this[i] = parseInt(data[i]);
+		for (let i = 0; i < GRID_SIZE; i++) {
+			const symbol = parseInt(data[i]);
+			this[i].symbol = (symbol === 0 ? null : symbol - 1);
+		}
 	}
 	compress() {
 		let pointer = 0;
@@ -695,7 +688,7 @@ class Grid extends Uint8Array {
 	}
 }
 
-const g = new Grid();
+// const g = new Grid();
 // for (const i in g) {
 // 	g[i] = 1 + (8 - (i % 9));
 // }

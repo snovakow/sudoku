@@ -1,4 +1,4 @@
-import { Grid } from "./Grid.js";
+import { Cell, CellMarker, Grid } from "./Grid.js";
 import { pixAlign } from "./picker.js";
 
 export const markers = [];
@@ -14,23 +14,48 @@ const FONT = "Hauss,sans-serif";
 const BOX_SIDE = 3;
 const GRID_SIDE = BOX_SIDE * BOX_SIDE;
 
+const indices = Uint8Array.of(
+	0, 1, 2, 3, 4, 5, 6, 7, 8,
+	9, 10, 11, 12, 13, 14, 15, 16, 17,
+	18, 19, 20, 21, 22, 23, 24, 25, 26,
+	27, 28, 29, 30, 31, 32, 33, 34, 35,
+	36, 37, 38, 39, 40, 41, 42, 43, 44,
+	45, 46, 47, 48, 49, 50, 51, 52, 53,
+	54, 55, 56, 57, 58, 59, 60, 61, 62,
+	63, 64, 65, 66, 67, 68, 69, 70, 71,
+	72, 73, 74, 75, 76, 77, 78, 79, 80
+);
+
 class Board {
 	constructor() {
 		this.canvas = canvas;
-		this.grid = new Grid();
-		this.startGrid = new Grid();
+
+		this.cells = new Grid();
+		for (const index of indices) this.cells[index] = new CellMarker(index);
+
+		this.startCells = new Grid();
+		for (const index of indices) this.startCells[index] = new Cell(index);
 	}
-	setGrid(grid) {
-		for (let r = 0; r < 9; r++) {
-			const row = grid[r];
-			for (let c = 0; c < 9; c++) {
-				this.startGrid[r * 9 + c] = row[c];
+	setGrid(cells) {
+		for (let r = 0, index = 0; r < 9; r++) {
+			const row = cells[r];
+			for (let c = 0; c < 9; c++, index++) {
+				this.startCells[index].fromStore(row[c]);
 			}
 		}
-		this.grid.set(this.startGrid);
+		for (const startCell of this.startCells) {
+			const cell = this.cells[startCell.index];
+			cell.setSymbol(startCell.symbol);
+		}
+		for (const cell of this.cells) {
+			const startCell = this.startCells[cell.index];
+			cell.setSymbol(startCell.symbol);
+		}
 	}
 	resetGrid() {
-		this.grid.set(this.startGrid);
+		for (const cell of this.cells) {
+			cell.setSymbol(this.startCells[cell.index].symbol);
+		}
 	}
 	hitDetect(x, y, sizeTotal) {
 		const size = sizeTotal - LINE_THICK;
@@ -141,11 +166,11 @@ class Board {
 
 					if (!measure) measure = ctx.measureText("0");
 
-					const symbol = this.grid.getSymbol(r, c);
-					if (symbol === 0) continue;
+					const symbol = this.cells[r * 9 + c].symbol;
+					if (symbol === null) continue;
 					const x = coff;
 					const y = roff + (measure.actualBoundingBoxAscent * 0.5 - measure.actualBoundingBoxDescent * 0.5);
-					ctx.fillText(symbol, pixAlign(x), pixAlign(y));
+					ctx.fillText(symbol + 1, pixAlign(x), pixAlign(y));
 				}
 			}
 		}

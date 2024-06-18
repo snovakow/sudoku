@@ -1,7 +1,6 @@
-import { Cell } from "./Grid.js";
 import { FONT, board, markers } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { candidates, missingCells, nakedCells, hiddenCells, pairGroups, xWing, xyWing, generate } from "./solver.js";
+import { candidates, openSingles, loneSingles, hiddenSingles, pairGroups, xWing, xyWing, generate } from "./solver.js";
 
 const sudokuSamples = [
 	// [
@@ -16,6 +15,18 @@ const sudokuSamples = [
 	// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
 	// 	"Name"
 	// ],
+	[
+		[0, 0, 5, 0, 0, 0, 2, 0, 0],
+		[0, 9, 0, 0, 6, 0, 0, 8, 0],
+		[8, 0, 3, 0, 0, 0, 1, 0, 9],
+		[0, 0, 0, 3, 0, 9, 0, 0, 0],
+		[0, 4, 0, 0, 0, 0, 0, 3, 0],
+		[0, 0, 0, 7, 0, 4, 0, 0, 0],
+		[2, 0, 7, 0, 0, 0, 6, 0, 5],
+		[0, 5, 0, 0, 1, 0, 0, 2, 0],
+		[0, 0, 9, 0, 0, 0, 8, 0, 0],
+		"v=BjOtNij7C84"
+	],
 	[
 		[0, 0, 1, 0, 0, 7, 0, 0, 2],
 		[0, 0, 0, 0, 1, 4, 0, 0, 0],
@@ -383,25 +394,11 @@ for (const sudoku of sudokuStrings) {
 	sudokus.push(convert);
 }
 
-const indices = Uint8Array.of(
-	0, 1, 2, 3, 4, 5, 6, 7, 8,
-	9, 10, 11, 12, 13, 14, 15, 16, 17,
-	18, 19, 20, 21, 22, 23, 24, 25, 26,
-	27, 28, 29, 30, 31, 32, 33, 34, 35,
-	36, 37, 38, 39, 40, 41, 42, 43, 44,
-	45, 46, 47, 48, 49, 50, 51, 52, 53,
-	54, 55, 56, 57, 58, 59, 60, 61, 62,
-	63, 64, 65, 66, 67, 68, 69, 70, 71,
-	72, 73, 74, 75, 76, 77, 78, 79, 80
-);
-const boardCells = [];
-for (const index of indices) boardCells[index] = new Cell(index);
-
 const selector = createSelect(["-", ...names], (select) => {
 	if (select.selectedIndex === 0) {
 		for (let i = 0; i < 81; i++) {
-			board.grid[i] = 0;
-			board.startGrid[i] = 0;
+			board.cells[i].setSymbol(null);
+			board.startCells[i].setSymbol(null);
 			markers.length = 0;
 		}
 		localStorage.removeItem("gridName");
@@ -423,8 +420,8 @@ selector.style.width = '40px';
 
 const saveGrid = (selectedIndex = null) => {
 	if (selectedIndex !== null) localStorage.setItem("gridName", selectedIndex);
-	localStorage.setItem("startGrid", board.startGrid.toData());
-	localStorage.setItem("grid", board.grid.toData());
+	localStorage.setItem("startGrid", board.startCells.toData());
+	localStorage.setItem("grid", board.cells.toData());
 
 	localStorage.setItem("markers", JSON.stringify(markers));
 };
@@ -438,11 +435,11 @@ const loadGrid = () => {
 	const startGrid = localStorage.getItem("startGrid");
 
 	if (startGrid) {
-		board.startGrid.fromData(startGrid);
+		board.startCells.fromData(startGrid);
 
 		const grid = localStorage.getItem("grid");
 		if (grid) {
-			board.grid.fromData(grid);
+			board.cells.fromData(grid);
 		}
 
 		const markersJSON = localStorage.getItem("markers");
@@ -476,7 +473,7 @@ const click = (event) => {
 
 	if (row < 0 || col < 0) return;
 
-	if (board.startGrid.getSymbol(row, col) !== 0) return;
+	if (board.startCells[row * 9 + col].symbol !== null) return;
 
 	if (selected && selectedRow === row && selectedCol === col) {
 		selected = false;
@@ -509,13 +506,14 @@ const pickerClick = (event) => {
 
 	const [r, c] = clickLocation(event);
 
-	const index = r * 3 + c + 1;
-	const symbol = board.grid.getSymbol(selectedRow, selectedCol);
-	if (symbol == index) {
-		board.grid.setSymbol(selectedRow, selectedCol, 0);
+	const index = r * 3 + c;
+	const selectedIndex = selectedRow * 9 + selectedCol;
+	const symbol = board.cells[selectedIndex].symbol;
+	if (symbol === index) {
+		board.cells[selectedIndex].setSymbol(null);
 	} else {
-		delete markers[selectedRow * 9 + selectedCol];
-		board.grid.setSymbol(selectedRow, selectedCol, index);
+		delete markers[selectedIndex];
+		board.cells[selectedIndex].setSymbol(index);
 		saveGrid(selector.selectedIndex);
 	}
 
@@ -588,20 +586,20 @@ markerButton.addEventListener('click', () => {
 
 	let progress = false;
 	do {
-		candidates(board.grid, markers);
+		candidates(board.cells, markers);
 		// Open Singles
-		progress = missingCells(board.grid, markers);
+		progress = openSingles(board.cells, markers);
 		if (progress) {
 			fills++;
 		} else {
 			// Lone Singles
-			progress = nakedCells(board.grid, markers);
+			progress = loneSingles(board.cells, markers);
 			if (progress) {
 				missingSingles++;
 				fills++;
 			} else {
 				// Hidden Singles
-				progress = hiddenCells(markers);
+				progress = hiddenSingles(markers);
 				if (progress) {
 					groupSets++;
 				} else {
@@ -633,11 +631,11 @@ document.body.appendChild(markerButton);
 let solveTries = 0;
 const solve = (reset) => {
 	if (reset) {
-		for (let i = 0; i < 81; i++) board.grid[i] = 0;
+		for (let i = 0; i < 81; i++) board.cells[i].setSymbol(null);
 		for (let i = 0; i < 81; i++) delete markers[i];
 	}
 
-	candidates(board.grid, markers);
+	candidates(board.cells, markers);
 	generate();
 
 	while (generate(markers)) {
@@ -648,17 +646,17 @@ const solve = (reset) => {
 
 		let progress = false;
 		do {
-			candidates(board.grid, markers);
-			progress = missingCells(board.grid, markers);
+			candidates(board.cells, markers);
+			progress = openSingles(board.cells, markers);
 			if (progress) {
 				fills++;
 			} else {
-				progress = nakedCells(board.grid, markers);
+				progress = loneSingles(board.cells, markers);
 				if (progress) {
 					missingSingles++;
 					fills++;
 				} else {
-					progress = hiddenCells(markers);
+					progress = hiddenSingles(markers);
 					if (progress) {
 						groupSets++;
 					} else {
@@ -686,8 +684,8 @@ const solve = (reset) => {
 	}
 
 	solveTries++;
-	for (const cell of board.grid) {
-		if (cell === 0) {
+	for (const cell of board.cells) {
+		if (cell.symbol === null) {
 			// console.log("fail");
 			return false;
 		}
@@ -709,18 +707,6 @@ generateButton.addEventListener('click', () => {
 
 	const now = performance.now();
 	console.log(`Tries: ${solveTries} Time: ${(now - time) / 1000}`);
-
-	// for (let i = 0; i < 81; i++) board.startGrid[i] = board.grid[i];
-
-	const grid = new Int8Array(81);
-	const markers = new Uint16Array(81);
-
-	for (let i = 0; i < 81; i++) {
-		const symbol = board.grid[i];
-		grid[i] = symbol - 1;
-		if (symbol === -1) markers[i] = 0x0;
-		else markers[i] = 0x01ff;
-	}
 
 	draw();
 	// saveGrid();
