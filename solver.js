@@ -873,6 +873,21 @@ const xyWing = (markers) => {
 	return false;
 }
 
+const phistomefel = () => {
+	// A symbol set = B symbol set
+	// AA.|...|.AA
+	// AA.|...|.AA
+	// ..B|BBB|B..
+	// ---|---|---
+	// ..B|...|B..
+	// ..B|...|B..
+	// ..B|...|B..
+	// ---|---|---
+	// ..B|BBB|B..
+	// AA.|...|.AA
+	// AA.|...|.AA
+}
+
 const indices = new Uint8Array(81);
 for (let i = 0; i < 81; i++) indices[i] = i;
 
