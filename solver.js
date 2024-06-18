@@ -645,69 +645,69 @@ const xyWing = (markers) => {
 						hits.delete(pair1.s1);
 						hits.delete(pair1.s2);
 
-						let hit = -1;
-						for (const s of hits) {
-							hit = s;
+						for (const hit of hits) {
+
+							if (box2 !== box3) {
+								for (let x = 0; x < 9; x++) {
+									const index = indexForCol(col2, x);
+									const b = boxForIndex(index);
+									if (box3 === b) {
+										const m = markerGroup.group[index];
+										if (m?.[hit]) {
+											m[hit] = false;
+											reduced = true;
+											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+										}
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForRow(row2, x);
+									const b = boxForIndex(index);
+									if (box3 === b) {
+										const m = markerGroup.group[index];
+										if (m?.[hit]) {
+											m[hit] = false;
+											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											reduced = true;
+										}
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForCol(col3, x);
+									const b = boxForIndex(index);
+									if (box2 === b) {
+										const m = markerGroup.group[index];
+										if (m?.[hit]) {
+											m[hit] = false;
+											reduced = true;
+											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+										}
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForRow(row3, x);
+									const b = boxForIndex(index);
+									if (box2 === b) {
+										const m = markerGroup.group[index];
+										if (m?.[hit]) {
+											m[hit] = false;
+											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											reduced = true;
+										}
+									}
+								}
+							}
+
 						}
 
-						if (box2 !== box3) {
-							for (let x = 0; x < 9; x++) {
-								const index = indexForCol(col2, x);
-								const b = boxForIndex(index);
-								if (box3 === b) {
-									const m = markerGroup.group[index];
-									if (m?.[hit]) {
-										m[hit] = false;
-										reduced = true;
-										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
-									}
-								}
-							}
-							for (let x = 0; x < 9; x++) {
-								const index = indexForRow(row2, x);
-								const b = boxForIndex(index);
-								if (box3 === b) {
-									const m = markerGroup.group[index];
-									if (m?.[hit]) {
-										m[hit] = false;
-										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
-										reduced = true;
-									}
-								}
-							}
-							for (let x = 0; x < 9; x++) {
-								const index = indexForCol(col3, x);
-								const b = boxForIndex(index);
-								if (box2 === b) {
-									const m = markerGroup.group[index];
-									if (m?.[hit]) {
-										m[hit] = false;
-										reduced = true;
-										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
-									}
-								}
-							}
-							for (let x = 0; x < 9; x++) {
-								const index = indexForRow(row3, x);
-								const b = boxForIndex(index);
-								if (box2 === b) {
-									const m = markerGroup.group[index];
-									if (m?.[hit]) {
-										m[hit] = false;
-										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
-										reduced = true;
-									}
-								}
-							}
-						}
 					}
 				}
 				if (row1 === row2 || col1 === col2 || box1 === box2) {
@@ -721,70 +721,70 @@ const xyWing = (markers) => {
 						hits.delete(pair2.s1);
 						hits.delete(pair2.s2);
 
-						let hit = -1;
-						for (const s of hits) {
-							hit = s;
+						for (const hit of hits) {
+
+							if (box1 !== box3) {
+								for (let x = 0; x < 9; x++) {
+									const index = indexForCol(col1, x);
+									const b = boxForIndex(index);
+									if (box3 === b) {
+										const m = markerGroup.group[index];
+										if (m?.[hit]) {
+											m[hit] = false;
+											reduced = true;
+											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+										}
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForRow(row1, x);
+									const b = boxForIndex(index);
+									if (box3 === b) {
+										const m = markerGroup.group[index];
+										if (m?.[hit]) {
+											m[hit] = false;
+											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											reduced = true;
+										}
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForCol(col3, x);
+									const b = boxForIndex(index);
+									if (box1 === b) {
+										const m = markerGroup.group[index];
+										if (m?.[hit]) {
+											m[hit] = false;
+											reduced = true;
+
+											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+										}
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForRow(row3, x);
+									const b = boxForIndex(index);
+									if (box1 === b) {
+										const m = markerGroup.group[index];
+										if (m?.[hit]) {
+											m[hit] = false;
+											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											reduced = true;
+										}
+									}
+								}
+							}
+
 						}
 
-						if (box1 !== box3) {
-							for (let x = 0; x < 9; x++) {
-								const index = indexForCol(col1, x);
-								const b = boxForIndex(index);
-								if (box3 === b) {
-									const m = markerGroup.group[index];
-									if (m?.[hit]) {
-										m[hit] = false;
-										reduced = true;
-										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
-									}
-								}
-							}
-							for (let x = 0; x < 9; x++) {
-								const index = indexForRow(row1, x);
-								const b = boxForIndex(index);
-								if (box3 === b) {
-									const m = markerGroup.group[index];
-									if (m?.[hit]) {
-										m[hit] = false;
-										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
-										reduced = true;
-									}
-								}
-							}
-							for (let x = 0; x < 9; x++) {
-								const index = indexForCol(col3, x);
-								const b = boxForIndex(index);
-								if (box1 === b) {
-									const m = markerGroup.group[index];
-									if (m?.[hit]) {
-										m[hit] = false;
-										reduced = true;
-
-										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
-									}
-								}
-							}
-							for (let x = 0; x < 9; x++) {
-								const index = indexForRow(row3, x);
-								const b = boxForIndex(index);
-								if (box1 === b) {
-									const m = markerGroup.group[index];
-									if (m?.[hit]) {
-										m[hit] = false;
-										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
-										reduced = true;
-									}
-								}
-							}
-						}
 					}
 				}
 				if (row1 === row3 || col1 === col3 || box1 === box3) {
@@ -798,69 +798,69 @@ const xyWing = (markers) => {
 						hits.delete(pair3.s1);
 						hits.delete(pair3.s2);
 
-						let hit = -1;
-						for (const s of hits) {
-							hit = s;
+						for (const hit of hits) {
+
+							if (box1 !== box2) {
+								for (let x = 0; x < 9; x++) {
+									const index = indexForCol(col1, x);
+									const b = boxForIndex(index);
+									if (box2 === b) {
+										const m = markerGroup.group[index];
+										if (m?.[hit]) {
+											m[hit] = false;
+											reduced = true;
+											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+										}
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForRow(row1, x);
+									const b = boxForIndex(index);
+									if (box2 === b) {
+										const m = markerGroup.group[index];
+										if (m?.[hit]) {
+											m[hit] = false;
+											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											reduced = true;
+										}
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForCol(col2, x);
+									const b = boxForIndex(index);
+									if (box1 === b) {
+										const m = markerGroup.group[index];
+										if (m?.[hit]) {
+											m[hit] = false;
+											reduced = true;
+											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+										}
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForRow(row2, x);
+									const b = boxForIndex(index);
+									if (box1 === b) {
+										const m = markerGroup.group[index];
+										if (m?.[hit]) {
+											m[hit] = false;
+											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											reduced = true;
+										}
+									}
+								}
+							}
+
 						}
 
-						if (box1 !== box2) {
-							for (let x = 0; x < 9; x++) {
-								const index = indexForCol(col1, x);
-								const b = boxForIndex(index);
-								if (box2 === b) {
-									const m = markerGroup.group[index];
-									if (m?.[hit]) {
-										m[hit] = false;
-										reduced = true;
-										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
-									}
-								}
-							}
-							for (let x = 0; x < 9; x++) {
-								const index = indexForRow(row1, x);
-								const b = boxForIndex(index);
-								if (box2 === b) {
-									const m = markerGroup.group[index];
-									if (m?.[hit]) {
-										m[hit] = false;
-										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
-										reduced = true;
-									}
-								}
-							}
-							for (let x = 0; x < 9; x++) {
-								const index = indexForCol(col2, x);
-								const b = boxForIndex(index);
-								if (box1 === b) {
-									const m = markerGroup.group[index];
-									if (m?.[hit]) {
-										m[hit] = false;
-										reduced = true;
-										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
-									}
-								}
-							}
-							for (let x = 0; x < 9; x++) {
-								const index = indexForRow(row2, x);
-								const b = boxForIndex(index);
-								if (box1 === b) {
-									const m = markerGroup.group[index];
-									if (m?.[hit]) {
-										m[hit] = false;
-										console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-										console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-										console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
-										reduced = true;
-									}
-								}
-							}
-						}
 					}
 				}
 				// console.log(reduced);
