@@ -56,6 +56,11 @@ const rows = [row1, row2, row3, row4, row5, row6, row7, row8, row9];
 const cols = [col1, col2, col3, col4, col5, col6, col7, col8, col9];
 const boxs = [box1, box2, box3, box4, box5, box6, box7, box8, box9];
 
+const groupIndices = [];
+groupIndices.push(...rows);
+groupIndices.push(...cols);
+groupIndices.push(...boxs);
+
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
 class Set9 {
 	constructor() {
@@ -128,28 +133,6 @@ for (const index of indices) {
 }
 Object.freeze(baseCells);
 
-class Marks {
-	constructor() {
-		this.clear();
-	}
-	clear() {
-		this.mask = 0x01ff;
-		this.size = 9;
-		this.remainder = 36; // 0+1+2+3+4+5+6+7+8
-	}
-	has(value) {
-		return ((this.mask >> value) & 0x1) === 0x1;
-	}
-	delete(value) {
-		const mask = this.mask;
-		this.mask &= ~(0x1 << value);
-		if (mask === this.mask) return false;
-		this.size--;
-		this.remainder -= value;
-		return true;
-	}
-}
-
 export class Cell {
 	constructor(index) {
 		this.index = index;
@@ -174,6 +157,7 @@ export class CellMarker extends Cell {
 		this.mask = 0x01ff;
 		this.size = 9;
 		this.remainder = 36; // 0+1+2+3+4+5+6+7+8
+		this.show = false;
 
 		const baseCell = baseCells[index];
 		this.row = baseCell.row;
@@ -184,15 +168,14 @@ export class CellMarker extends Cell {
 	}
 	setSymbol(symbol) {
 		super.setSymbol(symbol);
-		this.symbol = symbol;
 		if (symbol === null) {
 			this.mask = 0x01ff;
 			this.size = 9;
 			this.remainder = 36;
 		} else {
-			// this.mask = 0x0;
-			// this.size = 0;
-			// this.remainder = symbol;
+			this.mask = 0x0;
+			this.size = 0;
+			this.remainder = symbol;
 		}
 	}
 	has(value) {
@@ -206,261 +189,31 @@ export class CellMarker extends Cell {
 		this.remainder -= value;
 		return true;
 	}
-}
-
-export class Sudoku {
-	constructor() {
-		this.cells = [];
-		for (const baseCell of baseCells) {
-			this.cells[baseCell.index] = new Cell(baseCell.index);
-		}
+	clear() {
+		this.mask = 0x0;
+		this.size = 0;
+		this.remainder = 36;
 	}
-	setClues(clues) {
-		let index = 0;
-		for (const row of clues) {
-			for (const clue of row) {
-				const cell = this.cells[index];
-				if (clue !== 0) cell.symbol = clue - 1;
-				index++;
-			}
-		}
+	add(value) {
+		this.mask |= 0x1 << value;
+		this.size++;
+		this.remainder += value;
 	}
-	setPencilMarks() {
-		for (const cell of this.cells) {
-			const symbol = cell.symbol;
-			if (symbol === null) continue;
-			for (const index of cell.groups) {
-				const compare = this.cells[index];
-				if (compare.symbol === null) compare.delete(symbol);
-			}
-		}
-	}
-	fillCell(cell, symbol) {
-		cell.symbol = symbol;
-		for (const index of cell.groups) {
-			const compare = this.cells[index];
-			if (compare.symbol === null) compare.delete(symbol);
-		}
-	}
-	solveLoneSingles() {
-		for (const cell of this.cells) {
-			if (cell.symbol !== null) continue;
-			if (cell.size === 1) {
-				console.log(cell.remainder, cell.mask);
-				// this.fillCell(cell, cell.markers.remainder);
-				// return true;
-			}
-		}
-		return false;
-	}
-	solveHiddenSingles() {
-		const symbols = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-		for (const symbol of symbols) {
-			for (const x of rows) {
-				let single = null;
-				for (const index of x) {
-					const cell = this.cells[index];
-					if (cell.symbol === symbol) {
-						single = null;
-						break;
-					}
-					if (cell.symbol !== null) continue;
-
-					if (cell.has(symbol)) {
-						if (single) {
-							single = null;
-							break;
-						} else {
-							single = cell;
-						}
-					}
-				}
-				if (single) {
-					console.log(single);
-					this.fillCell(single, symbol);
-					return true;
-				}
-			}
-
-			for (const x of cols) {
-				let single = null;
-				for (const index of x) {
-					const cell = this.cells[index];
-					if (cell.symbol === symbol) {
-						single = null;
-						break;
-					}
-					if (cell.symbol !== null) continue;
-
-					if (cell.has(symbol)) {
-						if (single) {
-							single = null;
-							break;
-						} else {
-							single = cell;
-						}
-					}
-				}
-				if (single) {
-					console.log(single);
-					this.fillCell(single, symbol);
-					return true;
-				}
-			}
-
-			for (const box of boxs) {
-				let single = null;
-				for (const index of box) {
-					const cell = this.cells[index];
-					if (cell.symbol === symbol) {
-						single = null;
-						break;
-					}
-					if (cell.symbol !== null) continue;
-
-					if (cell.has(symbol)) {
-						if (single) {
-							single = null;
-							break;
-						} else {
-							single = cell;
-						}
-					}
-				}
-				if (single) {
-					console.log(single);
-					this.fillCell(single, symbol);
-					return true;
-				}
-			}
-		}
-		// const groups = [rows, cols, boxs];
-		// const symbols = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-		// for (const symbol of symbols) {
-		// 	for (const group of groups) {
-		// 		for (const x of group) {
-		// 			let single = null;
-		// 			for (const index of x) {
-		// 				const cell = this.cells[index];
-		// 				if (cell.symbol === symbol) {
-		// 					single = null;
-		// 					break;
-		// 				}
-		// 				if (cell.symbol !== null) continue;
-
-		// 				if (cell.has(symbol)) {
-		// 					if (single) {
-		// 						single = null;
-		// 						break;
-		// 					} else {
-		// 						single = cell;
-		// 					}
-		// 				}
-		// 			}
-		// 			if (single) {
-		// 				console.log(single);
-		// 				this.fillCell(single, symbol);
-		// 				return true;
-		// 			}
-		// 		}
-		// 	}
-		// }
-		return false;
-	}
-
-	fromOld(grid, markers) {
-		for (const cell of this.cells) {
-			const symbol = grid[cell.index];
-			let marker = markers[cell.index];
-			if (symbol === 0) {
-				// cell.symbol = 0xff;
-				// if (!marker) {
-				// 	cell.markers = 0x01ff;
-				// 	marker = [true, true, true, true, true, true, true, true, true];
-				// 	markers[cell.index] = marker;
-				// }	
-			} else {
-				cell.symbol = symbol - 1;
-				cell.markers = 0x01ff;
-			}
-		}
-	}
-	toOld(grid, markers) {
-		for (const cell of this.cells) {
-			grid[cell.index] = (cell.symbol === null) ? 0 : cell.symbol + 1;
-
-			if (cell.symbol === null) {
-				// 	if (markers[cell.index]) {
-				markers[cell.index] = [
-					cell.markers & 0x0001 ? false : true,
-					(cell.markers >> 1) & 0x0001 ? false : true,
-					(cell.markers >> 2) & 0x0001 ? false : true,
-					(cell.markers >> 3) & 0x0001 ? false : true,
-					(cell.markers >> 4) & 0x0001 ? false : true,
-					(cell.markers >> 5) & 0x0001 ? false : true,
-					(cell.markers >> 6) & 0x0001 ? false : true,
-					(cell.markers >> 7) & 0x0001 ? false : true,
-					cell.markers >> 8 ? false : true
-				];
-				// }
-			}
-		}
+	toggle(value) {
+		const had = this.delete(value);
+		if (!had) this.add(value);
 	}
 }
-// const sudoku = new Sudoku();
-// sudoku.cells[0].symbol = 0;
-
-// const clues = [
-// 	[6, 0, 7, 9, 0, 1, 3, 0, 0],
-// 	[9, 0, 3, 0, 7, 0, 0, 0, 0],
-// 	[0, 5, 0, 0, 3, 0, 0, 0, 0],
-// 	[0, 0, 0, 1, 2, 0, 6, 8, 0],
-// 	[0, 0, 2, 5, 8, 9, 0, 0, 0],
-// 	[5, 0, 0, 0, 0, 0, 0, 0, 0],
-// 	[3, 0, 0, 0, 0, 7, 9, 0, 6],
-// 	[0, 0, 0, 0, 6, 0, 4, 0, 0],
-// 	[7, 0, 0, 3, 0, 0, 8, 0, 0],
-// ]
-// sudoku.setClues(clues);
-// sudoku.setPencilMarks();
-// let progress = false;
-
-// const startTime = performance.now();
-// let loneSingles = 0;
-// let hiddenSingles = 0;
-// do {
-// 	progress = sudoku.solveLoneSingles();
-// 	if (progress) {
-// 		loneSingles++;
-// 	} else {
-// 		progress = sudoku.solveHiddenSingles();
-// 		hiddenSingles++;
-// 	}
-// } while (progress);
-
-// console.log("Lone Singles: " + loneSingles);
-// console.log("Hidden Singles: " + hiddenSingles);
-// console.log(("Time: " + (performance.now() - startTime) / 1000));
-// for (let r = 0; r < 9; r++) {
-// 	let row = "";
-// 	for (let c = 0; c < 9; c++) {
-// 		const cell = sudoku.cells[r * 9 + c];
-// 		row += cell.symbol === null ? "_" : cell.symbol + 1;
-// 		if (c % 3 === 2) row += "|";
-// 	}
-// 	console.log(row);
-// 	if (r % 3 === 2) console.log("---+---+---");
-// }
-
-// export const candidates = (grid, markers) => {
-// 	sudoku.fromOld(grid, markers);
-// 	sudoku.toOld(grid, markers);
-// }
 
 const GRID_SIDE = 9;
 const GRID_SIZE = 81;
 
 class Grid extends Array {
+	static rowIndices = rows;
+	static colIndices = cols;
+	static boxIndices = boxs;
+	static groupIndices = groupIndices;
+
 	constructor() {
 		super(GRID_SIZE);
 	}
