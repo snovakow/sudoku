@@ -1,8 +1,6 @@
 import { Cell, CellMarker, Grid } from "./Grid.js";
 import { pixAlign } from "./picker.js";
 
-export const markers = [];
-
 const canvas = document.createElement('canvas');
 
 const LINE_THICK = 8;
@@ -48,12 +46,15 @@ class Board {
 			cell.setSymbol(startCell.symbol);
 		}
 		for (const cell of this.cells) {
+			cell.show = false;
+
 			const startCell = this.startCells[cell.index];
 			cell.setSymbol(startCell.symbol);
 		}
 	}
 	resetGrid() {
 		for (const cell of this.cells) {
+			cell.show = false;
 			cell.setSymbol(this.startCells[cell.index].symbol);
 		}
 	}
@@ -135,14 +136,8 @@ class Board {
 		for (let r = 0; r < GRID_SIDE; r++, roff += unitSize) {
 			let coff = base;
 			for (let c = 0; c < GRID_SIDE; c++, coff += unitSize) {
-				const marker = markers[r * 9 + c];
-				let count = 0;
-				if (marker) {
-					for (let i = 0; i < 9; i++) {
-						if (marker[i]) count++;
-					}
-				}
-				if (count > 0) {
+				const cell = this.cells[r * 9 + c];
+				if (cell.size > 0 && cell.show) {
 					ctx.font = "100 " + pixAlign(unitSize * 0.7 * 1 / 3) + "px " + FONT;
 					// ctx.font = "100 " + unitSize * 0.75 * 1 / 3 + "px " + FONTS[fontCurrent];
 					// ctx.font = "100 " + unitSize * 0.8 * 1 / 3 + "px " + FONTS[fontCurrent];
@@ -151,7 +146,7 @@ class Board {
 
 					for (let x = 0; x < 3; x++) {
 						for (let y = 0; y < 3; y++) {
-							if (marker[y * 3 + x]) {
+							if (cell.has(y * 3 + x)) {
 								const xx = coff + unitSize * (x - 1) / 3 * 1;
 								const yy = roff + (measureMarker.actualBoundingBoxAscent * 0.5 - measureMarker.actualBoundingBoxDescent * 0.5) + unitSize * (y - 1) / 3 * 1;
 								const symbol = y * 3 + x + 1;
@@ -160,14 +155,15 @@ class Board {
 						}
 					}
 				} else {
+					const symbol = cell.symbol;
+					if (symbol === null) continue;
+
 					ctx.font = "100 " + pixAlign(unitSize * 0.7) + "px " + FONT;
 					// ctx.font = "100 " + unitSize * 0.75 + "px " + FONTS[fontCurrent];
 					// ctx.font = "100 " + unitSize * 0.8 + "px " + FONTS[fontCurrent];
 
 					if (!measure) measure = ctx.measureText("0");
 
-					const symbol = this.cells[r * 9 + c].symbol;
-					if (symbol === null) continue;
 					const x = coff;
 					const y = roff + (measure.actualBoundingBoxAscent * 0.5 - measure.actualBoundingBoxDescent * 0.5);
 					ctx.fillText(symbol + 1, pixAlign(x), pixAlign(y));
