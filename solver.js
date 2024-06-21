@@ -36,6 +36,8 @@ const candidates = (cells, markers) => {
 			}
 		}
 	}
+
+	// Open Singles
 	for (let r = 0; r < 9; r++) {
 		for (let c = 0; c < 9; c++) {
 			const symbol = cells.getSymbol(r, c);
@@ -63,10 +65,28 @@ const candidates = (cells, markers) => {
 	}
 }
 
-const openSingles = (cells, markers) => {
+const markerToMask = (marker)=>{
+	if(!marker) return 0x1ff;
+	let mask = 0x0;
+	for(let i=0; i<9; i++) {
+		if(marker[i]) mask |= 0x1 << i;
+	}
+	return mask;
+}
+const maskToMarker = (mask)=>{
+	const marker = [];
+	for(let i=0; i<9; i++) {
+		marker[i] = ((mask>>i) & 0x1) === 0x1;
+	}
+	return marker;
+}
+
+const loneSingles = (cells, markers) => {
 	for (let i = 0; i < 81; i++) {
 		const cell = cells[i];
 		if (cell.symbol === null) {
+			cell.mask = markerToMask(markers[i]);
+
 			let symbol = -1;
 			const marker = markers[i];
 			if (!marker) continue;
@@ -86,6 +106,8 @@ const openSingles = (cells, markers) => {
 				cell.setSymbol(symbol);
 				return true;
 			}
+
+			markers[i] = maskToMarker(cell.mask);
 		}
 	}
 	return false;
@@ -146,7 +168,7 @@ class Type {
 }
 const groupTypes = [new Type(TypeRow), new Type(TypeCol), new Type(TypeBox)];
 
-const loneSingles = (cells, markers) => {
+const hiddenSingles = (cells, markers) => {
 	const markerGroup = new GridGroup(markers);
 
 	for (const groupType of groupTypes) {
@@ -185,7 +207,8 @@ class SetUnit {
 	}
 }
 
-const hiddenSingles = (markers) => { // single double any
+// https://www.learn-sudoku.com/basic-techniques.html
+const hiddenCells = (markers) => { // single double any
 	const markerGroup = new GridGroup(markers);
 	const union = new Set();
 
@@ -874,7 +897,7 @@ const xyWing = (markers) => {
 }
 
 const phistomefel = () => {
-	// A symbol set = B symbol set
+	// A symbols = B symbols
 	// AA.|...|.AA
 	// AA.|...|.AA
 	// ..B|BBB|B..
@@ -886,6 +909,14 @@ const phistomefel = () => {
 	// ..B|BBB|B..
 	// AA.|...|.AA
 	// AA.|...|.AA
+}
+const deadlyPattern = () => {
+	// same pairs on 2 cols, 2 rows, and 2 boxs
+	// Unique Rectangle
+	// Type 1 Unique Rectangles
+
+	// Type 2 Unique Rectangles
+	// https://www.sudokuwiki.org/Unique_Rectangles
 }
 
 const indices = new Uint8Array(81);
@@ -934,4 +965,4 @@ const generate = (markers) => {
 	return false;
 }
 
-export { candidates, generate, openSingles, loneSingles, hiddenSingles, pairGroups, xWing, xyWing };
+export { candidates, generate, loneSingles, hiddenSingles, hiddenCells, pairGroups, xWing, xyWing };
