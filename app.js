@@ -1,6 +1,6 @@
-import { FONT, board, markers } from "./board.js";
+import { FONT, board } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { candidates, openSingles, loneSingles, hiddenSingles, pairGroups, xWing, xyWing, generate } from "./solver.js";
+import { candidates, loneSingles, hiddenSingles, hiddenCells, pairGroups, xWing, xyWing, generate } from "./solver.js";
 
 const sudokuSamples = [
 	// [
@@ -447,7 +447,6 @@ const selector = createSelect(["-", ...names], (select) => {
 		for (let i = 0; i < 81; i++) {
 			board.cells[i].setSymbol(null);
 			board.startCells[i].setSymbol(null);
-			markers.length = 0;
 		}
 		localStorage.removeItem("gridName");
 		saveGrid();
@@ -455,7 +454,6 @@ const selector = createSelect(["-", ...names], (select) => {
 		return;
 	}
 
-	markers.length = 0;
 	selected = false;
 
 	const index = select.selectedIndex - 1;
@@ -466,11 +464,22 @@ const selector = createSelect(["-", ...names], (select) => {
 selector.style.position = 'absolute';
 selector.style.width = '40px';
 
+const DataVersion = "0";
+
 const saveGrid = (selectedIndex = null) => {
 	if (selectedIndex !== null) localStorage.setItem("gridName", selectedIndex);
+	localStorage.setItem("DataVersion", DataVersion);
 	localStorage.setItem("startGrid", board.startCells.toData());
 	localStorage.setItem("grid", board.cells.toData());
 
+	const markers = [];
+	for (const cell of board.cells) {
+		markers.push({
+			mask: cell.mask,
+			size: cell.size,
+			remainder: cell.remainder
+		});
+	}
 	localStorage.setItem("markers", JSON.stringify(markers));
 };
 const loadGrid = () => {
@@ -480,28 +489,30 @@ const loadGrid = () => {
 		if (selectedInt > 0 && selectedInt < selector.options.length) selector.selectedIndex = selectedInt;
 	}
 
+	if (localStorage.getItem("DataVersion") !== DataVersion) return false;
+
 	const startGrid = localStorage.getItem("startGrid");
+	if (!startGrid) return false;
 
-	if (startGrid) {
-		board.startCells.fromData(startGrid);
+	board.startCells.fromData(startGrid);
 
-		const grid = localStorage.getItem("grid");
-		if (grid) {
-			board.cells.fromData(grid);
-		}
-
-		const markersJSON = localStorage.getItem("markers");
-		if (markersJSON) {
-			const markersData = JSON.parse(markersJSON);
-			markers.length = 0;
-			for (const index in markersData) {
-				markers[index] = markersData[index];
-			}
-		}
-
-		return true;
+	const grid = localStorage.getItem("grid");
+	if (grid) {
+		board.cells.fromData(grid);
 	}
-	return false;
+
+	const markersJSON = localStorage.getItem("markers");
+	if (markersJSON) {
+		const markersData = JSON.parse(markersJSON);
+		for (const cell of board.cells) {
+			const data = markersData[cell.index];
+			cell.mask = parseInt(data.mask);
+			cell.size = parseInt(data.size);
+			cell.remainder = parseInt(data.remainder);
+		}
+	}
+
+	return true;
 };
 
 loadGrid();
@@ -560,7 +571,6 @@ const pickerClick = (event) => {
 	if (symbol === index) {
 		board.cells[selectedIndex].setSymbol(null);
 	} else {
-		delete markers[selectedIndex];
 		board.cells[selectedIndex].setSymbol(index);
 		saveGrid(selector.selectedIndex);
 	}
@@ -577,14 +587,15 @@ const pickerMarkerClick = (event) => {
 	const [r, c] = clickLocation(event);
 
 	const index = r * 3 + c;
-	let marker = markers[selectedRow * 9 + selectedCol];
-	if (!marker) {
-		marker = [];
-		markers[selectedRow * 9 + selectedCol] = marker;
+	const selectedIndex = selectedRow * 9 + selectedCol;
+	const cell = board.cells[selectedIndex];
+	if (cell.show) {
+		cell.toggle(index);
+	} else {
+		cell.clear();
+		cell.add(index);
+		cell.show = true;
 	}
-	// if (marker[index]) delete marker[index];
-	// else marker[index] = true;
-	marker[index] = !marker[index];
 
 	draw();
 };
@@ -612,7 +623,6 @@ clearButton.style.position = 'absolute';
 clearButton.style.width = '32px';
 clearButton.style.height = '32px';
 clearButton.addEventListener('click', () => {
-	markers.length = 0;
 	selected = false;
 	board.resetGrid();
 	saveGrid();
@@ -626,30 +636,43 @@ markerButton.style.position = 'absolute';
 markerButton.style.width = '32px';
 markerButton.style.height = '32px';
 markerButton.addEventListener('click', () => {
-	// candidates2(board.grid, markers);
+	const markers = [];
+	for (const cell of board.cells) {
+		if (cell.symbol !== null) continue;
+		cell.show = true;
+		const marker = [];
+		for (let i = 0; i < 9; i++) {
+			marker[i] = cell.has(i);
+		}
+		markers[cell.index] = marker;
+	}
+
 	const t = performance.now();
 	let fills = 0;
-	let missingSingles = 0;
+	let loneSinglesFills = 0;
+	let hiddenSinglesFills = 0;
 	let groupSets = 0;
 
 	let progress = false;
 	do {
-		candidates(board.cells, markers);
 		// Open Singles
-		progress = openSingles(board.cells, markers);
+		candidates(board.cells, markers);
+		// Lone Singles
+		progress = loneSingles(board.cells, markers);
 		if (progress) {
+			loneSinglesFills++;
 			fills++;
 		} else {
-			// Lone Singles
-			progress = loneSingles(board.cells, markers);
+			// Hidden Singles
+			progress = hiddenSingles(board.cells, markers);
 			if (progress) {
-				missingSingles++;
+				hiddenSinglesFills++;
 				fills++;
 			} else {
-				// Hidden Singles
-				progress = hiddenSingles(markers);
+				progress = hiddenCells(markers);
 				if (progress) {
 					groupSets++;
+					fills++;
 				} else {
 					progress = pairGroups(markers);
 					if (progress) {
@@ -670,9 +693,21 @@ markerButton.addEventListener('click', () => {
 
 	console.log("--- " + Math.floor(performance.now() - t) / 1000);
 	console.log("Removals: " + fills);
-	console.log("Missing Singles: " + missingSingles);
+	console.log("Lone Singles: " + loneSinglesFills);
+	console.log("Hidden Singles: " + hiddenSinglesFills);
 	console.log("Marker Reductions: " + groupSets);
 	draw();
+
+	for (const cell of board.cells) {
+		if (cell.symbol !== null) continue;
+		const marker = markers[cell.index];
+		if (!marker) continue;
+		for (let i = 0; i < 9; i++) {
+			if (!marker[i]) {
+				cell.delete(i);
+			}
+		}
+	}
 });
 document.body.appendChild(markerButton);
 
@@ -680,7 +715,19 @@ let solveTries = 0;
 const solve = (reset) => {
 	if (reset) {
 		for (let i = 0; i < 81; i++) board.cells[i].setSymbol(null);
-		for (let i = 0; i < 81; i++) delete markers[i];
+	}
+
+	const markers = [];
+	for (const cell of board.cells) {
+		if (cell.symbol !== null) continue;
+
+		cell.show = true;
+
+		const marker = [];
+		for (let i = 0; i < 9; i++) {
+			marker[i] = cell.has(i);
+		}
+		markers[cell.index] = marker;
 	}
 
 	candidates(board.cells, markers);
@@ -695,16 +742,16 @@ const solve = (reset) => {
 		let progress = false;
 		do {
 			candidates(board.cells, markers);
-			progress = openSingles(board.cells, markers);
+			progress = loneSingles(board.cells, markers);
 			if (progress) {
 				fills++;
 			} else {
-				progress = loneSingles(board.cells, markers);
+				progress = hiddenSingles(board.cells, markers);
 				if (progress) {
 					missingSingles++;
 					fills++;
 				} else {
-					progress = hiddenSingles(markers);
+					progress = hiddenCells(markers);
 					if (progress) {
 						groupSets++;
 					} else {
@@ -729,6 +776,17 @@ const solve = (reset) => {
 		// console.log("Removals: " + fills);
 		// console.log("Missing Singles: " + missingSingles);
 		// console.log("Marker Reductions: " + groupSets);
+	}
+
+	for (const cell of board.cells) {
+		if (cell.symbol !== null) continue;
+		const marker = markers[cell.index];
+		if (!marker) continue;
+		for (let i = 0; i < 9; i++) {
+			if (!marker[i]) {
+				cell.delete();
+			}
+		}
 	}
 
 	solveTries++;
