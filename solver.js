@@ -63,61 +63,6 @@ const loneSingles = (cells) => {
 	return false;
 }
 
-class GridGroup {
-	static rowForIndex = rowForIndex;
-	static colForIndex = colForIndex;
-	static boxForIndex = boxForIndex;
-
-	static rowIndex = indexForRow;
-	static colIndex = indexForCol;
-	static boxIndex = indexForBox;
-
-	constructor(group) {
-		this.group = group;
-	}
-	getRow(x, i) {
-		return this.group[x * 9 + i];
-	}
-	setRow(x, i, symbol) {
-		this.group[x * 9 + i] = symbol;
-	}
-	getCol(x, i) {
-		return this.group[i * 9 + x];
-	}
-	setCol(x, i, symbol) {
-		this.group[i * 9 + x] = symbol;
-	}
-	getBox(x, i) {
-		const row = floor3(x) * 3 + floor3(i);
-		const col = mod3(x) * 3 + mod3(i);
-		return this.group[row * 9 + col];
-	}
-}
-
-const TypeRow = "ROW";
-const TypeCol = "COL";
-const TypeBox = "BOX";
-class Type {
-	constructor(type) {
-		switch (type) {
-			case TypeRow:
-				this.group = 'getRow';
-				this.index = 'rowIndex';
-				break;
-			case TypeCol:
-				this.group = 'getCol';
-				this.index = 'colIndex';
-				break;
-			case TypeBox:
-				this.group = 'getBox';
-				this.index = 'boxIndex';
-				break;
-		}
-		this.type = type;
-	}
-}
-const groupTypes = [new Type(TypeRow), new Type(TypeCol), new Type(TypeBox)];
-
 const hiddenSingles = (cells) => {
 	for (let x = 0; x < 9; x++) {
 		for (const group of Grid.groupTypes) {
@@ -261,6 +206,36 @@ const omissions = (cells) => {
 	return false;
 }
 
+class GridGroup {
+	static rowForIndex = rowForIndex;
+	static colForIndex = colForIndex;
+	static boxForIndex = boxForIndex;
+
+	static rowIndex = indexForRow;
+	static colIndex = indexForCol;
+	static boxIndex = indexForBox;
+
+	constructor(group) {
+		this.group = group;
+	}
+	getRow(x, i) {
+		return this.group[x * 9 + i];
+	}
+	setRow(x, i, symbol) {
+		this.group[x * 9 + i] = symbol;
+	}
+	getCol(x, i) {
+		return this.group[i * 9 + x];
+	}
+	setCol(x, i, symbol) {
+		this.group[i * 9 + x] = symbol;
+	}
+	getBox(x, i) {
+		const row = floor3(x) * 3 + floor3(i);
+		const col = mod3(x) * 3 + mod3(i);
+		return this.group[row * 9 + col];
+	}
+}
 const xWing = (markers) => {
 	const markerGroup = new GridGroup(markers);
 
