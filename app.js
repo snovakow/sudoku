@@ -477,7 +477,8 @@ const saveGrid = (selectedIndex = null) => {
 		markers.push({
 			mask: cell.mask,
 			size: cell.size,
-			remainder: cell.remainder
+			remainder: cell.remainder,
+			show: cell.show,
 		});
 	}
 	localStorage.setItem("markers", JSON.stringify(markers));
@@ -506,9 +507,10 @@ const loadGrid = () => {
 		const markersData = JSON.parse(markersJSON);
 		for (const cell of board.cells) {
 			const data = markersData[cell.index];
-			cell.mask = parseInt(data.mask);
-			cell.size = parseInt(data.size);
-			cell.remainder = parseInt(data.remainder);
+			cell.mask = data.mask;
+			cell.size = data.size;
+			cell.remainder = data.remainder;
+			cell.show = data.show;
 		}
 	}
 
@@ -572,10 +574,11 @@ const pickerClick = (event) => {
 		board.cells[selectedIndex].setSymbol(null);
 	} else {
 		board.cells[selectedIndex].setSymbol(index);
-		saveGrid(selector.selectedIndex);
 	}
 
 	draw();
+
+	saveGrid(selector.selectedIndex);
 };
 picker.addEventListener('click', pickerClick);
 
@@ -598,6 +601,8 @@ const pickerMarkerClick = (event) => {
 	}
 
 	draw();
+
+	saveGrid(selector.selectedIndex);
 };
 pickerMarker.addEventListener('click', pickerMarkerClick);
 

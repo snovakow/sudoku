@@ -126,9 +126,6 @@ export class Cell {
 		x = parseInt(x);
 		this.symbol = x === 0 ? null : x - 1;
 	}
-	setSymbol(symbol) {
-		this.symbol = symbol;
-	}
 }
 
 export class CellMarker extends Cell {
@@ -152,7 +149,7 @@ export class CellMarker extends Cell {
 		this.group = baseCell.group;
 	}
 	setSymbol(symbol) {
-		super.setSymbol(symbol);
+		this.symbol = symbol;
 		if (symbol === null) {
 			this.mask = 0x01ff;
 			this.size = 9;
@@ -177,7 +174,7 @@ export class CellMarker extends Cell {
 	clear() {
 		this.mask = 0x0;
 		this.size = 0;
-		this.remainder = 36;
+		this.remainder = 0;
 	}
 	add(value) {
 		this.mask |= 0x1 << value;
