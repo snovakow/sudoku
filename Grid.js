@@ -45,61 +45,18 @@ const col9 = Uint8Array.of(8, 17, 26, 35, 44, 53, 62, 71, 80);
 const box1 = Uint8Array.of(0, 1, 2, 9, 10, 11, 18, 19, 20);
 const box2 = Uint8Array.of(3, 4, 5, 12, 13, 14, 21, 22, 23);
 const box3 = Uint8Array.of(6, 7, 8, 15, 16, 17, 24, 25, 26);
-const box4 = Uint8Array.of(27, 28, 29, 36, 37, 38, 45, 45, 47);
+const box4 = Uint8Array.of(27, 28, 29, 36, 37, 38, 45, 46, 47);
 const box5 = Uint8Array.of(30, 31, 32, 39, 40, 41, 48, 49, 50);
 const box6 = Uint8Array.of(33, 34, 35, 42, 43, 44, 51, 52, 53);
 const box7 = Uint8Array.of(54, 55, 56, 63, 64, 65, 72, 73, 74);
 const box8 = Uint8Array.of(57, 58, 59, 66, 67, 68, 75, 76, 77);
 const box9 = Uint8Array.of(60, 61, 62, 69, 70, 71, 78, 79, 80);
 
-const rows = [row1, row2, row3, row4, row5, row6, row7, row8, row9];
-const cols = [col1, col2, col3, col4, col5, col6, col7, col8, col9];
-const boxs = [box1, box2, box3, box4, box5, box6, box7, box8, box9];
+const groupRows = [row1, row2, row3, row4, row5, row6, row7, row8, row9];
+const groupCols = [col1, col2, col3, col4, col5, col6, col7, col8, col9];
+const groupBoxs = [box1, box2, box3, box4, box5, box6, box7, box8, box9];
 
-const groupIndices = [];
-groupIndices.push(...rows);
-groupIndices.push(...cols);
-groupIndices.push(...boxs);
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set
-class Set9 {
-	constructor() {
-		this.mask = 0x0; // Uint16 0x01ff: 9 bit penic mark mask
-		this.size = 0;
-	}
-	*[Symbol.iterator]() {
-		const mask = this.mask;
-		if (mask & 0x1 === 0x1) yield 0;
-		if ((mask >> 0x1) & 0x1 === 0x1) yield 1;
-		if ((mask >> 0x2) & 0x1 === 0x1) yield 2;
-		if ((mask >> 0x3) & 0x1 === 0x1) yield 3;
-		if ((mask >> 0x4) & 0x1 === 0x1) yield 4;
-		if ((mask >> 0x5) & 0x1 === 0x1) yield 5;
-		if ((mask >> 0x6) & 0x1 === 0x1) yield 6;
-		if ((mask >> 0x7) & 0x1 === 0x1) yield 7;
-		if (mask >> 0x8 === 0x1) yield 8;
-	}
-	add(value) {
-		const mask = this.mask;
-		this.mask |= 0x1 << value;
-		if (mask !== this.mask) this.size++;
-		return this;
-	}
-	clear() {
-		this.mask = 0x0;
-		this.size = 0;
-	}
-	has(value) {
-		return ((this.mask >> value) & 0x1) === 0x1;
-	}
-	delete(value) {
-		const mask = this.mask;
-		this.mask &= ~(0x1 << value);
-		if (mask === this.mask) return false;
-		this.size--;
-		return true;
-	}
-}
+const groupTypes = [...groupRows, ...groupCols, ...groupBoxs];
 
 class BaseCell {
 	constructor(index) {
@@ -109,18 +66,42 @@ class BaseCell {
 		this.col = index % 9;
 		this.box = Math.floor(this.row / 3) * 3 + Math.floor(this.col / 3);
 
-		const set = new Set();
-		for (const i of rows[this.row]) set.add(i);
-		for (const i of cols[this.col]) set.add(i);
-		for (const i of boxs[this.box]) set.add(i);
-		set.delete(index);
-		this.groups = set;
+		const rowSet = new Set();
+		const colSet = new Set();
+		const boxSet = new Set();
+		const groupSet = new Set();
+		for (const i of groupRows[this.row]) {
+			rowSet.add(i);
+			groupSet.add(i);
+		}
+		for (const i of groupCols[this.col]) {
+			colSet.add(i);
+			groupSet.add(i);
+		}
+		for (const i of groupBoxs[this.box]) {
+			boxSet.add(i);
+			groupSet.add(i);
+		}
+		rowSet.delete(index);
+		colSet.delete(index);
+		boxSet.delete(index);
+		groupSet.delete(index);
+		this.groupRow = [...rowSet];
+		this.groupCol = [...colSet];
+		this.groupBox = [...boxSet];
+		this.groupType = [rowSet, colSet, boxSet];
+		this.group = [...groupSet];
 
 		Object.freeze(this.index);
 		Object.freeze(this.row);
 		Object.freeze(this.col);
 		Object.freeze(this.box);
+
+		Object.freeze(this.rowGroup);
+		Object.freeze(this.colGroup);
+		Object.freeze(this.boxGroup);
 		Object.freeze(this.groups);
+		Object.freeze(this.group);
 	}
 }
 
@@ -164,7 +145,11 @@ export class CellMarker extends Cell {
 		this.col = baseCell.col;
 		this.box = baseCell.box;
 
+		this.groupRow = baseCell.groupRow;
+		this.groupCol = baseCell.groupCol;
+		this.groupBox = baseCell.groupBox;
 		this.groups = baseCell.groups;
+		this.group = baseCell.group;
 	}
 	setSymbol(symbol) {
 		super.setSymbol(symbol);
@@ -175,7 +160,7 @@ export class CellMarker extends Cell {
 		} else {
 			this.mask = 0x0;
 			this.size = 0;
-			this.remainder = symbol;
+			// this.remainder = symbol;
 		}
 	}
 	has(value) {
@@ -209,10 +194,10 @@ const GRID_SIDE = 9;
 const GRID_SIZE = 81;
 
 class Grid extends Array {
-	static rowIndices = rows;
-	static colIndices = cols;
-	static boxIndices = boxs;
-	static groupIndices = groupIndices;
+	static groupRows = groupRows;
+	static groupCols = groupCols;
+	static groupBoxs = groupBoxs;
+	static groupTypes = groupTypes;
 
 	constructor() {
 		super(GRID_SIZE);

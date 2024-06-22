@@ -1,6 +1,6 @@
 import { FONT, board } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { candidates, loneSingles, hiddenSingles, hiddenCells, pairGroups, xWing, xyWing, generate } from "./solver.js";
+import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, xyWing, generate } from "./solver.js";
 
 const sudokuSamples = [
 	// [
@@ -636,55 +636,51 @@ markerButton.style.position = 'absolute';
 markerButton.style.width = '32px';
 markerButton.style.height = '32px';
 markerButton.addEventListener('click', () => {
-	const markers = [];
 	for (const cell of board.cells) {
 		if (cell.symbol !== null) continue;
 		cell.show = true;
-		const marker = [];
-		for (let i = 0; i < 9; i++) {
-			marker[i] = cell.has(i);
-		}
-		markers[cell.index] = marker;
 	}
 
 	const t = performance.now();
 	let fills = 0;
 	let loneSinglesFills = 0;
 	let hiddenSinglesFills = 0;
-	let groupSets = 0;
+	let nakedHiddenSetsFills = 0;
+	let omissionsFills = 0;
 
 	let progress = false;
 	do {
 		// Open Singles
-		candidates(board.cells, markers);
+		candidates(board.cells);
 		// Lone Singles
-		progress = loneSingles(board.cells, markers);
+		progress = loneSingles(board.cells);
 		if (progress) {
 			loneSinglesFills++;
 			fills++;
 		} else {
 			// Hidden Singles
-			progress = hiddenSingles(board.cells, markers);
+			progress = hiddenSingles(board.cells);
 			if (progress) {
 				hiddenSinglesFills++;
 				fills++;
 			} else {
-				progress = hiddenCells(markers);
+				progress = nakedHiddenSets(board.cells);
 				if (progress) {
-					groupSets++;
+					nakedHiddenSetsFills++;
 					fills++;
 				} else {
-					progress = pairGroups(markers);
+					progress = omissions(board.cells);
 					if (progress) {
+						omissionsFills++;
 						fills++;
 					} else {
-						progress = xWing(markers);
-						if (progress) {
-							fills++;
-						} else {
-							progress = xyWing(markers);
-							if (progress) fills++;
-						}
+						// 				progress = xWing(markers);
+						// 				if (progress) {
+						// 					fills++;
+						// 				} else {
+						// 					progress = xyWing(markers);
+						// 					if (progress) fills++;
+						// 				}
 					}
 				}
 			}
@@ -695,19 +691,10 @@ markerButton.addEventListener('click', () => {
 	console.log("Removals: " + fills);
 	console.log("Lone Singles: " + loneSinglesFills);
 	console.log("Hidden Singles: " + hiddenSinglesFills);
-	console.log("Marker Reductions: " + groupSets);
-	draw();
+	console.log("Naked and Hidden Sets: " + nakedHiddenSetsFills);
+	console.log("Omissions: " + omissionsFills);
 
-	for (const cell of board.cells) {
-		if (cell.symbol !== null) continue;
-		const marker = markers[cell.index];
-		if (!marker) continue;
-		for (let i = 0; i < 9; i++) {
-			if (!marker[i]) {
-				cell.delete(i);
-			}
-		}
-	}
+	draw();
 });
 document.body.appendChild(markerButton);
 
@@ -717,23 +704,10 @@ const solve = (reset) => {
 		for (let i = 0; i < 81; i++) board.cells[i].setSymbol(null);
 	}
 
-	const markers = [];
-	for (const cell of board.cells) {
-		if (cell.symbol !== null) continue;
-
-		cell.show = true;
-
-		const marker = [];
-		for (let i = 0; i < 9; i++) {
-			marker[i] = cell.has(i);
-		}
-		markers[cell.index] = marker;
-	}
-
-	candidates(board.cells, markers);
+	candidates(board.cells);
 	generate();
 
-	while (generate(markers)) {
+	while (generate(board.cells)) {
 
 		let fills = 0;
 		let missingSingles = 0;
@@ -741,21 +715,21 @@ const solve = (reset) => {
 
 		let progress = false;
 		do {
-			candidates(board.cells, markers);
-			progress = loneSingles(board.cells, markers);
+			candidates(board.cells);
+			progress = loneSingles(board.cells);
 			if (progress) {
 				fills++;
 			} else {
-				progress = hiddenSingles(board.cells, markers);
+				progress = hiddenSingles(board.cells);
 				if (progress) {
 					missingSingles++;
 					fills++;
 				} else {
-					progress = hiddenCells(markers);
+					progress = nakedHiddenSets(board.cells);
 					if (progress) {
 						groupSets++;
 					} else {
-						progress = pairGroups(markers);
+						progress = omissions(board.cells);
 						if (progress) {
 							fills++;
 							// } else {
@@ -776,17 +750,6 @@ const solve = (reset) => {
 		// console.log("Removals: " + fills);
 		// console.log("Missing Singles: " + missingSingles);
 		// console.log("Marker Reductions: " + groupSets);
-	}
-
-	for (const cell of board.cells) {
-		if (cell.symbol !== null) continue;
-		const marker = markers[cell.index];
-		if (!marker) continue;
-		for (let i = 0; i < 9; i++) {
-			if (!marker[i]) {
-				cell.delete();
-			}
-		}
 	}
 
 	solveTries++;

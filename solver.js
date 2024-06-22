@@ -1,3 +1,5 @@
+import { Grid } from "./Grid.js";
+
 const floor3 = x => Math.floor(x / 3);
 const mod3 = x => x % 3;
 
@@ -23,92 +25,43 @@ const indexForBox = (x, i) => {
 	return row * 9 + col;
 }
 
-const candidates = (cells, markers) => {
-	for (let i = 0; i < 81; i++) {
-		if (cells[i].symbol === null) {
-			const marker = markers[i];
-			if (marker) {
-				for (let i = 0; i < 9; i++) {
-					if (marker[i] !== false) marker[i] = true;
-				}
-			} else {
-				markers[i] = [true, true, true, true, true, true, true, true, true];
-			}
-		}
-	}
+const candidates = (cells) => {
+	for (const cell of cells) {
+		const symbol = cell.symbol;
+		if (symbol === null) continue;
 
-	// Open Singles
-	for (let r = 0; r < 9; r++) {
-		for (let c = 0; c < 9; c++) {
-			const symbol = cells.getSymbol(r, c);
-			if (symbol !== null) continue;
-
-			const index = r * 9 + c;
-			const marker = markers[index];
-			if (!marker) {
-				continue;
-			}
-
-			for (let i = 0; i < 9; i++) {
-				const rsymbol = cells.getSymbol(r, i);
-				const csymbol = cells.getSymbol(i, c);
-
-				const rbase = floor3(r) * 3;
-				const cbase = floor3(c) * 3;
-				const bsymbol = cells.getSymbol(rbase + floor3(i), cbase + mod3(i));
-
-				if (rsymbol !== null) marker[rsymbol] = false;
-				if (csymbol !== null) marker[csymbol] = false;
-				if (bsymbol !== null) marker[bsymbol] = false;
-			}
+		for (const i of cell.group) {
+			const linked = cells[i];
+			if (linked.symbol === null) linked.delete(symbol);
 		}
 	}
 }
 
-const markerToMask = (marker)=>{
-	if(!marker) return 0x1ff;
-	let mask = 0x0;
-	for(let i=0; i<9; i++) {
-		if(marker[i]) mask |= 0x1 << i;
-	}
-	return mask;
-}
-const maskToMarker = (mask)=>{
-	const marker = [];
-	for(let i=0; i<9; i++) {
-		marker[i] = ((mask>>i) & 0x1) === 0x1;
-	}
-	return marker;
-}
-
-const loneSingles = (cells, markers) => {
-	for (let i = 0; i < 81; i++) {
-		const cell = cells[i];
-		if (cell.symbol === null) {
-			cell.mask = markerToMask(markers[i]);
-
-			let symbol = -1;
-			const marker = markers[i];
-			if (!marker) continue;
-
-			for (let j = 0; j < 9; j++) {
-				if (marker[j]) {
-					if (symbol === -1) {
-						symbol = j;
-					} else {
-						symbol = -1;
-						break;
-					}
-				}
+const openSingles = (cells) => {
+	for (const group of Grid.groupTypes) {
+		let symbolCell = null;
+		for (const index of group) {
+			const cell = cells[index];
+			if (cell.symbol !== null) continue;
+			if (symbolCell === null) symbolCell = cell;
+			else {
+				symbolCell = null;
+				break;
 			}
-			if (symbol >= 0) {
-				delete markers[i];
-				cell.setSymbol(symbol);
-				return true;
-			}
-
-			markers[i] = maskToMarker(cell.mask);
 		}
+		if (symbolCell !== null) {
+			symbolCell.setSymbol(symbolCell.remainder);
+			return true;
+		}
+	}
+	return false;
+}
+
+const loneSingles = (cells) => {
+	for (const cell of cells) {
+		if (cell.symbol !== null || cell.size !== 1) continue;
+		cell.setSymbol(cell.remainder);
+		return true;
 	}
 	return false;
 }
@@ -168,32 +121,23 @@ class Type {
 }
 const groupTypes = [new Type(TypeRow), new Type(TypeCol), new Type(TypeBox)];
 
-const hiddenSingles = (cells, markers) => {
-	const markerGroup = new GridGroup(markers);
-
-	for (const groupType of groupTypes) {
-		const getGroup = groupType.group;
-		const groupIndex = groupType.index;
-
-		for (let i = 0; i < 9; i++) {
-			for (let x = 0; x < 9; x++) {
-				let symbol = -1;
-				for (let y = 0; y < 9; y++) {
-					const marker = markerGroup[getGroup](x, y);
-					if (marker && marker[i]) {
-						if (symbol === -1) symbol = y;
-						else {
-							symbol = -1;
-							break;
-						}
-					}
+const hiddenSingles = (cells) => {
+	for (let x = 0; x < 9; x++) {
+		for (const group of Grid.groupTypes) {
+			let symbolCell = null;
+			for (const index of group) {
+				const cell = cells[index];
+				if (cell.symbol !== null) continue;
+				if (!cell.has(x)) continue;
+				if (symbolCell === null) symbolCell = cell;
+				else {
+					symbolCell = null;
+					break;
 				}
-				if (symbol !== -1) {
-					const index = GridGroup[groupIndex](x, symbol);
-					cells[index].setSymbol(i);
-					delete markers[index];
-					return true;
-				}
+			}
+			if (symbolCell !== null) {
+				symbolCell.setSymbol(x);
+				return true;
 			}
 		}
 	}
@@ -207,70 +151,60 @@ class SetUnit {
 	}
 }
 
-// https://www.learn-sudoku.com/basic-techniques.html
-const hiddenCells = (markers) => { // single double any
-	const markerGroup = new GridGroup(markers);
+const nakedHiddenSets = (cells) => { // Naked and Hidden Pairs Triplets Quads any
 	const union = new Set();
 
-	for (const groupType of groupTypes) {
-		const getGroup = groupType.group;
-		for (let x = 0; x < 9; x++) {
-			const sets = [];
-			for (let y = 0; y < 9; y++) {
-				const marker = markerGroup[getGroup](x, y);
-				if (!marker) continue;
+	for (const groupType of Grid.groupTypes) {
+		const sets = [];
+		for (const index of groupType) {
+			const cell = cells[index];
 
-				const set = new Set();
-				for (let i = 0; i < 9; i++) {
-					const symbol = marker[i];
-					if (symbol) set.add(i);
-				}
-				if (set.size > 0) sets.push(new SetUnit(y, set));
+			const set = new Set();
+			for (let i = 0; i < 9; i++) {
+				if (cell.has(i)) set.add(i);
 			}
-			const len = sets.length;
-			for (let i = 0; i < len - 1; i++) {
-				const remainder = len - i - 1;
-				const setUnit = sets[i];
+			if (set.size > 0) sets.push(new SetUnit(index, set));
+		}
 
-				const endLen = 0x1 << remainder;
-				for (let inc = 1; inc < endLen; inc++) {
-					union.clear();
-					for (const x of setUnit.set) union.add(x);
-					let unionCount = 1;
-					let setHitMask = 0x1 << i;
+		const len = sets.length;
+		for (let i = 0; i < len - 1; i++) {
+			const remainder = len - i - 1;
+			const setUnit = sets[i];
 
-					let mask = 0x1;
-					for (let j = i + 1; j < len; j++) {
-						const state = inc & mask;
-						if (state > 0) {
-							const compare = sets[j];
-							for (const x of compare.set) union.add(x);
-							unionCount++;
-							setHitMask |= 0x1 << j;
-						}
-						mask <<= 1;
+			const endLen = 0x1 << remainder;
+			for (let inc = 1; inc < endLen; inc++) {
+				union.clear();
+				for (const x of setUnit.set) union.add(x);
+				let unionCount = 1;
+				let setHitMask = 0x1 << i;
+
+				let mask = 0x1;
+				for (let j = i + 1; j < len; j++) {
+					const state = inc & mask;
+					if (state > 0) {
+						const compare = sets[j];
+						for (const x of compare.set) union.add(x);
+						unionCount++;
+						setHitMask |= 0x1 << j;
 					}
-
-					let reduced = false;
-					if (unionCount === union.size && unionCount < sets.length) {
-						for (let shift = 0; shift < len; shift++) {
-							if ((setHitMask & (0x1 << shift)) > 0) continue;
-
-							const set = sets[shift];
-							const marker = markerGroup[getGroup](x, set.index);
-							if (!marker) continue;
-
-							for (const symbol of union) {
-								if (marker[symbol]) {
-									marker[symbol] = false;
-									reduced = true;
-								}
-							}
-						}
-						// console.log("Found Group " + getGroup);
-					}
-					if (reduced) return true;
+					mask <<= 1;
 				}
+
+				let reduced = false;
+				if (unionCount === union.size && unionCount < sets.length) {
+					for (let shift = 0; shift < len; shift++) {
+						if ((setHitMask & (0x1 << shift)) > 0) continue;
+
+						const set = sets[shift];
+						const cell = cells[set.index];
+
+						for (const symbol of union) {
+							const had = cell.delete(symbol);
+							if (had) reduced = true;
+						}
+					}
+				}
+				if (reduced) return true;
 			}
 		}
 	}
@@ -278,7 +212,8 @@ const hiddenCells = (markers) => { // single double any
 	return false;
 }
 
-const pairGroups = (markers) => {
+const omissions = (cells) => {
+	return false;
 	const markerGroup = new GridGroup(markers);
 
 	for (let i = 0; i < 9; i++) {
@@ -922,8 +857,8 @@ const deadlyPattern = () => {
 const indices = new Uint8Array(81);
 for (let i = 0; i < 81; i++) indices[i] = i;
 
-const generate = (markers) => {
-	if (!markers) {
+const generate = (cells) => {
+	if (!cells) {
 		for (let i = 0; i < 81; i++) {
 			const position = Math.floor(Math.random() * 81);
 			if (position !== i) {
@@ -937,8 +872,8 @@ const generate = (markers) => {
 
 	for (let i = 0; i < 81; i++) {
 		const index = indices[i];
-		const marker = markers[index];
-		if (!marker) continue;
+		const cell = cells[index];
+		if (cell.symbol !== null) continue;
 		let found = -1;
 
 		const random = [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -952,10 +887,9 @@ const generate = (markers) => {
 		}
 
 		for (const x of random) {
-			if (marker[x]) {
+			if (cell.has(x)) {
 				if (found >= 0) {
-					for (let y = 0; y < 9; y++) marker[y] = false;
-					marker[found] = true;
+					cell.setSymbol(x);
 					return true;
 				}
 				found = x;
@@ -965,4 +899,4 @@ const generate = (markers) => {
 	return false;
 }
 
-export { candidates, generate, loneSingles, hiddenSingles, hiddenCells, pairGroups, xWing, xyWing };
+export { candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, xyWing };
