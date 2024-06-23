@@ -380,10 +380,7 @@ class GridGroup {
 		return this.group[row * 9 + col];
 	}
 }
-const xyWing = (markers) => {
-	return false;
-	const markerGroup = new GridGroup(markers);
-
+const xyWing = (cells) => {
 	class Pair {
 		constructor(index, s1, s2) {
 			this.index = index;
@@ -394,13 +391,12 @@ const xyWing = (markers) => {
 
 	// map pairs
 	const pairs = [];
-	for (let i = 0; i < 81; i++) {
-		const marker = markers[i];
-		if (!marker) continue;
+	for (const cell of cells) {
+		if (cell.symbol !== null) continue;
 		let s1 = -1;
 		let s2 = -1;
 		for (let s = 0; s < 9; s++) {
-			if (!marker[s]) continue;
+			if (!cell.has(s)) continue;
 			if (s1 === -1) {
 				s1 = s;
 			} else if (s2 === -1) {
@@ -411,7 +407,7 @@ const xyWing = (markers) => {
 			}
 		}
 		if (s2 !== -1) {
-			pairs.push(new Pair(i, s1, s2));
+			pairs.push(new Pair(cell.index, s1, s2));
 		}
 	}
 
@@ -491,9 +487,9 @@ const xyWing = (markers) => {
 									const index = indexForCol(col2, x);
 									const b = boxForIndex(index);
 									if (box3 === b) {
-										const m = markerGroup.group[index];
-										if (m?.[hit]) {
-											m[hit] = false;
+										const cell = cells[index];
+										const had = cell.delete(hit);
+										if (had) {
 											reduced = true;
 											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
 											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
@@ -505,9 +501,9 @@ const xyWing = (markers) => {
 									const index = indexForRow(row2, x);
 									const b = boxForIndex(index);
 									if (box3 === b) {
-										const m = markerGroup.group[index];
-										if (m?.[hit]) {
-											m[hit] = false;
+										const cell = cells[index];
+										const had = cell.delete(hit);
+										if (had) {
 											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
 											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
 											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
@@ -519,9 +515,9 @@ const xyWing = (markers) => {
 									const index = indexForCol(col3, x);
 									const b = boxForIndex(index);
 									if (box2 === b) {
-										const m = markerGroup.group[index];
-										if (m?.[hit]) {
-											m[hit] = false;
+										const cell = cells[index];
+										const had = cell.delete(hit);
+										if (had) {
 											reduced = true;
 											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
 											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
@@ -533,9 +529,9 @@ const xyWing = (markers) => {
 									const index = indexForRow(row3, x);
 									const b = boxForIndex(index);
 									if (box2 === b) {
-										const m = markerGroup.group[index];
-										if (m?.[hit]) {
-											m[hit] = false;
+										const cell = cells[index];
+										const had = cell.delete(hit);
+										if (had) {
 											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
 											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
 											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
@@ -567,9 +563,9 @@ const xyWing = (markers) => {
 									const index = indexForCol(col1, x);
 									const b = boxForIndex(index);
 									if (box3 === b) {
-										const m = markerGroup.group[index];
-										if (m?.[hit]) {
-											m[hit] = false;
+										const cell = cells[index];
+										const had = cell.delete(hit);
+										if (had) {
 											reduced = true;
 											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
 											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
@@ -581,9 +577,9 @@ const xyWing = (markers) => {
 									const index = indexForRow(row1, x);
 									const b = boxForIndex(index);
 									if (box3 === b) {
-										const m = markerGroup.group[index];
-										if (m?.[hit]) {
-											m[hit] = false;
+										const cell = cells[index];
+										const had = cell.delete(hit);
+										if (had) {
 											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
 											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
 											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
@@ -595,9 +591,9 @@ const xyWing = (markers) => {
 									const index = indexForCol(col3, x);
 									const b = boxForIndex(index);
 									if (box1 === b) {
-										const m = markerGroup.group[index];
-										if (m?.[hit]) {
-											m[hit] = false;
+										const cell = cells[index];
+										const had = cell.delete(hit);
+										if (had) {
 											reduced = true;
 
 											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
@@ -610,9 +606,9 @@ const xyWing = (markers) => {
 									const index = indexForRow(row3, x);
 									const b = boxForIndex(index);
 									if (box1 === b) {
-										const m = markerGroup.group[index];
-										if (m?.[hit]) {
-											m[hit] = false;
+										const cell = cells[index];
+										const had = cell.delete(hit);
+										if (had) {
 											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
 											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
 											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
@@ -644,9 +640,9 @@ const xyWing = (markers) => {
 									const index = indexForCol(col1, x);
 									const b = boxForIndex(index);
 									if (box2 === b) {
-										const m = markerGroup.group[index];
-										if (m?.[hit]) {
-											m[hit] = false;
+										const cell = cells[index];
+										const had = cell.delete(hit);
+										if (had) {
 											reduced = true;
 											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
 											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
@@ -658,9 +654,9 @@ const xyWing = (markers) => {
 									const index = indexForRow(row1, x);
 									const b = boxForIndex(index);
 									if (box2 === b) {
-										const m = markerGroup.group[index];
-										if (m?.[hit]) {
-											m[hit] = false;
+										const cell = cells[index];
+										const had = cell.delete(hit);
+										if (had) {
 											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
 											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
 											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
@@ -672,9 +668,9 @@ const xyWing = (markers) => {
 									const index = indexForCol(col2, x);
 									const b = boxForIndex(index);
 									if (box1 === b) {
-										const m = markerGroup.group[index];
-										if (m?.[hit]) {
-											m[hit] = false;
+										const cell = cells[index];
+										const had = cell.delete(hit);
+										if (had) {
 											reduced = true;
 											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
 											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
@@ -686,9 +682,9 @@ const xyWing = (markers) => {
 									const index = indexForRow(row2, x);
 									const b = boxForIndex(index);
 									if (box1 === b) {
-										const m = markerGroup.group[index];
-										if (m?.[hit]) {
-											m[hit] = false;
+										const cell = cells[index];
+										const had = cell.delete(hit);
+										if (had) {
 											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
 											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
 											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
