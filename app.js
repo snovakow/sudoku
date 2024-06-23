@@ -76,18 +76,6 @@ const sudokuSamples = [
 		"v=BjOtNij7C84"
 	],
 	[
-		[0, 0, 1, 0, 0, 7, 0, 0, 2],
-		[0, 0, 0, 0, 1, 4, 0, 0, 0],
-		[0, 9, 8, 0, 0, 0, 0, 0, 0],
-		[0, 5, 0, 2, 0, 0, 0, 0, 4],
-		[7, 1, 0, 0, 0, 0, 0, 6, 8],
-		[0, 0, 3, 0, 0, 0, 9, 0, 5],
-		[9, 0, 4, 0, 6, 8, 0, 0, 3],
-		[0, 0, 0, 9, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 2, 5, 8, 0],
-		"New"
-	],
-	[
 		[6, 0, 7, 9, 0, 1, 3, 0, 0],
 		[9, 0, 3, 0, 7, 0, 0, 0, 0],
 		[0, 5, 0, 0, 3, 0, 0, 0, 0],
@@ -133,7 +121,7 @@ const sudokuSamples = [
 		[4, 0, 0, 0, 9, 0, 0, 0, 5],
 		[0, 5, 0, 0, 7, 0, 0, 9, 0],
 		[0, 0, 0, 6, 5, 8, 0, 2, 0],
-		"Isolate"
+		"X-Wing"
 	],
 	[ // 25.63%
 		[9, 0, 0, 0, 0, 0, 0, 0, 5],
@@ -170,6 +158,18 @@ const sudokuSamples = [
 		[9, 0, 0, 0, 1, 0, 0, 7, 8],
 		[0, 0, 0, 0, 0, 0, 0, 0, 6],
 		"Iso 5 b2"
+	],
+	[
+		[0, 0, 1, 0, 0, 7, 0, 0, 2],
+		[0, 0, 0, 0, 1, 4, 0, 0, 0],
+		[0, 9, 8, 0, 0, 0, 0, 0, 0],
+		[0, 5, 0, 2, 0, 0, 0, 0, 4],
+		[7, 1, 0, 0, 0, 0, 0, 6, 8],
+		[0, 0, 3, 0, 0, 0, 9, 0, 5],
+		[9, 0, 4, 0, 6, 8, 0, 0, 3],
+		[0, 0, 0, 9, 0, 0, 0, 0, 0],
+		[0, 0, 0, 0, 0, 2, 5, 8, 0],
+		"New"
 	],
 	[ // 26.51%
 		[0, 2, 0, 0, 0, 0, 0, 0, 3],
@@ -571,7 +571,9 @@ const pickerClick = (event) => {
 	const selectedIndex = selectedRow * 9 + selectedCol;
 	const symbol = board.cells[selectedIndex].symbol;
 	if (symbol === index) {
-		board.cells[selectedIndex].setSymbol(null);
+		const cell = board.cells[selectedIndex];
+		cell.show = false;
+		cell.setSymbol(null);
 	} else {
 		board.cells[selectedIndex].setSymbol(index);
 	}
