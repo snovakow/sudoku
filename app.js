@@ -748,13 +748,17 @@ generateButton.style.width = '32px';
 generateButton.style.height = '32px';
 generateButton.addEventListener('click', () => {
 	const time = performance.now();
-	solveTries = 0;
 
-	let solved;
-	do solved = solve(true); while (!solved);
+	const makeGrid = ()=>{
+		solveTries = 0;
 
-	const now = performance.now();
-	console.log(`Tries: ${solveTries} Time: ${Math.round(now - time) / 1000}`);
+		let solved;
+		do solved = solve(true); while (!solved);
+	
+		const now = performance.now();
+		console.log(`Tries: ${solveTries} Time: ${Math.round(now - time) / 1000}`);	
+	}
+	makeGrid();
 
 	draw();
 	// saveGrid();

@@ -34,13 +34,6 @@ export const canvasDraw = (font, canvas) => {
 	const inc = unitSize;
 
 	const off = unitSize * 0.5;
-	// for (let r = 0; r < GRID_SIDE; r++, roff += inc) {
-	// 	for (let c = 0; c < GRID_SIDE; c++, coff += inc) {
-	// 		const symbol = grid.getSymbol(r, c);
-	// 		if (symbol === 0) continue;
-	// 		ctx.fillText(symbol, coff, roff + (measure.actualBoundingBoxAscent * 0.5 - measure.actualBoundingBoxDescent * 0.5));
-	// 	}
-	// }
 
 	const ctx = canvas.getContext("2d");
 	// ctx.clearRect(0, 0, canvas.width, canvas.height);

@@ -350,36 +350,6 @@ const xWingSwordfish2 = (cells) => {
 	return false;
 }
 
-class GridGroup {
-	static rowForIndex = rowForIndex;
-	static colForIndex = colForIndex;
-	static boxForIndex = boxForIndex;
-
-	static rowIndex = indexForRow;
-	static colIndex = indexForCol;
-	static boxIndex = indexForBox;
-
-	constructor(group) {
-		this.group = group;
-	}
-	getRow(x, i) {
-		return this.group[x * 9 + i];
-	}
-	setRow(x, i, symbol) {
-		this.group[x * 9 + i] = symbol;
-	}
-	getCol(x, i) {
-		return this.group[i * 9 + x];
-	}
-	setCol(x, i, symbol) {
-		this.group[i * 9 + x] = symbol;
-	}
-	getBox(x, i) {
-		const row = floor3(x) * 3 + floor3(i);
-		const col = mod3(x) * 3 + mod3(i);
-		return this.group[row * 9 + col];
-	}
-}
 const xyWing = (cells) => {
 	class Pair {
 		constructor(index, s1, s2) {
@@ -729,6 +699,11 @@ const deadlyPattern = () => {
 
 	// Type 2 Unique Rectangles
 	// https://www.sudokuwiki.org/Unique_Rectangles
+}
+
+const bruteForce = (cells) => {
+	const stateStack = [];
+
 }
 
 const indices = new Uint8Array(81);

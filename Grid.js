@@ -187,9 +187,6 @@ export class CellMarker extends Cell {
 	}
 }
 
-const GRID_SIDE = 9;
-const GRID_SIZE = 81;
-
 class Grid extends Array {
 	static indices = indices;
 
@@ -199,25 +196,19 @@ class Grid extends Array {
 	static groupTypes = groupTypes;
 
 	constructor() {
-		super(GRID_SIZE);
-	}
-	getSymbol(r, c) {
-		return this[r * GRID_SIDE + c].symbol;
-	}
-	setSymbol(r, c, symbol) {
-		this[r * GRID_SIDE + c].setSymbol(symbol);
+		super(81);
 	}
 
 	toData() {
 		let data = "";
-		for (let i = 0; i < GRID_SIZE; i++) {
+		for (let i = 0; i < 81; i++) {
 			const symbol = this[i].symbol;
 			data += (symbol === null ? 0 : symbol + 1);
 		}
 		return data;
 	}
 	fromData(data) {
-		for (let i = 0; i < GRID_SIZE; i++) {
+		for (let i = 0; i < 81; i++) {
 			const symbol = parseInt(data[i]);
 			this[i].symbol = (symbol === 0 ? null : symbol - 1);
 		}
