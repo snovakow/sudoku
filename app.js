@@ -700,7 +700,7 @@ markerButton.addEventListener('click', () => {
 		}
 	} while (progress);
 
-	console.log("--- " + Math.floor(performance.now() - t) / 1000);
+	console.log("--- " + Math.round(performance.now() - t) / 1000);
 	console.log("Removals: " + fills);
 	console.log("Lone Singles: " + loneSinglesFills);
 	console.log("Hidden Singles: " + hiddenSinglesFills);
@@ -723,48 +723,12 @@ const solve = (reset) => {
 	generate();
 
 	while (generate(board.cells)) {
-
-		let fills = 0;
-		let missingSingles = 0;
-		let groupSets = 0;
-
 		let progress = false;
 		do {
 			candidates(board.cells);
 			progress = loneSingles(board.cells);
-			if (progress) {
-				fills++;
-			} else {
-				progress = hiddenSingles(board.cells);
-				if (progress) {
-					missingSingles++;
-					fills++;
-				} else {
-					progress = nakedHiddenSets(board.cells);
-					if (progress) {
-						groupSets++;
-					} else {
-						progress = omissions(board.cells);
-						if (progress) {
-							fills++;
-							// } else {
-							// 	progress = xWingSwordfish(markers);
-							// 	if (progress) {
-							// 		fills++;
-							// 	} else {
-							// 		progress = xyWing(markers);
-							// 		if (progress) fills++;
-							// 	}
-						}
-					}
-				}
-			}
+			if (!progress) progress = hiddenSingles(board.cells);
 		} while (progress);
-
-		// console.log("---");
-		// console.log("Removals: " + fills);
-		// console.log("Missing Singles: " + missingSingles);
-		// console.log("Marker Reductions: " + groupSets);
 	}
 
 	solveTries++;
@@ -790,7 +754,7 @@ generateButton.addEventListener('click', () => {
 	do solved = solve(true); while (!solved);
 
 	const now = performance.now();
-	console.log(`Tries: ${solveTries} Time: ${(now - time) / 1000}`);
+	console.log(`Tries: ${solveTries} Time: ${Math.round(now - time) / 1000}`);
 
 	draw();
 	// saveGrid();
