@@ -191,6 +191,8 @@ const GRID_SIDE = 9;
 const GRID_SIZE = 81;
 
 class Grid extends Array {
+	static indices = indices;
+
 	static groupRows = groupRows;
 	static groupCols = groupCols;
 	static groupBoxs = groupBoxs;
