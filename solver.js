@@ -207,9 +207,6 @@ const omissions = (cells) => {
 }
 
 const xWingSwordfish = (cells) => {
-	return false;
-	const markerGroup = new GridGroup(markers);
-
 	class GroupPair {
 		constructor(x, i1, i2) {
 			this.x = x;
@@ -226,9 +223,9 @@ const xWingSwordfish = (cells) => {
 			let y1 = -1;
 			let y2 = -1;
 			for (let y = 0; y < 9; y++) {
-				const marker = markerGroup.getRow(x, y);
-				if (!marker) continue;
-				if (marker[i]) {
+				const cell = cells[x * 9 + y];
+				if (cell.symbol !== null) continue;
+				if (cell.has(i)) {
 					if (y1 === -1) y1 = y;
 					else if (y2 === -1) y2 = y;
 					else { y2 = -1; break; }
@@ -246,21 +243,19 @@ const xWingSwordfish = (cells) => {
 					for (let x = 0; x < 9; x++) {
 						if (x === pair1.x || x === pair2.x) continue;
 
-						const marker1 = markerGroup.getCol(pair1.i1, x);
-						if (marker1) {
-							const symbol = marker1[i];
-							if (symbol) {
-								marker1[i] = false;
+						const cell1 = cells[x * 9 + pair1.i1];
+						if (cell1.symbol === null) {
+							const had = cell1.delete(i);
+							if (had) {
 								reduced = true;
 								console.log("X-Wing");
 							}
 						}
 
-						const marker2 = markerGroup.getCol(pair1.i2, x);
-						if (marker2) {
-							const symbol = marker2[i];
-							if (symbol) {
-								marker2[i] = false;
+						const cell2 = cells[x * 9 + pair1.i2];
+						if (cell2.symbol === null) {
+							const had = cell2.delete(i);
+							if (had) {
 								reduced = true;
 								console.log("X-Wing");
 							}
@@ -277,9 +272,9 @@ const xWingSwordfish = (cells) => {
 			let y1 = -1;
 			let y2 = -1;
 			for (let y = 0; y < 9; y++) {
-				const marker = markerGroup.getCol(x, y);
-				if (!marker) continue;
-				if (marker[i]) {
+				const cell = cells[y * 9 + x];
+				if (cell.symbol !== null) continue;
+				if (cell.has(i)) {
 					if (y1 === -1) y1 = y;
 					else if (y2 === -1) y2 = y;
 					else { y2 = -1; break; }
@@ -297,21 +292,19 @@ const xWingSwordfish = (cells) => {
 					for (let x = 0; x < 9; x++) {
 						if (x === pair1.x || x === pair2.x) continue;
 
-						const marker1 = markerGroup.getRow(pair1.i1, x);
-						if (marker1) {
-							const symbol = marker1[i];
-							if (symbol) {
-								marker1[i] = false;
+						const cell1 = cells[pair1.i1 * 9 + x];
+						if (cell1.symbol === null) {
+							const had = cell1.delete(i);
+							if (had) {
 								reduced = true;
 								console.log("X-Wing");
 							}
 						}
 
-						const marker2 = markerGroup.getRow(pair1.i2, x);
-						if (marker2) {
-							const symbol = marker2[i];
-							if (symbol) {
-								marker2[i] = false;
+						const cell2 = cells[pair1.i2 * 9 + x];
+						if (cell2.symbol === null) {
+							const had = cell2.delete(i);
+							if (had) {
 								reduced = true;
 								console.log("X-Wing");
 							}
@@ -323,6 +316,38 @@ const xWingSwordfish = (cells) => {
 	}
 
 	return reduced;
+}
+
+const xWingSwordfish2 = (cells) => {
+	for (let x = 0; x < 9; x++) {
+		let rowIndex = 0;
+		let rowMap = new Map();
+		for (const rowGroup of Grid.groupRows) {
+			const symbols = new Set();
+			for (const index of rowGroup) {
+				const cell = cells[index];
+				if (cell.has(x)) symbols.add(index);
+				if (symbols.size > 3) break;
+			}
+			if (symbols.size === 2 || symbols.size === 3) {
+				rowMap.set(rowIndex, symbols);
+			}
+			rowIndex++;
+		}
+
+		// const rowArray = rowMap.entries();
+		// for (let i = 0; i < rowArray.length) {
+
+		// }
+		// for(const [rkey, rvalue] of rowMap) {
+		// 	for(const [ckey, cvalue] of colMap) {
+		// 		if()
+		// 	}
+
+		// 	console.log(key, value);
+		// }
+	}
+	return false;
 }
 
 class GridGroup {
