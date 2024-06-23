@@ -1,6 +1,6 @@
 import { FONT, board } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, xyWing, generate } from "./solver.js";
+import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWingSwordfish, xyWing, generate } from "./solver.js";
 
 const sudokuSamples = [
 	// [
@@ -652,6 +652,8 @@ markerButton.addEventListener('click', () => {
 	let hiddenSinglesFills = 0;
 	let nakedHiddenSetsFills = 0;
 	let omissionsFills = 0;
+	let xWingSwordfishFills = 0;
+	let xyWingFills = 0;
 
 	let progress = false;
 	do {
@@ -679,13 +681,17 @@ markerButton.addEventListener('click', () => {
 						omissionsFills++;
 						fills++;
 					} else {
-						// 				progress = xWing(markers);
-						// 				if (progress) {
-						// 					fills++;
-						// 				} else {
-						// 					progress = xyWing(markers);
-						// 					if (progress) fills++;
-						// 				}
+						progress = xWingSwordfish(board.cells);
+						if (progress) {
+							xWingSwordfishFills++;
+							fills++;
+						} else {
+							progress = xyWing(board.cells);
+							if (progress) {
+								xyWingFills++;
+								fills++;
+							}
+						}
 					}
 				}
 			}
@@ -698,6 +704,8 @@ markerButton.addEventListener('click', () => {
 	console.log("Hidden Singles: " + hiddenSinglesFills);
 	console.log("Naked and Hidden Sets: " + nakedHiddenSetsFills);
 	console.log("Omissions: " + omissionsFills);
+	console.log("X Wing Swordfish: " + xWingSwordfishFills);
+	console.log("XY Wing: " + xyWingFills);
 
 	draw();
 });
@@ -738,7 +746,7 @@ const solve = (reset) => {
 						if (progress) {
 							fills++;
 							// } else {
-							// 	progress = xWing(markers);
+							// 	progress = xWingSwordfish(markers);
 							// 	if (progress) {
 							// 		fills++;
 							// 	} else {

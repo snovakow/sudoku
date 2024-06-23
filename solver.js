@@ -206,37 +206,8 @@ const omissions = (cells) => {
 	return false;
 }
 
-class GridGroup {
-	static rowForIndex = rowForIndex;
-	static colForIndex = colForIndex;
-	static boxForIndex = boxForIndex;
-
-	static rowIndex = indexForRow;
-	static colIndex = indexForCol;
-	static boxIndex = indexForBox;
-
-	constructor(group) {
-		this.group = group;
-	}
-	getRow(x, i) {
-		return this.group[x * 9 + i];
-	}
-	setRow(x, i, symbol) {
-		this.group[x * 9 + i] = symbol;
-	}
-	getCol(x, i) {
-		return this.group[i * 9 + x];
-	}
-	setCol(x, i, symbol) {
-		this.group[i * 9 + x] = symbol;
-	}
-	getBox(x, i) {
-		const row = floor3(x) * 3 + floor3(i);
-		const col = mod3(x) * 3 + mod3(i);
-		return this.group[row * 9 + col];
-	}
-}
-const xWing = (markers) => {
+const xWingSwordfish = (cells) => {
+	return false;
 	const markerGroup = new GridGroup(markers);
 
 	class GroupPair {
@@ -354,7 +325,38 @@ const xWing = (markers) => {
 	return reduced;
 }
 
+class GridGroup {
+	static rowForIndex = rowForIndex;
+	static colForIndex = colForIndex;
+	static boxForIndex = boxForIndex;
+
+	static rowIndex = indexForRow;
+	static colIndex = indexForCol;
+	static boxIndex = indexForBox;
+
+	constructor(group) {
+		this.group = group;
+	}
+	getRow(x, i) {
+		return this.group[x * 9 + i];
+	}
+	setRow(x, i, symbol) {
+		this.group[x * 9 + i] = symbol;
+	}
+	getCol(x, i) {
+		return this.group[i * 9 + x];
+	}
+	setCol(x, i, symbol) {
+		this.group[i * 9 + x] = symbol;
+	}
+	getBox(x, i) {
+		const row = floor3(x) * 3 + floor3(i);
+		const col = mod3(x) * 3 + mod3(i);
+		return this.group[row * 9 + col];
+	}
+}
 const xyWing = (markers) => {
+	return false;
 	const markerGroup = new GridGroup(markers);
 
 	class Pair {
@@ -753,4 +755,4 @@ const generate = (cells) => {
 	return false;
 }
 
-export { candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, xyWing };
+export { candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWingSwordfish, xyWing };
