@@ -703,7 +703,9 @@ const deadlyPattern = () => {
 
 const bruteForce = (cells) => {
 	const stateStack = [];
-
+	for (let index = 0; index < 81; index++) {
+		const cell = cells[index];
+	}
 }
 
 const indices = new Uint8Array(81);

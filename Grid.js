@@ -100,7 +100,7 @@ class BaseCell {
 		Object.freeze(this.rowGroup);
 		Object.freeze(this.colGroup);
 		Object.freeze(this.boxGroup);
-		Object.freeze(this.groups);
+		Object.freeze(this.groupType);
 		Object.freeze(this.group);
 	}
 }
@@ -119,12 +119,17 @@ export class Cell {
 		this.index = index;
 		this.symbol = null; // 0-9
 	}
-	getStore() {
-		return this.symbol === null ? 0 : this.symbol + 1;
-	}
+
 	fromStore(x) {
 		x = parseInt(x);
 		this.symbol = x === 0 ? null : x - 1;
+	}
+
+	toStorage() {
+		return this.symbol;
+	}
+	fromStorage(data) {
+		this.symbol = data;
 	}
 }
 
@@ -148,6 +153,38 @@ export class CellMarker extends Cell {
 		this.groups = baseCell.groups;
 		this.group = baseCell.group;
 	}
+
+	toData() {
+		return {
+			symbol: this.symbol,
+			mask: this.mask,
+			size: this.size,
+			remainder: this.remainder,
+		};
+	}
+	fromData(data) {
+		this.symbol = data.symbol;
+		this.mask = data.mask;
+		this.size = data.size;
+		this.remainder = data.remainder;
+	}
+	toStorage() {
+		return {
+			symbol: this.symbol,
+			mask: this.mask,
+			size: this.size,
+			remainder: this.remainder,
+			show: this.show
+		};
+	}
+	fromStorage(data) {
+		this.symbol = data.symbol;
+		this.mask = data.mask;
+		this.size = data.size;
+		this.remainder = data.remainder;
+		this.show = data.show;
+	}
+
 	setSymbol(symbol) {
 		this.symbol = symbol;
 		if (symbol === null) {
@@ -200,19 +237,15 @@ class Grid extends Array {
 	}
 
 	toData() {
-		let data = "";
-		for (let i = 0; i < 81; i++) {
-			const symbol = this[i].symbol;
-			data += (symbol === null ? 0 : symbol + 1);
-		}
-		return data;
+		const data = [];
+		for (const cell of this) data[cell.index] = cell.toStorage();
+		return JSON.stringify(data);
 	}
-	fromData(data) {
-		for (let i = 0; i < 81; i++) {
-			const symbol = parseInt(data[i]);
-			this[i].symbol = (symbol === 0 ? null : symbol - 1);
-		}
+	fromData(json) {
+		const data = JSON.parse(json);
+		for (const cell of this) cell.fromStorage(data[cell.index]);
 	}
+
 	compress() {
 		let pointer = 0;
 		const bits = new Uint8Array(168);

@@ -464,33 +464,22 @@ const selector = createSelect(["-", ...names], (select) => {
 selector.style.position = 'absolute';
 selector.style.width = '40px';
 
-const DataVersion = "0";
+const DataVersion = "2";
 
 const saveGrid = (selectedIndex = null) => {
 	if (selectedIndex !== null) localStorage.setItem("gridName", selectedIndex);
 	localStorage.setItem("DataVersion", DataVersion);
 	localStorage.setItem("startGrid", board.startCells.toData());
 	localStorage.setItem("grid", board.cells.toData());
-
-	const markers = [];
-	for (const cell of board.cells) {
-		markers.push({
-			mask: cell.mask,
-			size: cell.size,
-			remainder: cell.remainder,
-			show: cell.show,
-		});
-	}
-	localStorage.setItem("markers", JSON.stringify(markers));
 };
 const loadGrid = () => {
+	if (localStorage.getItem("DataVersion") !== DataVersion) return false;
+
 	const selectedIndex = localStorage.getItem("gridName");
 	if (selectedIndex !== null) {
 		const selectedInt = parseInt(selectedIndex);
 		if (selectedInt > 0 && selectedInt < selector.options.length) selector.selectedIndex = selectedInt;
 	}
-
-	if (localStorage.getItem("DataVersion") !== DataVersion) return false;
 
 	const startGrid = localStorage.getItem("startGrid");
 	if (!startGrid) return false;
@@ -501,20 +490,6 @@ const loadGrid = () => {
 	if (grid) {
 		board.cells.fromData(grid);
 	}
-
-	const markersJSON = localStorage.getItem("markers");
-	if (markersJSON) {
-		const markersData = JSON.parse(markersJSON);
-		for (const cell of board.cells) {
-			const data = markersData[cell.index];
-			cell.mask = data.mask;
-			cell.size = data.size;
-			cell.remainder = data.remainder;
-			cell.show = data.show;
-		}
-	}
-
-	return true;
 };
 
 loadGrid();
@@ -710,6 +685,7 @@ markerButton.addEventListener('click', () => {
 	console.log("XY Wing: " + xyWingFills);
 
 	draw();
+	saveGrid();
 });
 document.body.appendChild(markerButton);
 
@@ -749,14 +725,14 @@ generateButton.style.height = '32px';
 generateButton.addEventListener('click', () => {
 	const time = performance.now();
 
-	const makeGrid = ()=>{
+	const makeGrid = () => {
 		solveTries = 0;
 
 		let solved;
 		do solved = solve(true); while (!solved);
-	
+
 		const now = performance.now();
-		console.log(`Tries: ${solveTries} Time: ${Math.round(now - time) / 1000}`);	
+		console.log(`Tries: ${solveTries} Time: ${Math.round(now - time) / 1000}`);
 	}
 	makeGrid();
 
