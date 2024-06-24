@@ -236,14 +236,23 @@ class Grid extends Array {
 		super(81);
 	}
 
-	toData() {
+	toStorage() {
 		const data = [];
 		for (const cell of this) data[cell.index] = cell.toStorage();
 		return JSON.stringify(data);
 	}
-	fromData(json) {
+	fromStorage(json) {
 		const data = JSON.parse(json);
 		for (const cell of this) cell.fromStorage(data[cell.index]);
+	}
+
+	toData() {
+		const data = [];
+		for (const cell of this) data[cell.index] = cell.toData();
+		return data;
+	}
+	fromData(data) {
+		for (const cell of this) cell.fromData(data[cell.index]);
 	}
 
 	compress() {

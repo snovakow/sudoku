@@ -1,6 +1,6 @@
 import { FONT, board } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWingSwordfish, xyWing, generate } from "./solver.js";
+import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWingSwordfish, xyWing, generate, bruteForce } from "./solver.js";
 
 const sudokuSamples = [
 	// [
@@ -464,13 +464,13 @@ const selector = createSelect(["-", ...names], (select) => {
 selector.style.position = 'absolute';
 selector.style.width = '40px';
 
-const DataVersion = "2";
+const DataVersion = "0.1";
 
 const saveGrid = (selectedIndex = null) => {
 	if (selectedIndex !== null) localStorage.setItem("gridName", selectedIndex);
 	localStorage.setItem("DataVersion", DataVersion);
-	localStorage.setItem("startGrid", board.startCells.toData());
-	localStorage.setItem("grid", board.cells.toData());
+	localStorage.setItem("startGrid", board.startCells.toStorage());
+	localStorage.setItem("grid", board.cells.toStorage());
 };
 const loadGrid = () => {
 	if (localStorage.getItem("DataVersion") !== DataVersion) return false;
@@ -484,11 +484,11 @@ const loadGrid = () => {
 	const startGrid = localStorage.getItem("startGrid");
 	if (!startGrid) return false;
 
-	board.startCells.fromData(startGrid);
+	board.startCells.fromStorage(startGrid);
 
 	const grid = localStorage.getItem("grid");
 	if (grid) {
-		board.cells.fromData(grid);
+		board.cells.fromStorage(grid);
 	}
 };
 
@@ -631,6 +631,7 @@ markerButton.addEventListener('click', () => {
 	let omissionsFills = 0;
 	let xWingSwordfishFills = 0;
 	let xyWingFills = 0;
+	let bruteForceFills = 0;
 
 	let progress = false;
 	do {
@@ -667,6 +668,12 @@ markerButton.addEventListener('click', () => {
 							if (progress) {
 								xyWingFills++;
 								fills++;
+							} else {
+								progress = bruteForce(board.cells);
+								if (progress) {
+									bruteForceFills++;
+									fills++;
+								}
 							}
 						}
 					}
@@ -683,6 +690,7 @@ markerButton.addEventListener('click', () => {
 	console.log("Omissions: " + omissionsFills);
 	console.log("X Wing Swordfish: " + xWingSwordfishFills);
 	console.log("XY Wing: " + xyWingFills);
+	console.log("Brute Force: " + bruteForceFills);
 
 	draw();
 	saveGrid();

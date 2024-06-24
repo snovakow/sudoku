@@ -702,10 +702,49 @@ const deadlyPattern = () => {
 }
 
 const bruteForce = (cells) => {
-	const stateStack = [];
-	for (let index = 0; index < 81; index++) {
+	const process = (index, symbol) => {
 		const cell = cells[index];
-	}
+
+		if (cell.symbol !== null || !cell.has(symbol)) {
+			symbol++;
+			if (symbol === 9) {
+				symbol = 0;
+				index++;
+				if (index === 81) return false;
+			}
+			return process(index, symbol);
+		}
+
+		const state = cells.toData();
+
+		cell.setSymbol(symbol);
+		let progress = false;
+		do {
+			// Open Singles
+			candidates(cells);
+			// Lone Singles
+			progress = loneSingles(cells);
+			if (!progress) progress = hiddenSingles(cells);
+		} while (progress);
+
+		for (const cell of cells) {
+			if (cell.symbol === null) {
+				console.log("fail", index, symbol + 1);
+
+				cells.fromData(state);
+				cell.delete(symbol);
+
+
+				// process(index, symbol);
+				// return true;
+				return false;
+			}
+		}
+		return true;
+
+	};
+
+	process(0, 0);
 }
 
 const indices = new Uint8Array(81);
@@ -753,4 +792,4 @@ const generate = (cells) => {
 	return false;
 }
 
-export { candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWingSwordfish, xyWing };
+export { candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWingSwordfish, xyWing, bruteForce };
