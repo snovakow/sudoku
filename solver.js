@@ -710,7 +710,7 @@ const bruteForce = (cells) => {
 			if (symbol === 9) {
 				symbol = 0;
 				index++;
-				if (index === 81) return false;
+				if (index === 81) return true;
 			}
 			return process(index, symbol);
 		}
@@ -727,24 +727,47 @@ const bruteForce = (cells) => {
 			if (!progress) progress = hiddenSingles(cells);
 		} while (progress);
 
-		for (const cell of cells) {
-			if (cell.symbol === null) {
-				console.log("fail", index, symbol + 1);
+		let valid = true;
+		let finished = true;
+		for (const result of cells) {
+			if (result.symbol === null) {
+				finished = false;
+				if (result.size > 1) {
+					break;
+					return process(index, symbol);
+					return false;
 
-				cells.fromData(state);
-				cell.delete(symbol);
+				} else {
+					valid = false;
+					break;
+					console.log("fail", index, symbol + 1);
 
+					cells.fromData(state);
+					console.log(index, symbol + 1, cell);
+					cell.delete(symbol);
 
-				// process(index, symbol);
-				// return true;
-				return false;
+					return process(index, symbol);
+				}
 			}
 		}
-		return true;
+		if (valid) {
+			if (finished) {
+				return true;
+			} else {
+				return process(index, symbol);
+			}
+		} else {
+			cells.fromData(state);
+			console.log(index, symbol + 1, cell);
+			cell.delete(symbol);
+
+			return process(index, symbol);
+		}
+		return false;
 
 	};
 
-	process(0, 0);
+	return process(0, 0);
 }
 
 const indices = new Uint8Array(81);
