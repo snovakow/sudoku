@@ -643,7 +643,7 @@ markerButton.addEventListener('click', () => {
 	let omissionsFills = 0;
 	let xWingSwordfishFills = 0;
 	let xyWingFills = 0;
-	let bruteForceFills = 0;
+	let bruteForceFill = false;
 
 	let progress = false;
 	do {
@@ -680,12 +680,9 @@ markerButton.addEventListener('click', () => {
 							if (progress) {
 								xyWingFills++;
 								fills++;
-								// } else {
-								// 	progress = bruteForce(board.cells);
-								// 	if (progress) {
-								// 		bruteForceFills++;
-								// 		fills++;
-								// 	}
+							} else {
+								bruteForce(board.cells);
+								bruteForceFill = true;
 							}
 						}
 					}
@@ -702,7 +699,7 @@ markerButton.addEventListener('click', () => {
 	console.log("Omissions: " + omissionsFills);
 	console.log("X Wing Swordfish: " + xWingSwordfishFills);
 	console.log("XY Wing: " + xyWingFills);
-	console.log("Brute Force: " + bruteForceFills);
+	console.log("Brute Force: " + bruteForceFill);
 
 	draw();
 	saveGrid();

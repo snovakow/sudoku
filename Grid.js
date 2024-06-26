@@ -137,9 +137,7 @@ export class CellMarker extends Cell {
 	constructor(index) {
 		super(index);
 
-		this.mask = 0x01ff;
-		this.size = 9;
-		this.remainder = 36; // 0+1+2+3+4+5+6+7+8
+		this.reset();
 		this.show = false;
 
 		const baseCell = baseCells[index];
@@ -212,6 +210,11 @@ export class CellMarker extends Cell {
 		this.mask = 0x0;
 		this.size = 0;
 		this.remainder = 0;
+	}
+	reset() {
+		this.mask = 0x01ff;
+		this.size = 9;
+		this.remainder = 36; // 0+1+2+3+4+5+6+7+8
 	}
 	add(value) {
 		this.mask |= 0x1 << value;

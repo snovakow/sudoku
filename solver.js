@@ -702,72 +702,54 @@ const deadlyPattern = () => {
 }
 
 const bruteForce = (cells) => {
-	const process = (index, symbol) => {
-		const cell = cells[index];
-
-		if (cell.symbol !== null || !cell.has(symbol)) {
-			symbol++;
-			if (symbol === 9) {
-				symbol = 0;
-				index++;
-				if (index === 81) return true;
+	let tries = 0;
+	function isValid(cell, x) {
+		const row = Math.floor(cell.index / 9);
+		const col = cell.index % 9;
+		for (let i = 0; i < 9; i++) {
+			const m = 3 * Math.floor(row / 3) + Math.floor(i / 3);
+			const n = 3 * Math.floor(col / 3) + i % 3;
+			const rowCell = cells[row * 9 + i];
+			const colCell = cells[i * 9 + col];
+			const boxCell = cells[m * 9 + n];
+			if (rowCell.symbol === x || colCell.symbol === x || boxCell.symbol === x) {
+				return false;
 			}
-			return process(index, symbol);
 		}
+		return true;
+	}
 
-		const state = cells.toData();
+	function sodokoSolver() {
+		tries++;
+		for (let index = 0; index < 81; index++) {
+			const cell = cells[index];
+			if (cell.symbol === null) {
+				for (let x = 0; x < 9; x++) {
+					if (!cell.has(x)) continue;
 
-		cell.setSymbol(symbol);
-		let progress = false;
-		do {
-			// Open Singles
-			candidates(cells);
-			// Lone Singles
-			progress = loneSingles(cells);
-			if (!progress) progress = hiddenSingles(cells);
-		} while (progress);
+					const state = cell.toData();
 
-		let valid = true;
-		let finished = true;
-		for (const result of cells) {
-			if (result.symbol === null) {
-				finished = false;
-				if (result.size > 1) {
-					break;
-					return process(index, symbol);
-					return false;
-
-				} else {
-					valid = false;
-					break;
-					console.log("fail", index, symbol + 1);
-
-					cells.fromData(state);
-					console.log(index, symbol + 1, cell);
-					cell.delete(symbol);
-
-					return process(index, symbol);
+					if (isValid(cell, x)) {
+						cell.setSymbol(x);
+						if (sodokoSolver()) {
+							return true;
+						} else {
+							cell.fromData(state);
+							// cell.setSymbol(null);
+						}
+					}
 				}
+				return false;
 			}
 		}
-		if (valid) {
-			if (finished) {
-				return true;
-			} else {
-				return process(index, symbol);
-			}
-		} else {
-			cells.fromData(state);
-			console.log(index, symbol + 1, cell);
-			cell.delete(symbol);
+		return true;
+	}
 
-			return process(index, symbol);
-		}
-		return false;
+	sodokoSolver();
 
-	};
+	console.log(tries);
 
-	return process(0, 0);
+	return false;
 }
 
 const indices = new Uint8Array(81);
