@@ -687,7 +687,7 @@ const fillSolve = () => {
 								xyWingFills++;
 								fills++;
 							} else {
-								bruteForce(board.cells);
+								// bruteForce(board.cells);
 								// bruteForceFill = true;
 							}
 						}
@@ -750,6 +750,80 @@ const solve = (reset) => {
 	return true;
 }
 
+const isFinished = () => {
+	const cells = board.cells;
+	for (let i = 0; i < 81; i++) {
+		const cell = cells[i];
+		if (cell.symbol === null) return false;
+	}
+	return true;
+}
+const bruteForce2 = () => {
+	const cells = board.cells;
+	
+	function isValid(cell, x) {
+		const row = Math.floor(cell.index / 9);
+		const col = cell.index % 9;
+		for (let i = 0; i < 9; i++) {
+			const m = 3 * Math.floor(row / 3) + Math.floor(i / 3);
+			const n = 3 * Math.floor(col / 3) + i % 3;
+			const rowCell = cells[row * 9 + i];
+			const colCell = cells[i * 9 + col];
+			const boxCell = cells[m * 9 + n];
+			if (rowCell.symbol === x || colCell.symbol === x || boxCell.symbol === x) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	const makeRand = (size) => {
+		const rnd = new Uint8Array(size);
+		for (let i = 0; i < size; i++) rnd[i] = i;
+
+		for (let i = 0; i < size; i++) {
+			const position = Math.floor(Math.random() * size);
+			if (position !== i) {
+				const tmp = rnd[position];
+				rnd[position] = rnd[i];
+				rnd[i] = tmp;
+			}
+		}
+		return rnd;
+	}
+	const rnd = makeRand(81);
+	function sodokoSolver() {
+		for (let index = 0; index < 81; index++) {
+			const cell = cells[rnd[index]];
+			if (cell.symbol === null) {
+
+				const rndx = makeRand(9);
+				for (let x = 0; x < 9; x++) {
+					const symbol = rndx[x];
+					if (!cell.has(symbol)) continue;
+
+					const state = cell.toData();
+
+					if (isValid(cell, symbol)) {
+						cell.setSymbol(symbol);
+						if (sodokoSolver()) {
+							return true;
+						} else {
+							cell.fromData(state);
+							// cell.setSymbol(null);
+						}
+					}
+				}
+				return false;
+			}
+		}
+		return true;
+	}
+
+	const result = sodokoSolver();
+	return result;
+}
+
 const generateButton = document.createElement('button');
 generateButton.appendChild(document.createTextNode("+"));
 generateButton.style.position = 'absolute';
@@ -759,13 +833,6 @@ let counter = 0;
 const generator = () => {
 	const cells = board.cells;
 
-	const isFinished = () => {
-		for (let i = 0; i < 81; i++) {
-			const cell = cells[i];
-			if (cell.symbol === null) return false;
-		}
-		return true;
-	}
 	const isValid = () => {
 		for (let i = 0; i < 81; i++) {
 			const cell = cells[i];
@@ -887,70 +954,6 @@ const generator = () => {
 	return solutions;
 };
 
-const bruteForce2 = (cells) => {
-	function isValid(cell, x) {
-		const row = Math.floor(cell.index / 9);
-		const col = cell.index % 9;
-		for (let i = 0; i < 9; i++) {
-			const m = 3 * Math.floor(row / 3) + Math.floor(i / 3);
-			const n = 3 * Math.floor(col / 3) + i % 3;
-			const rowCell = cells[row * 9 + i];
-			const colCell = cells[i * 9 + col];
-			const boxCell = cells[m * 9 + n];
-			if (rowCell.symbol === x || colCell.symbol === x || boxCell.symbol === x) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	const makeRand = (size) => {
-		const rnd = new Uint8Array(size);
-		for (let i = 0; i < size; i++) rnd[i] = i;
-
-		for (let i = 0; i < size; i++) {
-			const position = Math.floor(Math.random() * size);
-			if (position !== i) {
-				const tmp = rnd[position];
-				rnd[position] = rnd[i];
-				rnd[i] = tmp;
-			}
-		}
-		return rnd;
-	}
-	const rnd = makeRand(81);
-	function sodokoSolver() {
-		for (let index = 0; index < 81; index++) {
-			const cell = cells[rnd[index]];
-			if (cell.symbol === null) {
-
-				const rndx = makeRand(9);
-				for (let x = 0; x < 9; x++) {
-					const symbol = rndx[x];
-					if (!cell.has(symbol)) continue;
-
-					const state = cell.toData();
-
-					if (isValid(cell, symbol)) {
-						cell.setSymbol(symbol);
-						if (sodokoSolver()) {
-							return true;
-						} else {
-							cell.fromData(state);
-							// cell.setSymbol(null);
-						}
-					}
-				}
-				return false;
-			}
-		}
-		return true;
-	}
-
-	const result = sodokoSolver();
-	return result;
-}
-
 const makeGrid = () => {
 	const solveGrid = () => {
 		solveTries = 0;
@@ -1029,13 +1032,15 @@ generateButton.addEventListener('click', () => {
 			board.cells.log();
 		}
 
+		draw();
+
 		const { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills } = fillSolve();
 		console.log(nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills);
-		if (nakedHiddenSetsFills > 0 || omissionsFills > 0 || xWingSwordfishFills > 0 || xyWingFills) {
-			console.log(nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills);
+		const finished = isFinished();
+		if (nakedHiddenSetsFills > 0 || omissionsFills > 0 || xWingSwordfishFills > 0 || xyWingFills || !finished) {
+			console.log(nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills, finished);
 			board.cells.log();
 		}
-		draw();
 
 		window.setTimeout(() => {
 			step();
