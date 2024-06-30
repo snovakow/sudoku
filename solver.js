@@ -702,7 +702,6 @@ const deadlyPattern = () => {
 }
 
 const bruteForce = (cells) => {
-	let tries = 0;
 	function isValid(cell, x) {
 		const row = Math.floor(cell.index / 9);
 		const col = cell.index % 9;
@@ -719,18 +718,35 @@ const bruteForce = (cells) => {
 		return true;
 	}
 
+	const makeRand = (size) => {
+		const rnd = new Uint8Array(size);
+		for (let i = 0; i < size; i++) rnd[i] = i;
+
+		for (let i = 0; i < size; i++) {
+			const position = Math.floor(Math.random() * size);
+			if (position !== i) {
+				const tmp = rnd[position];
+				rnd[position] = rnd[i];
+				rnd[i] = tmp;
+			}
+		}
+		return rnd;
+	}
+	const rnd = makeRand(81);
 	function sodokoSolver() {
-		tries++;
 		for (let index = 0; index < 81; index++) {
-			const cell = cells[index];
+			const cell = cells[rnd[index]];
 			if (cell.symbol === null) {
+
+				const rndx = makeRand(9);
 				for (let x = 0; x < 9; x++) {
-					if (!cell.has(x)) continue;
+					const symbol = rndx[x];
+					if (!cell.has(symbol)) continue;
 
 					const state = cell.toData();
 
-					if (isValid(cell, x)) {
-						cell.setSymbol(x);
+					if (isValid(cell, symbol)) {
+						cell.setSymbol(symbol);
 						if (sodokoSolver()) {
 							return true;
 						} else {
@@ -745,11 +761,8 @@ const bruteForce = (cells) => {
 		return true;
 	}
 
-	sodokoSolver();
-
-	console.log(tries);
-
-	return false;
+	const result = sodokoSolver();
+	return result;
 }
 
 const indices = new Uint8Array(81);
@@ -761,7 +774,7 @@ const generate = (cells) => {
 			const position = Math.floor(Math.random() * 81);
 			if (position !== i) {
 				const tmp = indices[position];
-				indices[position] = i;
+				indices[position] = indices[i];
 				indices[i] = tmp;
 			}
 		}
@@ -779,7 +792,7 @@ const generate = (cells) => {
 			const position = Math.floor(Math.random() * 9);
 			if (position !== i) {
 				const tmp = random[position];
-				random[position] = i;
+				random[position] = random[i];
 				random[i] = tmp;
 			}
 		}

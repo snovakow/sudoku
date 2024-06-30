@@ -239,6 +239,12 @@ class Grid extends Array {
 		super(81);
 	}
 
+	log() {
+		let string = "";
+		for (const cell of this) string += cell.symbol===null ? "0" : cell.symbol+1;
+		console.log(string);
+	}
+
 	toStorage() {
 		const data = [];
 		for (const cell of this) data[cell.index] = cell.toStorage();
