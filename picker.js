@@ -1,5 +1,5 @@
- const picker = document.createElement('canvas');
- const pickerMarker = document.createElement('canvas');
+const picker = document.createElement('canvas');
+const pickerMarker = document.createElement('canvas');
 
 picker.style.position = 'fixed';
 picker.style.width = '192px';
