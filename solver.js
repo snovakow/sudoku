@@ -206,7 +206,7 @@ const omissions = (cells) => {
 	return false;
 }
 
-const xWingSwordfish = (cells) => {
+const xWing = (cells) => {
 	class GroupPair {
 		constructor(x, i1, i2) {
 			this.x = x;
@@ -318,8 +318,8 @@ const xWingSwordfish = (cells) => {
 	return reduced;
 }
 
-const xWingSwordfish2 = (cells) => {
-	class Group {
+const swordfish = (cells) => {
+	class GroupPair {
 		constructor(x, i1, i2, i3) {
 			this.x = x;
 			this.i1 = i1;
@@ -330,6 +330,7 @@ const xWingSwordfish2 = (cells) => {
 
 	let reduced = false;
 
+	const set = new Set();
 	for (let i = 0; i < 9; i++) {
 		const pairs = [];
 		for (let x = 0; x < 9; x++) {
@@ -350,36 +351,67 @@ const xWingSwordfish2 = (cells) => {
 		}
 
 		const len = pairs.length;
-		for (let p1 = 0, last = len - 1; p1 < last; p1++) {
+		for (let p1 = 0, last1 = len - 2; p1 < last1; p1++) {
 			const pair1 = pairs[p1];
-			for (let p2 = p1 + 1; p2 < len; p2++) {
+			for (let p2 = p1 + 1, last2 = len - 1; p2 < last2; p2++) {
 				const pair2 = pairs[p2];
-				if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
-					for (let x = 0; x < 9; x++) {
-						if (x === pair1.x || x === pair2.x) continue;
+				for (let p3 = p2 + 1; p3 < len; p3++) {
+					const pair3 = pairs[p3];
 
-						const cell1 = cells[x * 9 + pair1.i1];
-						if (cell1.symbol === null) {
-							const had = cell1.delete(i);
-							if (had) {
-								reduced = true;
-								// console.log("X-Wing");
-							}
-						}
+					set.clear();
 
-						const cell2 = cells[x * 9 + pair1.i2];
-						if (cell2.symbol === null) {
-							const had = cell2.delete(i);
-							if (had) {
-								reduced = true;
-								// console.log("X-Wing");
+					set.add(pair1.i1);
+					set.add(pair1.i2);
+					if (pair1.i3 !== -1) set.add(pair1.i3);
+
+					set.add(pair2.i1);
+					set.add(pair2.i2);
+					if (pair2.i3 !== -1) set.add(pair2.i3);
+
+					set.add(pair3.i1);
+					set.add(pair3.i2);
+					if (pair3.i3 !== -1) set.add(pair3.i3);
+
+					if (set.size === 3) {
+						for (let x = 0; x < 9; x++) {
+							if (x === pair1.x || x === pair2.x || x === pair3.x) continue;
+
+							const pairArray = [...set];
+
+							const cell1 = cells[x * 9 + pairArray[0]];
+							if (cell1.symbol === null) {
+								const had = cell1.delete(i);
+								if (had) {
+									reduced = true;
+									// console.log("Swordfish");
+								}
 							}
+
+							const cell2 = cells[x * 9 + pairArray[1]];
+							if (cell2.symbol === null) {
+								const had = cell2.delete(i);
+								if (had) {
+									reduced = true;
+									// console.log("Swordfish");
+								}
+							}
+
+							const cell3 = cells[x * 9 + pairArray[2]];
+							if (cell3.symbol === null) {
+								const had = cell3.delete(i);
+								if (had) {
+									reduced = true;
+									// console.log("Swordfish");
+								}
+							}
+
 						}
 					}
 				}
 			}
 		}
 	}
+	return reduced;
 
 	for (let i = 0; i < 9; i++) {
 		const pairs = [];
@@ -1006,4 +1038,4 @@ const generate = (cells) => {
 	return false;
 }
 
-export { candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWingSwordfish, xyWing, phistomefel, bruteForce };
+export { candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing, phistomefel, bruteForce };

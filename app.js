@@ -1,6 +1,6 @@
 import { FONT, board } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWingSwordfish, xyWing, generate, bruteForce, phistomefel } from "./solver.js";
+import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing, generate, bruteForce, phistomefel } from "./solver.js";
 
 const sudokuSamples = [
 	// [
@@ -15,6 +15,18 @@ const sudokuSamples = [
 	// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
 	// 	"Name"
 	// ],
+	[
+		[0, 0, 0, 8, 4, 0, 3, 0, 0],
+		[0, 0, 0, 0, 0, 0, 0, 8, 0],
+		[2, 0, 9, 0, 0, 0, 0, 0, 0],
+		[1, 0, 0, 0, 0, 0, 0, 4, 0],
+		[0, 0, 0, 3, 0, 0, 0, 0, 8],
+		[0, 0, 0, 9, 0, 6, 0, 0, 1],
+		[0, 4, 3, 0, 0, 0, 5, 6, 0],
+		[9, 5, 0, 0, 0, 0, 7, 0, 0],
+		[0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"20"
+	],
 	[
 		[0, 9, 0, 0, 0, 4, 0, 8, 5],
 		[0, 1, 0, 0, 8, 0, 9, 0, 0],
@@ -635,7 +647,8 @@ const fillSolve = () => {
 	let hiddenSinglesFills = 0;
 	let nakedHiddenSetsFills = 0;
 	let omissionsFills = 0;
-	let xWingSwordfishFills = 0;
+	let xWingFills = 0;
+	let swordfishFills = 0;
 	let xyWingFills = 0;
 	let phistomefelFills = 0;
 	let bruteForceFill = false;
@@ -666,23 +679,29 @@ const fillSolve = () => {
 						omissionsFills++;
 						fills++;
 					} else {
-						progress = xWingSwordfish(board.cells);
+						progress = xWing(board.cells);
 						if (progress) {
-							xWingSwordfishFills++;
+							xWingFills++;
 							fills++;
 						} else {
-							progress = xyWing(board.cells);
+							progress = swordfish(board.cells);
 							if (progress) {
-								xyWingFills++;
+								swordfishFills++;
 								fills++;
 							} else {
-								progress = phistomefel(board.cells);
+								progress = xyWing(board.cells);
 								if (progress) {
-									phistomefelFills++;
+									xyWingFills++;
 									fills++;
 								} else {
-									// bruteForce(board.cells);
-									bruteForceFill = true;
+									progress = phistomefel(board.cells);
+									if (progress) {
+										phistomefelFills++;
+										fills++;
+									} else {
+										// bruteForce(board.cells);
+										bruteForceFill = true;
+									}
 								}
 							}
 						}
@@ -691,7 +710,18 @@ const fillSolve = () => {
 			}
 		}
 	} while (progress);
-	return { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills, phistomefelFills, bruteForceFill };
+	return {
+		fills,
+		loneSinglesFills,
+		hiddenSinglesFills,
+		nakedHiddenSetsFills,
+		omissionsFills,
+		xWingFills,
+		swordfishFills,
+		xyWingFills,
+		phistomefelFills,
+		bruteForceFill
+	};
 }
 markerButton.addEventListener('click', () => {
 	for (const cell of board.cells) {
@@ -701,7 +731,7 @@ markerButton.addEventListener('click', () => {
 
 	const t = performance.now();
 
-	const { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills, phistomefelFills, bruteForceFill } = fillSolve();
+	const { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingFills, swordfishFills, xyWingFills, phistomefelFills, bruteForceFill } = fillSolve();
 
 	console.log("--- " + Math.round(performance.now() - t) / 1000);
 	console.log("Removals: " + fills);
@@ -709,7 +739,8 @@ markerButton.addEventListener('click', () => {
 	console.log("Hidden Singles: " + hiddenSinglesFills);
 	console.log("Naked and Hidden Sets: " + nakedHiddenSetsFills);
 	console.log("Omissions: " + omissionsFills);
-	console.log("X Wing Swordfish: " + xWingSwordfishFills);
+	console.log("X Wing: " + xWingFills);
+	console.log("Swordfish: " + swordfishFills);
 	console.log("XY Wing: " + xyWingFills);
 	console.log("Phistomefel: " + phistomefelFills);
 	console.log("Brute Force: " + bruteForceFill);
@@ -736,6 +767,7 @@ generateButton.style.height = '32px';
 
 generateButton.addEventListener('click', () => {
 	let min = 81;
+	let max = 16;
 
 	const makeArray = (size) => {
 		const array = new Uint8Array(size);
@@ -915,9 +947,21 @@ generateButton.addEventListener('click', () => {
 			cell.setSymbol(symbol === 0 ? null : symbol - 1);
 		}
 
-		if (hits < min || hits < 21) {
-			min = hits;
-			console.log(min, totalPuzzles);
+		if (hits < min || hits > max) {
+			if (hits < min) {
+				min = hits;
+			}
+
+			if (hits > max) {
+				max = hits;
+			}
+
+			console.log(min, max, totalPuzzles);
+			board.cells.log();
+		}
+		if (hits > max) {
+			max = hits;
+			console.log(max, totalPuzzles);
 			board.cells.log();
 		}
 
@@ -926,17 +970,17 @@ generateButton.addEventListener('click', () => {
 		// const now = performance.now();
 		// console.log(`Time: ${Math.round(now - time) / 1000}`);
 
-		const { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills, phistomefelFills, bruteForceFill } = fillSolve();
+		const { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingFills, swordfishFills, xyWingFills, phistomefelFills, bruteForceFill } = fillSolve();
 		const finished = isFinished();
-		// console.log(nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills, finished);
+		if(swordfishFills>0) console.log("swordfishFills: " + swordfishFills);
+		// console.log(nakedHiddenSetsFills, omissionsFills, xWingFills, swordfishFills, xyWingFills, finished);
 		if (!finished) {
-			// console.log(nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills, finished);
+			// console.log(nakedHiddenSetsFills, omissionsFills, xWingFills, swordfishFills, xyWingFills, finished);
 			// console.log(grid.toString());
 		}
 
 		if (phistomefelFills > 0) {
-			console.log(grid.toString());
-			return;
+			console.log("Phistomefel: " + grid.toString());
 		}
 		window.setTimeout(() => {
 			step();
