@@ -376,32 +376,14 @@ const swordfish = (cells) => {
 						for (let x = 0; x < 9; x++) {
 							if (x === pair1.x || x === pair2.x || x === pair3.x) continue;
 
-							const pairArray = [...set];
-
-							const cell1 = cells[x * 9 + pairArray[0]];
-							if (cell1.symbol === null) {
-								const had = cell1.delete(i);
-								if (had) {
-									reduced = true;
-									// console.log("Swordfish");
-								}
-							}
-
-							const cell2 = cells[x * 9 + pairArray[1]];
-							if (cell2.symbol === null) {
-								const had = cell2.delete(i);
-								if (had) {
-									reduced = true;
-									// console.log("Swordfish");
-								}
-							}
-
-							const cell3 = cells[x * 9 + pairArray[2]];
-							if (cell3.symbol === null) {
-								const had = cell3.delete(i);
-								if (had) {
-									reduced = true;
-									// console.log("Swordfish");
+							for (const pairi of [...set]) {
+								const cell = cells[x * 9 + pairi];
+								if (cell.symbol === null) {
+									const had = cell.delete(i);
+									if (had) {
+										reduced = true;
+										// console.log("Swordfish");
+									}
 								}
 							}
 
@@ -411,49 +393,53 @@ const swordfish = (cells) => {
 			}
 		}
 	}
-	return reduced;
 
 	for (let i = 0; i < 9; i++) {
 		const pairs = [];
 		for (let x = 0; x < 9; x++) {
 			let y1 = -1;
 			let y2 = -1;
+			let y3 = -1;
 			for (let y = 0; y < 9; y++) {
 				const cell = cells[y * 9 + x];
 				if (cell.symbol !== null) continue;
 				if (cell.has(i)) {
 					if (y1 === -1) y1 = y;
 					else if (y2 === -1) y2 = y;
+					else if (y3 === -1) y3 = y;
 					else { y2 = -1; break; }
 				}
 			}
-			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2));
+			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2, y3));
 		}
 
 		const len = pairs.length;
-		for (let p1 = 0, last = len - 1; p1 < last; p1++) {
+		for (let p1 = 0, last1 = len - 2; p1 < last1; p1++) {
 			const pair1 = pairs[p1];
-			for (let p2 = p1 + 1; p2 < len; p2++) {
+			for (let p2 = p1 + 1, last2 = len - 1; p2 < last2; p2++) {
 				const pair2 = pairs[p2];
-				if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
-					for (let x = 0; x < 9; x++) {
-						if (x === pair1.x || x === pair2.x) continue;
+				for (let p3 = p2 + 1; p3 < len; p3++) {
+					const pair2 = pairs[p2];
+					if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
+						for (let x = 0; x < 9; x++) {
+							if (x === pair1.x || x === pair2.x) continue;
 
-						const cell1 = cells[pair1.i1 * 9 + x];
-						if (cell1.symbol === null) {
-							const had = cell1.delete(i);
-							if (had) {
-								reduced = true;
-								// console.log("X-Wing");
+							const cell1 = cells[pair1.i1 * 9 + x];
+							if (cell1.symbol === null) {
+								const had = cell1.delete(i);
+								if (had) {
+									reduced = true;
+									// console.log("X-Wing");
+								}
 							}
-						}
 
-						const cell2 = cells[pair1.i2 * 9 + x];
-						if (cell2.symbol === null) {
-							const had = cell2.delete(i);
-							if (had) {
-								reduced = true;
-								// console.log("X-Wing");
+							const cell2 = cells[pair1.i2 * 9 + x];
+							if (cell2.symbol === null) {
+								const had = cell2.delete(i);
+								if (had) {
+									reduced = true;
+									// console.log("X-Wing");
+								}
 							}
 						}
 					}
