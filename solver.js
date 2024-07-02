@@ -248,7 +248,7 @@ const xWingSwordfish = (cells) => {
 							const had = cell1.delete(i);
 							if (had) {
 								reduced = true;
-								console.log("X-Wing");
+								// console.log("X-Wing");
 							}
 						}
 
@@ -257,7 +257,7 @@ const xWingSwordfish = (cells) => {
 							const had = cell2.delete(i);
 							if (had) {
 								reduced = true;
-								console.log("X-Wing");
+								// console.log("X-Wing");
 							}
 						}
 					}
@@ -297,7 +297,7 @@ const xWingSwordfish = (cells) => {
 							const had = cell1.delete(i);
 							if (had) {
 								reduced = true;
-								console.log("X-Wing");
+								// console.log("X-Wing");
 							}
 						}
 
@@ -306,7 +306,7 @@ const xWingSwordfish = (cells) => {
 							const had = cell2.delete(i);
 							if (had) {
 								reduced = true;
-								console.log("X-Wing");
+								// console.log("X-Wing");
 							}
 						}
 					}
@@ -461,9 +461,9 @@ const xyWing = (cells) => {
 										const had = cell.delete(hit);
 										if (had) {
 											reduced = true;
-											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											// console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											// console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											// console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
 										}
 									}
 								}
@@ -474,9 +474,9 @@ const xyWing = (cells) => {
 										const cell = cells[index];
 										const had = cell.delete(hit);
 										if (had) {
-											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											// console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											// console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											// console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
 											reduced = true;
 										}
 									}
@@ -489,9 +489,9 @@ const xyWing = (cells) => {
 										const had = cell.delete(hit);
 										if (had) {
 											reduced = true;
-											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											// console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											// console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											// console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
 										}
 									}
 								}
@@ -502,9 +502,9 @@ const xyWing = (cells) => {
 										const cell = cells[index];
 										const had = cell.delete(hit);
 										if (had) {
-											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											// console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											// console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											// console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
 											reduced = true;
 										}
 									}
@@ -537,9 +537,9 @@ const xyWing = (cells) => {
 										const had = cell.delete(hit);
 										if (had) {
 											reduced = true;
-											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											// console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											// console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											// console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
 										}
 									}
 								}
@@ -550,9 +550,9 @@ const xyWing = (cells) => {
 										const cell = cells[index];
 										const had = cell.delete(hit);
 										if (had) {
-											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											// console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											// console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											// console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
 											reduced = true;
 										}
 									}
@@ -566,9 +566,9 @@ const xyWing = (cells) => {
 										if (had) {
 											reduced = true;
 
-											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											// console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											// console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											// console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
 										}
 									}
 								}
@@ -579,9 +579,9 @@ const xyWing = (cells) => {
 										const cell = cells[index];
 										const had = cell.delete(hit);
 										if (had) {
-											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											// console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											// console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											// console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
 											reduced = true;
 										}
 									}
@@ -614,9 +614,9 @@ const xyWing = (cells) => {
 										const had = cell.delete(hit);
 										if (had) {
 											reduced = true;
-											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											// console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											// console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											// console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
 										}
 									}
 								}
@@ -627,9 +627,9 @@ const xyWing = (cells) => {
 										const cell = cells[index];
 										const had = cell.delete(hit);
 										if (had) {
-											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											// console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											// console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											// console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
 											reduced = true;
 										}
 									}
@@ -642,9 +642,9 @@ const xyWing = (cells) => {
 										const had = cell.delete(hit);
 										if (had) {
 											reduced = true;
-											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											// console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											// console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											// console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
 										}
 									}
 								}
@@ -655,9 +655,9 @@ const xyWing = (cells) => {
 										const cell = cells[index];
 										const had = cell.delete(hit);
 										if (had) {
-											console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
-											console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
-											console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
+											// console.log(rowForIndex(pair1.index) + 1, colForIndex(pair1.index) + 1);
+											// console.log(rowForIndex(pair2.index) + 1, colForIndex(pair2.index) + 1);
+											// console.log(rowForIndex(pair3.index) + 1, colForIndex(pair3.index) + 1);
 											reduced = true;
 										}
 									}
