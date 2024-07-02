@@ -319,35 +319,118 @@ const xWingSwordfish = (cells) => {
 }
 
 const xWingSwordfish2 = (cells) => {
-	for (let x = 0; x < 9; x++) {
-		let rowIndex = 0;
-		let rowMap = new Map();
-		for (const rowGroup of Grid.groupRows) {
-			const symbols = new Set();
-			for (const index of rowGroup) {
-				const cell = cells[index];
-				if (cell.has(x)) symbols.add(index);
-				if (symbols.size > 3) break;
+	class Group {
+		constructor(x, i1, i2, i3) {
+			this.x = x;
+			this.i1 = i1;
+			this.i2 = i2;
+			this.i3 = i3;
+		}
+	}
+
+	let reduced = false;
+
+	for (let i = 0; i < 9; i++) {
+		const pairs = [];
+		for (let x = 0; x < 9; x++) {
+			let y1 = -1;
+			let y2 = -1;
+			let y3 = -1;
+			for (let y = 0; y < 9; y++) {
+				const cell = cells[x * 9 + y];
+				if (cell.symbol !== null) continue;
+				if (cell.has(i)) {
+					if (y1 === -1) y1 = y;
+					else if (y2 === -1) y2 = y;
+					else if (y3 === -1) y3 = y;
+					else { y2 = -1; break; }
+				}
 			}
-			if (symbols.size === 2 || symbols.size === 3) {
-				rowMap.set(rowIndex, symbols);
-			}
-			rowIndex++;
+			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2, y3));
 		}
 
-		// const rowArray = rowMap.entries();
-		// for (let i = 0; i < rowArray.length) {
+		const len = pairs.length;
+		for (let p1 = 0, last = len - 1; p1 < last; p1++) {
+			const pair1 = pairs[p1];
+			for (let p2 = p1 + 1; p2 < len; p2++) {
+				const pair2 = pairs[p2];
+				if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
+					for (let x = 0; x < 9; x++) {
+						if (x === pair1.x || x === pair2.x) continue;
 
-		// }
-		// for(const [rkey, rvalue] of rowMap) {
-		// 	for(const [ckey, cvalue] of colMap) {
-		// 		if()
-		// 	}
+						const cell1 = cells[x * 9 + pair1.i1];
+						if (cell1.symbol === null) {
+							const had = cell1.delete(i);
+							if (had) {
+								reduced = true;
+								// console.log("X-Wing");
+							}
+						}
 
-		// 	console.log(key, value);
-		// }
+						const cell2 = cells[x * 9 + pair1.i2];
+						if (cell2.symbol === null) {
+							const had = cell2.delete(i);
+							if (had) {
+								reduced = true;
+								// console.log("X-Wing");
+							}
+						}
+					}
+				}
+			}
+		}
 	}
-	return false;
+
+	for (let i = 0; i < 9; i++) {
+		const pairs = [];
+		for (let x = 0; x < 9; x++) {
+			let y1 = -1;
+			let y2 = -1;
+			for (let y = 0; y < 9; y++) {
+				const cell = cells[y * 9 + x];
+				if (cell.symbol !== null) continue;
+				if (cell.has(i)) {
+					if (y1 === -1) y1 = y;
+					else if (y2 === -1) y2 = y;
+					else { y2 = -1; break; }
+				}
+			}
+			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2));
+		}
+
+		const len = pairs.length;
+		for (let p1 = 0, last = len - 1; p1 < last; p1++) {
+			const pair1 = pairs[p1];
+			for (let p2 = p1 + 1; p2 < len; p2++) {
+				const pair2 = pairs[p2];
+				if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
+					for (let x = 0; x < 9; x++) {
+						if (x === pair1.x || x === pair2.x) continue;
+
+						const cell1 = cells[pair1.i1 * 9 + x];
+						if (cell1.symbol === null) {
+							const had = cell1.delete(i);
+							if (had) {
+								reduced = true;
+								// console.log("X-Wing");
+							}
+						}
+
+						const cell2 = cells[pair1.i2 * 9 + x];
+						if (cell2.symbol === null) {
+							const had = cell2.delete(i);
+							if (had) {
+								reduced = true;
+								// console.log("X-Wing");
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return reduced;
 }
 
 const xyWing = (cells) => {
@@ -678,7 +761,19 @@ const xyWing = (cells) => {
 	return false;
 }
 
-const phistomefel = () => {
+const phistomefel = (cells) => {
+	// 00 01 02|03 04 05|06 07 08
+	// 09 10 11|12 13 14|15 16 17
+	// 18 19 20|21 22 23|24 25 26
+	// --------|--------|--------
+	// 27 28 29|30 31 32|33 34 35
+	// 36 37 38|39 40 41|42 43 44
+	// 45 46 47|48 49 50|51 52 53
+	// --------|--------|--------
+	// 54 55 56|57 58 59|60 61 62
+	// 63 64 65|66 67 68|69 70 71
+	// 72 73 74|75 76 77|78 79 80
+
 	// A symbols = B symbols
 	// AA.|...|.AA
 	// AA.|...|.AA
@@ -691,6 +786,107 @@ const phistomefel = () => {
 	// ..B|BBB|B..
 	// AA.|...|.AA
 	// AA.|...|.AA
+	const aCells = new Set();
+	const bCells = new Set();
+	const addGroupIndex = (set, index) => {
+		set.add(index);
+	};
+	addGroupIndex(aCells, 0);
+	addGroupIndex(aCells, 1);
+	addGroupIndex(aCells, 9);
+	addGroupIndex(aCells, 10);
+
+	addGroupIndex(aCells, 7);
+	addGroupIndex(aCells, 8);
+	addGroupIndex(aCells, 16);
+	addGroupIndex(aCells, 17);
+
+	addGroupIndex(aCells, 63);
+	addGroupIndex(aCells, 64);
+	addGroupIndex(aCells, 72);
+	addGroupIndex(aCells, 73);
+
+	addGroupIndex(aCells, 70);
+	addGroupIndex(aCells, 71);
+	addGroupIndex(aCells, 79);
+	addGroupIndex(aCells, 80);
+
+	addGroupIndex(bCells, 20);
+	addGroupIndex(bCells, 21);
+	addGroupIndex(bCells, 22);
+	addGroupIndex(bCells, 23);
+	addGroupIndex(bCells, 24);
+
+	addGroupIndex(bCells, 29);
+	addGroupIndex(bCells, 33);
+
+	addGroupIndex(bCells, 38);
+	addGroupIndex(bCells, 42);
+
+	addGroupIndex(bCells, 47);
+	addGroupIndex(bCells, 51);
+
+	addGroupIndex(bCells, 56);
+	addGroupIndex(bCells, 57);
+	addGroupIndex(bCells, 58);
+	addGroupIndex(bCells, 59);
+	addGroupIndex(bCells, 60);
+
+	for (const aIndex of aCells) {
+		const aCell = cells[aIndex];
+		if (aCell.symbol !== null) continue;
+		for (let x = 0; x < 9; x++) {
+			if (!aCell.has(x)) continue;
+
+			let possible = false;
+			for (const bIndex of bCells) {
+				const bCell = cells[bIndex];
+				if (bCell.symbol === null) {
+					if (bCell.has(x)) {
+						possible = true;
+						break;
+					}
+				} else {
+					possible = true;
+					break;
+				}
+			}
+
+			if (!possible) {
+				console.log("A !!!");
+				aCell.delete(x);
+				return true;
+			}
+		}
+	}
+	for (const bIndex of bCells) {
+		const bCell = cells[bIndex];
+		if (bCell.symbol !== null) continue;
+		for (let x = 0; x < 9; x++) {
+			if (!bCell.has(x)) continue;
+
+			let possible = false;
+			for (const aIndex of aCells) {
+				const aCell = cells[aIndex];
+				if (aCell.symbol === null) {
+					if (aCell.has(x)) {
+						possible = true;
+						break;
+					}
+				} else {
+					possible = true;
+					break;
+				}
+			}
+
+			if (!possible) {
+				console.log("B !!!");
+				bCell.delete(x);
+				return true;
+			}
+		}
+	}
+	return false;
 }
 const deadlyPattern = () => {
 	// same pairs on 2 cols, 2 rows, and 2 boxs
@@ -810,4 +1006,4 @@ const generate = (cells) => {
 	return false;
 }
 
-export { candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWingSwordfish, xyWing, bruteForce };
+export { candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWingSwordfish, xyWing, phistomefel, bruteForce };

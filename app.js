@@ -1,6 +1,6 @@
 import { FONT, board } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWingSwordfish, xyWing, generate, bruteForce } from "./solver.js";
+import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWingSwordfish, xyWing, generate, bruteForce, phistomefel } from "./solver.js";
 
 const sudokuSamples = [
 	// [
@@ -637,6 +637,7 @@ const fillSolve = () => {
 	let omissionsFills = 0;
 	let xWingSwordfishFills = 0;
 	let xyWingFills = 0;
+	let phistomefelFills = 0;
 	let bruteForceFill = false;
 
 	let progress = false;
@@ -675,8 +676,14 @@ const fillSolve = () => {
 								xyWingFills++;
 								fills++;
 							} else {
-								// bruteForce(board.cells);
-								// bruteForceFill = true;
+								progress = phistomefel(board.cells);
+								if (progress) {
+									phistomefelFills++;
+									fills++;
+								} else {
+									// bruteForce(board.cells);
+									bruteForceFill = true;
+								}
 							}
 						}
 					}
@@ -684,7 +691,7 @@ const fillSolve = () => {
 			}
 		}
 	} while (progress);
-	return { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills };
+	return { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills, phistomefelFills, bruteForceFill };
 }
 markerButton.addEventListener('click', () => {
 	for (const cell of board.cells) {
@@ -694,7 +701,7 @@ markerButton.addEventListener('click', () => {
 
 	const t = performance.now();
 
-	const { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills } = fillSolve();
+	const { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills, phistomefelFills, bruteForceFill } = fillSolve();
 
 	console.log("--- " + Math.round(performance.now() - t) / 1000);
 	console.log("Removals: " + fills);
@@ -704,39 +711,13 @@ markerButton.addEventListener('click', () => {
 	console.log("Omissions: " + omissionsFills);
 	console.log("X Wing Swordfish: " + xWingSwordfishFills);
 	console.log("XY Wing: " + xyWingFills);
+	console.log("Phistomefel: " + phistomefelFills);
+	console.log("Brute Force: " + bruteForceFill);
 
 	draw();
 	saveGrid();
 });
 document.body.appendChild(markerButton);
-
-let solveTries = 0;
-const solve = (reset) => {
-	if (reset) {
-		for (let i = 0; i < 81; i++) board.cells[i].setSymbol(null);
-	}
-
-	candidates(board.cells);
-	generate();
-
-	while (generate(board.cells)) {
-		let progress = false;
-		do {
-			candidates(board.cells);
-			progress = loneSingles(board.cells);
-			if (!progress) progress = hiddenSingles(board.cells);
-		} while (progress);
-	}
-
-	solveTries++;
-	for (const cell of board.cells) {
-		if (cell.symbol === null) {
-			// console.log("fail");
-			return false;
-		}
-	}
-	return true;
-}
 
 const isFinished = () => {
 	const cells = board.cells;
@@ -746,257 +727,15 @@ const isFinished = () => {
 	}
 	return true;
 }
-const bruteForce2 = () => {
-	const cells = board.cells;
-
-	function isValid(cell, x) {
-		const row = Math.floor(cell.index / 9);
-		const col = cell.index % 9;
-		for (let i = 0; i < 9; i++) {
-			const m = 3 * Math.floor(row / 3) + Math.floor(i / 3);
-			const n = 3 * Math.floor(col / 3) + i % 3;
-			const rowCell = cells[row * 9 + i];
-			const colCell = cells[i * 9 + col];
-			const boxCell = cells[m * 9 + n];
-			if (rowCell.symbol === x || colCell.symbol === x || boxCell.symbol === x) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	const makeRand = (size) => {
-		const rnd = new Uint8Array(size);
-		for (let i = 0; i < size; i++) rnd[i] = i;
-
-		for (let i = 0; i < size; i++) {
-			const position = Math.floor(Math.random() * size);
-			if (position !== i) {
-				const tmp = rnd[position];
-				rnd[position] = rnd[i];
-				rnd[i] = tmp;
-			}
-		}
-		return rnd;
-	}
-	const rnd = makeRand(81);
-	function sodokoSolver() {
-		for (let index = 0; index < 81; index++) {
-			const cell = cells[rnd[index]];
-			if (cell.symbol === null) {
-
-				const rndx = makeRand(9);
-				for (let x = 0; x < 9; x++) {
-					const symbol = rndx[x];
-					if (!cell.has(symbol)) continue;
-
-					const state = cell.toData();
-
-					if (isValid(cell, symbol)) {
-						cell.setSymbol(symbol);
-						if (sodokoSolver()) {
-							return true;
-						} else {
-							cell.fromData(state);
-							// cell.setSymbol(null);
-						}
-					}
-				}
-				return false;
-			}
-		}
-		return true;
-	}
-
-	const result = sodokoSolver();
-	return result;
-}
 
 const generateButton = document.createElement('button');
 generateButton.appendChild(document.createTextNode("+"));
 generateButton.style.position = 'absolute';
 generateButton.style.width = '32px';
 generateButton.style.height = '32px';
-let counter = 0;
-const generator = () => {
-	const cells = board.cells;
 
-	const isValid = () => {
-		for (let i = 0; i < 81; i++) {
-			const cell = cells[i];
-			if (cell.symbol === null && cell.size === 0) {
-				return false;
-			}
-		}
-		for (let i = 0; i < 9; i++) {
-			for (let x = 0; x < 9; x++) {
-				let foundRow = 0;
-				let foundCol = 0;
-				let foundBox = 0;
-				for (let j = 0; j < 9; j++) {
-
-					const cellRow = cells[i * 9 + j];
-					const cellCol = cells[j * 9 + i];
-
-					const m = 3 * Math.floor(i / 3) + Math.floor(j / 3);
-					const n = 3 * Math.floor(i / 3) + j % 3;
-
-					const cellBox = cells[m * 9 + n];
-
-
-					if (cellRow.symbol === x) {
-						if (foundRow === 0) {
-							foundRow = 1;
-						} else {
-							return false;
-							foundRow = 2;
-							break;
-						}
-					}
-					if (cellCol.symbol === x) {
-						if (foundCol === 0) {
-							foundCol = 1;
-						} else {
-							return false;
-							foundCol = 2;
-							break;
-						}
-					}
-					if (cellBox.symbol === x) {
-						if (foundBox === 0) {
-							foundBox = 1;
-						} else {
-							return false;
-							foundBox = 2;
-							break;
-						}
-					}
-				}
-				// if(foundRow === 2 || foundCol === 2 || foundBox === 2) return false;
-			}
-
-			// const cell = cells[i];
-			// if (cell.symbol === null) return false;
-		}
-		return true;
-	}
-
-	const markers = () => {
-		for (let i = 0; i < 81; i++) {
-			const cell = cells[i];
-			cell.show = true;
-			if (cell.symbol !== null) continue;
-			cell.reset();
-		}
-	}
-	const fillIn = () => {
-		let progress = false;
-		do {
-			candidates(board.cells);
-			progress = loneSingles(board.cells);
-			if (!progress) progress = hiddenSingles(board.cells);
-		} while (progress);
-	}
-
-	// if (counter === 0) markers();
-	markers();
-
-	let solutions = 0;
-	const solver = () => {
-		if (solutions > 1) return solutions;
-		fillIn();
-		if (isFinished()) return ++solutions;
-
-		for (let i = 0; i < 81; i++) {
-			const cell = cells[i];
-			if (cell.symbol !== null) continue;
-			for (let x = 0; x < 9; x++) {
-				if (cell.has(x)) {
-					const state = cells.toData();
-
-					cell.setSymbol(x);
-
-					if (solutions >= 2) return solutions;
-					const valid = solver();
-					if (!valid) {
-						cells.fromData(state);
-						cell.delete(x);
-					} else {
-						solutions++;
-						if (solutions === 2) return solutions;
-						else {
-							cells.fromData(state);
-							cell.delete(x);
-						}
-					}
-					// break;
-				}
-			}
-		}
-		return isValid();
-	}
-	solver();
-
-	counter++;
-
-	return solutions;
-};
-
-const makeGrid = () => {
-	const solveGrid = () => {
-		solveTries = 0;
-
-		let solved;
-		do solved = solve(true); while (!solved);
-
-		// const now = performance.now();
-		// console.log(`Tries: ${solveTries} Time: ${Math.round(now - time) / 1000}`);
-	}
-	solveGrid();
-	// bruteForce(board.cells);
-
-	const cells = board.cells;
-
-	const rnd = new Uint8Array(81);
-	for (let i = 0; i < 81; i++) rnd[i] = i;
-	for (let i = 0; i < 81; i++) {
-		const position = Math.floor(Math.random() * 81);
-		if (position !== i) {
-			const tmp = rnd[position];
-			rnd[position] = rnd[i];
-			rnd[i] = tmp;
-		}
-	}
-
-	for (let i = 0; i < 81; i++) {
-		const cell = cells[rnd[i]];
-		if (cell.symbol === null) continue;
-
-		const symbol = cell.symbol;
-		cell.setSymbol(null);
-
-		const state = cells.toData();
-		const solutions = generator();
-		if (solutions < 2) {
-			cells.fromData(state);
-		} else {
-			cells.fromData(state);
-			// cells.fromData(state);
-			cell.setSymbol(symbol);
-		}
-		// console.log(solutions, symbol);
-		// break;
-	}
-}
-let min = 81;
 generateButton.addEventListener('click', () => {
-	const time = performance.now();
-
-	// makeGrid();
-
-	// console.log(bruteForce2(board.cells));
-	// draw();
-	// return;
+	let min = 81;
 
 	const makeArray = (size) => {
 		const array = new Uint8Array(size);
@@ -1031,17 +770,16 @@ generateButton.addEventListener('click', () => {
 	}
 
 	// const puzzle = [
-	// 	[0, 0, 0, 1, 0, 2, 0, 0, 0],
-	// 	[0, 0, 0, 0, 0, 0, 0, 7, 0],
-	// 	[0, 0, 8, 0, 0, 0, 9, 0, 0],
-	// 	[4, 0, 0, 0, 0, 0, 0, 0, 3],
-	// 	[0, 5, 0, 0, 0, 7, 0, 0, 0],
-	// 	[2, 0, 0, 0, 8, 0, 0, 0, 1],
-	// 	[0, 0, 9, 0, 0, 0, 8, 0, 5],
-	// 	[0, 7, 0, 0, 0, 0, 0, 6, 0],
-	// 	[0, 0, 0, 3, 0, 4, 0, 0, 0],
+	// 	[0, 0, 0, 1, 0, 0, 3, 0, 0],
+	// 	[6, 0, 5, 0, 0, 0, 0, 0, 0],
+	// 	[2, 0, 0, 0, 0, 0, 0, 0, 0],
+	// 	[0, 1, 0, 4, 0, 0, 0, 0, 0],
+	// 	[0, 0, 0, 0, 0, 0, 0, 6, 8],
+	// 	[0, 0, 0, 0, 0, 0, 0, 5, 0],
+	// 	[0, 9, 0, 0, 0, 0, 1, 4, 0],
+	// 	[0, 0, 0, 2, 6, 0, 0, 0, 0],
+	// 	[0, 0, 0, 0, 0, 8, 7, 0, 0],
 	// ];
-	// // puzzle[0][1] = 0;
 	// for (let i = 0, index = 0; i < 9; i++) {
 	// 	for (let j = 0; j < 9; j++, index++) {
 	// 		grid[index] = puzzle[i][j];
@@ -1087,10 +825,9 @@ generateButton.addEventListener('click', () => {
 
 	const sodokoSolver = (grid) => {
 		const rndx = makeArray(9);
-
 		for (let i = 0; i < 81; i++) {
 			const index = i;
-			if (grid[index] == 0) {
+			if (grid[index] === 0) {
 				randomize(rndx);
 				for (let x = 0; x < 9; x++) {
 					const symbol = rndx[x] + 1;
@@ -1172,29 +909,24 @@ generateButton.addEventListener('click', () => {
 		// console.log(hits);
 		totalPuzzles++;
 
-		if (hits < min) {
-			min = hits;
-			console.log(min, totalPuzzles);
-			// board.cells.log();
-		}
-
-		// const result = sodokoSolver(grid);
-		// console.log(result);
-
 		for (let i = 0; i < 81; i++) {
 			const cell = board.cells[i];
 			const symbol = grid[i];
 			cell.setSymbol(symbol === 0 ? null : symbol - 1);
 		}
+
+		if (hits < min || hits < 21) {
+			min = hits;
+			console.log(min, totalPuzzles);
+			board.cells.log();
+		}
+
 		draw();
 
 		// const now = performance.now();
 		// console.log(`Time: ${Math.round(now - time) / 1000}`);
 
-
-
-
-		const { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills, valid } = fillSolve();
+		const { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills, phistomefelFills, bruteForceFill } = fillSolve();
 		const finished = isFinished();
 		// console.log(nakedHiddenSetsFills, omissionsFills, xWingSwordfishFills, xyWingFills, finished);
 		if (!finished) {
@@ -1202,6 +934,10 @@ generateButton.addEventListener('click', () => {
 			// console.log(grid.toString());
 		}
 
+		if (phistomefelFills > 0) {
+			console.log(grid.toString());
+			return;
+		}
 		window.setTimeout(() => {
 			step();
 		}, 0);
