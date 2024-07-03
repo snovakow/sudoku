@@ -420,25 +420,33 @@ const swordfish = (cells) => {
 				const pair2 = pairs[p2];
 				for (let p3 = p2 + 1; p3 < len; p3++) {
 					const pair3 = pairs[p3];
-					if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
+
+					set.clear();
+
+					set.add(pair1.i1);
+					set.add(pair1.i2);
+					if (pair1.i3 !== -1) set.add(pair1.i3);
+
+					set.add(pair2.i1);
+					set.add(pair2.i2);
+					if (pair2.i3 !== -1) set.add(pair2.i3);
+
+					set.add(pair3.i1);
+					set.add(pair3.i2);
+					if (pair3.i3 !== -1) set.add(pair3.i3);
+
+					if (set.size === 3) {
 						for (let x = 0; x < 9; x++) {
-							if (x === pair1.x || x === pair2.x) continue;
+							if (x === pair1.x || x === pair2.x || x === pair3.x) continue;
 
-							const cell1 = cells[pair1.i1 * 9 + x];
-							if (cell1.symbol === null) {
-								const had = cell1.delete(i);
-								if (had) {
-									reduced = true;
-									// console.log("X-Wing");
-								}
-							}
-
-							const cell2 = cells[pair1.i2 * 9 + x];
-							if (cell2.symbol === null) {
-								const had = cell2.delete(i);
-								if (had) {
-									reduced = true;
-									// console.log("X-Wing");
+							for (const pairi of [...set]) {
+								const cell = cells[pairi * 9 + x];
+								if (cell.symbol === null) {
+									const had = cell.delete(i);
+									if (had) {
+										reduced = true;
+										// console.log("Swordfish");
+									}
 								}
 							}
 						}
@@ -779,6 +787,17 @@ const xyWing = (cells) => {
 	return false;
 }
 
+const deadlyPattern = () => {
+	// same pairs on 2 cols, 2 rows, and 2 boxs
+	// Unique Rectangle
+	// Type 1 Unique Rectangles
+
+	// Type 2 Unique Rectangles
+	// https://www.sudokuwiki.org/Unique_Rectangles
+}
+
+export const aCells = new Set();
+export const bCells = new Set();
 const phistomefel = (cells) => {
 	// 00 01 02|03 04 05|06 07 08
 	// 09 10 11|12 13 14|15 16 17
@@ -804,8 +823,6 @@ const phistomefel = (cells) => {
 	// ..B|BBB|B..
 	// AA.|...|.AA
 	// AA.|...|.AA
-	const aCells = new Set();
-	const bCells = new Set();
 	const addGroupIndex = (set, index) => {
 		set.add(index);
 	};
@@ -850,6 +867,59 @@ const phistomefel = (cells) => {
 	addGroupIndex(bCells, 59);
 	addGroupIndex(bCells, 60);
 
+	let reduced = false;
+
+	let aCount = 0;
+	let aCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+	for (const aIndex of aCells) {
+		const aCell = cells[aIndex];
+		if (aCell.symbol === null) continue;
+		aCounts[aCell.symbol]++;
+		aCount++;
+	}
+	let bCount = 0;
+	let bCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+	for (const bIndex of bCells) {
+		const bCell = cells[bIndex];
+		if (bCell.symbol === null) continue;
+		bCounts[bCell.symbol]++;
+		bCount++;
+	}
+	if (aCount !== bCount) {
+		if (aCount === 16) {
+			for (let x = 0; x < 9; x++) {
+				aCounts[x] -= bCounts[x];
+			}
+			for (const bIndex of bCells) {
+				const bCell = cells[bIndex];
+				if (bCell.symbol !== null) continue;
+				for (let x = 0; x < 9; x++) {
+					if (aCounts[x] === 0) {
+						if (bCell.delete(x)) {
+							reduced = true;
+						}
+					}
+				}
+			}
+		}
+		if (bCount === 16) {
+			for (let x = 0; x < 9; x++) {
+				bCounts[x] -= aCounts[x];
+			}
+			for (const aIndex of aCells) {
+				const aCell = cells[aIndex];
+				if (aCell.symbol !== null) continue;
+				for (let x = 0; x < 9; x++) {
+					if (bCounts[x] === 0) {
+						if (aCell.delete(x)) {
+							reduced = true;
+						}
+					}
+				}
+			}
+		}
+	}
+
 	for (const aIndex of aCells) {
 		const aCell = cells[aIndex];
 		if (aCell.symbol !== null) continue;
@@ -865,15 +935,18 @@ const phistomefel = (cells) => {
 						break;
 					}
 				} else {
-					possible = true;
-					break;
+					if (bCell.symbol === x) {
+						possible = true;
+						break;
+					}
 				}
 			}
 
 			if (!possible) {
-				console.log("A !!!");
+				// console.log("A !!!");
+				reduced = true;
 				aCell.delete(x);
-				return true;
+				// return true;
 			}
 		}
 	}
@@ -892,27 +965,22 @@ const phistomefel = (cells) => {
 						break;
 					}
 				} else {
-					possible = true;
-					break;
+					if (aCell.symbol === x) {
+						possible = true;
+						break;
+					}
 				}
 			}
 
 			if (!possible) {
-				console.log("B !!!");
+				// console.log("B !!!");
+				reduced = true;
 				bCell.delete(x);
-				return true;
+				// return true;
 			}
 		}
 	}
-	return false;
-}
-const deadlyPattern = () => {
-	// same pairs on 2 cols, 2 rows, and 2 boxs
-	// Unique Rectangle
-	// Type 1 Unique Rectangles
-
-	// Type 2 Unique Rectangles
-	// https://www.sudokuwiki.org/Unique_Rectangles
+	return reduced;
 }
 
 const bruteForce = (cells) => {

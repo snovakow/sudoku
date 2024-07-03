@@ -1,6 +1,6 @@
 import { FONT, board } from "./board.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing, generate, bruteForce, phistomefel } from "./solver.js";
+import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing, generate, bruteForce, phistomefel, aCells, bCells } from "./solver.js";
 
 const sudokuSamples = [
 	// [
@@ -15,6 +15,30 @@ const sudokuSamples = [
 	// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
 	// 	"Name"
 	// ],
+	[
+		[1, 0, 0, 0, 0, 6, 7, 0, 9],
+		[5, 0, 0, 2, 7, 0, 0, 0, 0],
+		[0, 4, 7, 8, 3, 0, 5, 0, 6],
+		[0, 1, 0, 0, 8, 5, 0, 0, 7],
+		[0, 9, 0, 0, 0, 0, 0, 0, 5],
+		[0, 0, 0, 0, 2, 0, 3, 0, 0],
+		[6, 0, 0, 5, 0, 8, 9, 3, 0],
+		[0, 3, 1, 0, 0, 0, 0, 0, 8],
+		[0, 0, 0, 0, 6, 0, 0, 0, 0],
+		"30"
+	],
+	[
+		[0, 6, 0, 9, 0, 8, 0, 0, 4],
+		[0, 0, 0, 0, 0, 0, 1, 0, 0],
+		[0, 0, 0, 7, 0, 0, 0, 0, 0],
+		[1, 0, 0, 0, 0, 0, 8, 3, 0],
+		[3, 0, 4, 0, 0, 0, 0, 0, 0],
+		[0, 0, 0, 8, 0, 0, 0, 0, 0],
+		[0, 2, 0, 0, 5, 0, 0, 7, 0],
+		[0, 0, 0, 0, 1, 0, 0, 0, 0],
+		[0, 0, 0, 0, 0, 3, 0, 0, 0],
+		"17"
+	],
 	[
 		[0, 0, 0, 8, 4, 0, 3, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 8, 0],
@@ -304,6 +328,27 @@ const sudokuSamples = [
 		"Old 9"
 	],
 ];
+
+const raws = [
+	[0, 2, 0, 4, 0, 0, 7, 8, 0, 0, 8, 0, 1, 0, 0, 0, 5, 3, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 0, 0, 4, 0, 0, 8, 0, 5, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 4, 9, 0, 0, 3, 7, 0, 0, 0, 0, 0, 2, 8, 0, 1, 0, 0, 0, 0, 0, 0, 7],
+	[1, 2, 0, 0, 0, 0, 0, 8, 0, 7, 5, 0, 0, 0, 0, 0, 1, 6, 0, 0, 6, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 9, 0, 0, 0, 0, 0, 7, 0, 5, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 6, 9, 1, 0, 1, 9, 0, 0, 0, 0, 4, 5],
+	[0, 0, 0, 4, 0, 0, 0, 0, 9, 8, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 6, 0, 0, 8, 5, 0, 0, 7, 0, 9, 0, 0, 0, 8, 0, 3, 0, 1, 5, 0, 0, 0, 9, 0, 0, 0, 0, 8, 0, 0, 0, 6, 0, 0, 0, 0, 2, 9, 3, 5, 1, 0, 0, 0, 9, 1, 0, 6, 0, 0, 0, 5, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+];
+let rawIndex = raws.length;
+for (const raw of raws) {
+	const puzzle = [];
+	for (let i = 0, index = 0; i < 9; i++) {
+		const row = [];
+		for (let j = 0; j < 9; j++, index++) {
+			row[j] = raw[index];
+		}
+		puzzle[i] = row;
+	}
+	puzzle[9] = "puzzle " + rawIndex;
+	rawIndex--;
+
+	sudokuSamples.unshift(puzzle);
+}
 
 const sudokuStrings = `85...24..72......9..4.........1.7..23.5...9...4...........8..7..17..........36.4.
 ..53.....8......2..7..1.5..4....53...1..7...6..32...8..6.5....9..4....3......97..
@@ -641,7 +686,7 @@ markerButton.appendChild(document.createTextNode("x"));
 markerButton.style.position = 'absolute';
 markerButton.style.width = '32px';
 markerButton.style.height = '32px';
-const fillSolve = () => {
+const fillSolve = (basic = false) => {
 	let fills = 0;
 	let loneSinglesFills = 0;
 	let hiddenSinglesFills = 0;
@@ -694,13 +739,13 @@ const fillSolve = () => {
 									xyWingFills++;
 									fills++;
 								} else {
-									progress = phistomefel(board.cells);
+									if (!basic) progress = phistomefel(board.cells);
 									if (progress) {
 										phistomefelFills++;
 										fills++;
 									} else {
 										// bruteForce(board.cells);
-										bruteForceFill = true;
+										bruteForceFill = !isFinished();
 									}
 								}
 							}
@@ -731,7 +776,18 @@ markerButton.addEventListener('click', () => {
 
 	const t = performance.now();
 
-	const { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingFills, swordfishFills, xyWingFills, phistomefelFills, bruteForceFill } = fillSolve();
+	const {
+		fills,
+		loneSinglesFills,
+		hiddenSinglesFills,
+		nakedHiddenSetsFills,
+		omissionsFills,
+		xWingFills,
+		swordfishFills,
+		xyWingFills,
+		phistomefelFills,
+		bruteForceFill
+	} = fillSolve(true);
 
 	console.log("--- " + Math.round(performance.now() - t) / 1000);
 	console.log("Removals: " + fills);
@@ -902,10 +958,14 @@ generateButton.addEventListener('click', () => {
 	const savedGrid = new Uint8Array(81);
 	const rndi = makeArray(81);
 
+	let once = 0;
 	const step = () => {
 
-		for (let i = 0; i < 81; i++) grid[i] = 0;
-
+		if (once % 1 === 0) {
+			for (let i = 0; i < 81; i++) grid[i] = 0;
+			for (let i = 0; i < 9; i++) grid[i] = i + 1;
+		}
+		once++;
 		sodokoSolver(grid);
 
 		if (!isValidGrid(grid)) {
@@ -915,8 +975,29 @@ generateButton.addEventListener('click', () => {
 
 		randomize(rndi);
 
+		const groupCells = once % 2 === 0 ? aCells : bCells;
 		for (let i = 0; i < 81; i++) {
 			const index = rndi[i];
+
+			if (groupCells.has(index)) continue;
+
+			// const index = i;
+			const symbol = grid[index];
+			if (symbol === 0) continue;
+			grid[index] = 0;
+
+			savedGrid.set(grid);
+
+			const result = solutionCount(grid);
+			// console.log(result)
+			grid.set(savedGrid);
+			if (result !== 1) {
+				grid[index] = symbol;
+			}
+			// if (i > 20) break;
+		}
+		for (const index of groupCells) {
+			// const index = i;
 			const symbol = grid[index];
 			if (symbol === 0) continue;
 			grid[index] = 0;
@@ -970,17 +1051,26 @@ generateButton.addEventListener('click', () => {
 		// const now = performance.now();
 		// console.log(`Time: ${Math.round(now - time) / 1000}`);
 
-		const { fills, loneSinglesFills, hiddenSinglesFills, nakedHiddenSetsFills, omissionsFills, xWingFills, swordfishFills, xyWingFills, phistomefelFills, bruteForceFill } = fillSolve();
-		const finished = isFinished();
-		if(swordfishFills>0) console.log("swordfishFills: " + swordfishFills);
+		const {
+			fills,
+			loneSinglesFills,
+			hiddenSinglesFills,
+			nakedHiddenSetsFills,
+			omissionsFills,
+			xWingFills,
+			swordfishFills,
+			xyWingFills,
+			phistomefelFills,
+			bruteForceFill
+		} = fillSolve();
 		// console.log(nakedHiddenSetsFills, omissionsFills, xWingFills, swordfishFills, xyWingFills, finished);
-		if (!finished) {
+		if (!bruteForceFill) {
 			// console.log(nakedHiddenSetsFills, omissionsFills, xWingFills, swordfishFills, xyWingFills, finished);
 			// console.log(grid.toString());
 		}
 
-		if (phistomefelFills > 0) {
-			console.log("Phistomefel: " + grid.toString());
+		if (phistomefelFills > 0 && !bruteForceFill) {
+			console.log("Phistomefel: " + hits + " " + grid.toString());
 		}
 		window.setTimeout(() => {
 			step();
