@@ -153,6 +153,164 @@ const sudokuGenerator = (cells) => {
 
 	randomize(rndi);
 
+	for (let i = 0; i < 81; i++) {
+		const index = rndi[i];
+
+		// if (groupCells.has(index)) continue;
+
+		// const index = i;
+		const symbol = grid[index];
+		if (symbol === 0) continue;
+		grid[index] = 0;
+
+		savedGrid.set(grid);
+
+		const result = solutionCount(grid);
+		// console.log(result)
+		grid.set(savedGrid);
+		if (result !== 1) {
+			grid[index] = symbol;
+		}
+	}
+
+	let hits = 0;
+	for (let i = 0; i < 81; i++) {
+		if (grid[i] !== 0) {
+			hits++;
+		}
+	}
+	// console.log(hits);
+	totalPuzzles++;
+
+	for (let i = 0; i < 81; i++) {
+		const cell = cells[i];
+		const symbol = grid[i];
+		cell.setSymbol(symbol === 0 ? null : symbol - 1);
+	}
+
+	if (hits < min || hits > max) {
+		if (hits < min) {
+			min = hits;
+		}
+
+		if (hits > max) {
+			max = hits;
+		}
+
+		console.log(min, max, totalPuzzles);
+		cells.log();
+	}
+
+	return { clueCount: hits, grid };
+}
+
+const sudokuGeneratorPhistomefel = (cells) => {
+
+	if (once % 1 === 0) {
+		for (let i = 0; i < 81; i++) grid[i] = 0;
+		for (let i = 0; i < 9; i++) grid[i] = i + 1;
+	}
+	once++;
+	sodokoSolver(grid);
+
+	if (!isValidGrid(grid)) {
+		console.log("INVALID!");
+		return;
+	}
+
+	randomize(rndi);
+
+	const groupCells = once % 2 === 0 ? aCells : bCells;
+	for (let i = 0; i < 81; i++) {
+		const index = rndi[i];
+
+		if (groupCells.has(index)) continue;
+
+		// const index = i;
+		const symbol = grid[index];
+		if (symbol === 0) continue;
+		grid[index] = 0;
+
+		savedGrid.set(grid);
+
+		const result = solutionCount(grid);
+		// console.log(result)
+		grid.set(savedGrid);
+		if (result !== 1) {
+			grid[index] = symbol;
+		}
+	}
+	for (const index of groupCells) {
+		// const index = i;
+		const symbol = grid[index];
+		if (symbol === 0) continue;
+		grid[index] = 0;
+
+		savedGrid.set(grid);
+
+		const result = solutionCount(grid);
+		// console.log(result)
+		grid.set(savedGrid);
+		if (result !== 1) {
+			grid[index] = symbol;
+		}
+	}
+
+	let hits = 0;
+	for (let i = 0; i < 81; i++) {
+		if (grid[i] !== 0) {
+			hits++;
+		}
+	}
+	// console.log(hits);
+	totalPuzzles++;
+
+	for (let i = 0; i < 81; i++) {
+		const cell = cells[i];
+		const symbol = grid[i];
+		cell.setSymbol(symbol === 0 ? null : symbol - 1);
+	}
+
+	if (hits < min || hits > max) {
+		if (hits < min) {
+			min = hits;
+		}
+
+		if (hits > max) {
+			max = hits;
+		}
+
+		console.log(min, max, totalPuzzles);
+		cells.log();
+	}
+
+	return { clueCount: hits, grid };
+}
+
+const gridSize = new Uint8Array(81);
+let sizeCalled = false;
+const sudokuGeneratorSize = (cells) => {
+	if (!sizeCalled) {
+		for (let i = 0; i < 81; i++) gridSize[i] = 0;
+		for (let i = 0; i < 9; i++) gridSize[i] = i + 1;
+		sodokoSolver(gridSize);
+
+		const { clueCount, grid } = sudokuGenerator(cells);
+		console.log(clueCount);
+
+		gridSize.set(grid);
+
+		sizeCalled = true;
+	}
+	return;
+
+	if (!isValidGrid(grid)) {
+		console.log("INVALID!");
+		return;
+	}
+
+	randomize(rndi);
+
 	// const groupCells = once % 2 === 0 ? aCells : bCells;
 	for (let i = 0; i < 81; i++) {
 		const index = rndi[i];
@@ -220,4 +378,4 @@ const sudokuGenerator = (cells) => {
 	return { clueCount: hits, grid };
 }
 
-export { sudokuGenerator };
+export { sudokuGenerator, sudokuGeneratorSize };
