@@ -1,5 +1,5 @@
 import { FONT, board } from "./board.js";
-import { sudokuGenerator } from "./generator.js";
+import { sudokuGenerator, sudokuGeneratorPhistomefel } from "./generator.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
 import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing, generate, bruteForce, phistomefel, uniqueRectangle } from "./solver.js";
 
@@ -845,7 +845,7 @@ generateButton.style.height = '32px';
 
 generateButton.addEventListener('click', () => {
 	const step = () => {
-		const { clueCount, grid } = sudokuGenerator(board.cells);
+		const { clueCount, grid } = sudokuGeneratorPhistomefel(board.cells);
 		draw();
 
 		// const now = performance.now();
@@ -864,11 +864,6 @@ generateButton.addEventListener('click', () => {
 			uniqueRectangleFills,
 			bruteForceFill
 		} = fillSolve();
-		// console.log(nakedHiddenSetsFills, omissionsFills, xWingFills, swordfishFills, xyWingFills, finished);
-		if (!bruteForceFill) {
-			// console.log(nakedHiddenSetsFills, omissionsFills, xWingFills, swordfishFills, xyWingFills, finished);
-			// console.log(grid.toString());
-		}
 
 		if (phistomefelFills > 0 && !bruteForceFill) {
 			console.log("Phistomefel: " + clueCount + " " + grid.toString());
