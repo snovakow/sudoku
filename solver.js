@@ -788,16 +788,14 @@ const xyWing = (cells) => {
 }
 
 const deadlyPattern = () => {
-	// same pairs on 2 cols, 2 rows, and 2 boxs
-	// Unique Rectangle
-	// Type 1 Unique Rectangles
+
 
 	// Type 2 Unique Rectangles
 	// https://www.sudokuwiki.org/Unique_Rectangles
 }
 
+// Deadly Pattern: Type 1 Unique Rectangles
 const uniqueRectangle = (cells) => {
-	return false;
 	const pairs = [];
 	for (let i = 0; i < 81; i++) {
 		const cell = cells[i];
@@ -815,51 +813,40 @@ const uniqueRectangle = (cells) => {
 				if (cell1.mask !== cell2.mask || cell2.mask !== cell3.mask) continue;
 
 				let rowCount = 1;
-				if (cell1.row !== cell2.row) rowCount++;
-				if (cell2.row !== cell3.row) rowCount++;
+				if (cell2.row !== cell1.row) rowCount++;
+				if (cell3.row !== cell1.row && cell3.row !== cell2.row) rowCount++;
 				if (rowCount !== 2) continue;
 
 				let colCount = 1;
-				if (cell1.col !== cell2.col) colCount++;
-				if (cell2.col !== cell3.col) colCount++;
+				if (cell2.col !== cell1.col) colCount++;
+				if (cell3.col !== cell1.col && cell3.col !== cell2.col) colCount++;
 				if (colCount !== 2) continue;
 
 				let boxCount = 1;
-				if (cell1.box !== cell2.box) boxCount++;
-				if (cell2.box !== cell3.box) boxCount++;
+				if (cell2.box !== cell1.box) boxCount++;
+				if (cell3.box !== cell1.box && cell3.box !== cell2.box) boxCount++;
 				if (boxCount !== 2) continue;
 
-
 				let row = -1;
+				if (cell1.row === cell2.row) row = cell3.row;
+				// if (cell1.row === cell3.row) row = cell2.row; // cells are in order so the 1st and 3rd can't be on the same row
+				if (cell2.row === cell3.row) row = cell1.row;
+
+				if (row === -1) continue;
+
 				let col = -1;
-				if (cell1.row === cell2.row && cell1.col === cell3.col) {
-					row = cell1.col;
-					col = cell3.row;
-				}
-				if (cell1.col === cell2.col && cell1.row === cell3.row) {
-					row = cell1.row;
-					col = cell3.col;
-				}
+				if (cell1.col === cell2.col) col = cell3.col;
+				if (cell1.col === cell3.col) col = cell2.col;
+				if (cell2.col === cell3.col) col = cell1.col;
 
-				if (cell2.row === cell1.row && cell2.col === cell3.col) {
-					row = cell2.col;
-					col = cell3.row;
-				}
-				if (cell2.row === cell1.row && cell2.col === cell3.col) {
-					row = cell2.col;
-					col = cell3.row;
-				}
-
-				if (cell3.row === cell1.row && cell3.col === cell2.col) {
-					row = cell1.col;
-					col = cell3.row;
-				}
+				if (col === -1) continue;
 
 				const cell = cells[row * 9 + col];
 				for (let x = 0; x < 9; x++) {
-					cell1.has(x);
-					if (cell.delete(x)) {
-						return true;
+					if (cell1.has(x)) {
+						if (cell.delete(x)) {
+							return true;
+						}
 					}
 				}
 			}

@@ -216,11 +216,6 @@ const sudokuGenerator = (cells) => {
 		console.log(min, max, totalPuzzles);
 		cells.log();
 	}
-	if (hits > max) {
-		max = hits;
-		console.log(max, totalPuzzles);
-		cells.log();
-	}
 
 	return { clueCount: hits, grid };
 }
