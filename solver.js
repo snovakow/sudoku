@@ -796,6 +796,77 @@ const deadlyPattern = () => {
 	// https://www.sudokuwiki.org/Unique_Rectangles
 }
 
+const uniqueRectangle = (cells) => {
+	return false;
+	const pairs = [];
+	for (let i = 0; i < 81; i++) {
+		const cell = cells[i];
+		if (cell.symbol !== null) continue;
+		if (cell.size !== 2) continue;
+		pairs.push(cell);
+	}
+	for (let i = 0, leni = pairs.length - 2; i < leni; i++) {
+		for (let j = i + 1, lenj = pairs.length - 1; j < lenj; j++) {
+			for (let k = j + 1, lenk = pairs.length; k < lenk; k++) {
+				const cell1 = pairs[i];
+				const cell2 = pairs[j];
+				const cell3 = pairs[k];
+
+				if (cell1.mask !== cell2.mask || cell2.mask !== cell3.mask) continue;
+
+				let rowCount = 1;
+				if (cell1.row !== cell2.row) rowCount++;
+				if (cell2.row !== cell3.row) rowCount++;
+				if (rowCount !== 2) continue;
+
+				let colCount = 1;
+				if (cell1.col !== cell2.col) colCount++;
+				if (cell2.col !== cell3.col) colCount++;
+				if (colCount !== 2) continue;
+
+				let boxCount = 1;
+				if (cell1.box !== cell2.box) boxCount++;
+				if (cell2.box !== cell3.box) boxCount++;
+				if (boxCount !== 2) continue;
+
+
+				let row = -1;
+				let col = -1;
+				if (cell1.row === cell2.row && cell1.col === cell3.col) {
+					row = cell1.col;
+					col = cell3.row;
+				}
+				if (cell1.col === cell2.col && cell1.row === cell3.row) {
+					row = cell1.row;
+					col = cell3.col;
+				}
+
+				if (cell2.row === cell1.row && cell2.col === cell3.col) {
+					row = cell2.col;
+					col = cell3.row;
+				}
+				if (cell2.row === cell1.row && cell2.col === cell3.col) {
+					row = cell2.col;
+					col = cell3.row;
+				}
+
+				if (cell3.row === cell1.row && cell3.col === cell2.col) {
+					row = cell1.col;
+					col = cell3.row;
+				}
+
+				const cell = cells[row * 9 + col];
+				for (let x = 0; x < 9; x++) {
+					cell1.has(x);
+					if (cell.delete(x)) {
+						return true;
+					}
+				}
+			}
+		}
+	}
+}
+
 export const aCells = new Set();
 export const bCells = new Set();
 const phistomefel = (cells) => {
@@ -866,7 +937,37 @@ const phistomefel = (cells) => {
 	addGroupIndex(bCells, 58);
 	addGroupIndex(bCells, 59);
 	addGroupIndex(bCells, 60);
+	// let aCount = 0;
+	// let aCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+	// let aCompletes = [true, true, true, true, true, true, true, true, true];
+	// for (const aIndex of aCells) {
+	// 	const aCell = cells[aIndex];
+	// 	if (aCell.symbol === null) {
+	// 		for (let x = 0; x < 9; x++) {
+	// 			if (aCell.has(x)) {
+	// 				aCompletes[x] = false;
+	// 			}
+	// 		}
+	// 	} else {
+	// 		aCounts[aCell.symbol]++;
+	// 		aCount++;
+	// 	}
+	// }
+	// for (let x = 0; x < 9; x++) {
+	// 	if (aCompletes[x]) aCounts[x] -= bCounts[x];
+	// 	else continue;
 
+	// 	for (const bIndex of bCells) {
+	// 		const bCell = cells[bIndex];
+	// 		if (bCell.symbol !== null) continue;
+	// 		if (aCounts[x] === 0) {
+	// 			if (bCell.delete(x)) {
+	// 				console.log(aCount, bCount);
+	// 				reduced = true;
+	// 			}
+	// 		}
+	// 	}
+	// }
 	let reduced = false;
 
 	let aCount = 0;
@@ -1092,4 +1193,7 @@ const generate = (cells) => {
 	return false;
 }
 
-export { candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing, phistomefel, bruteForce };
+export {
+	candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing,
+	uniqueRectangle, phistomefel, bruteForce
+};
