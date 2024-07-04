@@ -788,8 +788,6 @@ const xyWing = (cells) => {
 }
 
 const deadlyPattern = () => {
-
-
 	// Type 2 Unique Rectangles
 	// https://www.sudokuwiki.org/Unique_Rectangles
 }
