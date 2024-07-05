@@ -224,7 +224,7 @@ const xWing = (cells) => {
 				let y1 = -1;
 				let y2 = -1;
 				for (let y = 0; y < 9; y++) {
-					const index = flip ? x * 9 + y : x * 9 + y;
+					const index = flip ? x * 9 + y : y * 9 + x;
 					const cell = cells[index];
 					if (cell.symbol !== null) continue;
 					if (cell.has(i)) {
@@ -245,7 +245,7 @@ const xWing = (cells) => {
 						for (let x = 0; x < 9; x++) {
 							if (x === pair1.x || x === pair2.x) continue;
 
-							const index1 = flip ? x * 9 + pair1.i1 : x * 9 + pair1.i1;
+							const index1 = flip ? x * 9 + pair1.i1 : pair1.i1 * 9 + x;
 							const cell1 = cells[index1];
 							if (cell1.symbol === null) {
 								const had = cell1.delete(i);
@@ -255,7 +255,7 @@ const xWing = (cells) => {
 								}
 							}
 
-							const index2 = flip ? x * 9 + pair1.i2 : x * 9 + pair1.i2;
+							const index2 = flip ? x * 9 + pair1.i2 : pair1.i2 * 9 + x;
 							const cell2 = cells[index2];
 							if (cell2.symbol === null) {
 								const had = cell2.delete(i);
@@ -270,56 +270,8 @@ const xWing = (cells) => {
 			}
 		}
 	}
+	xWingOrientation(true);
 	xWingOrientation(false);
-
-	for (let i = 0; i < 9; i++) {
-		const pairs = [];
-		for (let x = 0; x < 9; x++) {
-			let y1 = -1;
-			let y2 = -1;
-			for (let y = 0; y < 9; y++) {
-				const cell = cells[y * 9 + x];
-				if (cell.symbol !== null) continue;
-				if (cell.has(i)) {
-					if (y1 === -1) y1 = y;
-					else if (y2 === -1) y2 = y;
-					else { y2 = -1; break; }
-				}
-			}
-			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2));
-		}
-
-		const len = pairs.length;
-		for (let p1 = 0, last = len - 1; p1 < last; p1++) {
-			const pair1 = pairs[p1];
-			for (let p2 = p1 + 1; p2 < len; p2++) {
-				const pair2 = pairs[p2];
-				if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
-					for (let x = 0; x < 9; x++) {
-						if (x === pair1.x || x === pair2.x) continue;
-
-						const cell1 = cells[pair1.i1 * 9 + x];
-						if (cell1.symbol === null) {
-							const had = cell1.delete(i);
-							if (had) {
-								reduced = true;
-								// console.log("X-Wing");
-							}
-						}
-
-						const cell2 = cells[pair1.i2 * 9 + x];
-						if (cell2.symbol === null) {
-							const had = cell2.delete(i);
-							if (had) {
-								reduced = true;
-								// console.log("X-Wing");
-							}
-						}
-					}
-				}
-			}
-		}
-	}
 
 	return reduced;
 }
@@ -336,69 +288,72 @@ const swordfish = (cells) => {
 
 	let reduced = false;
 
-	const set = new Set();
-	for (let i = 0; i < 9; i++) {
-		const pairs = [];
-		for (let x = 0; x < 9; x++) {
-			let y1 = -1;
-			let y2 = -1;
-			let y3 = -1;
-			for (let y = 0; y < 9; y++) {
-				const cell = cells[x * 9 + y];
-				if (cell.symbol !== null) continue;
-				if (cell.has(i)) {
-					if (y1 === -1) y1 = y;
-					else if (y2 === -1) y2 = y;
-					else if (y3 === -1) y3 = y;
-					else { y2 = -1; break; }
+	const swordfishOrientation = (flip) => {
+		const set = new Set();
+		for (let i = 0; i < 9; i++) {
+			const pairs = [];
+			for (let x = 0; x < 9; x++) {
+				let y1 = -1;
+				let y2 = -1;
+				let y3 = -1;
+				for (let y = 0; y < 9; y++) {
+					const cell = cells[x * 9 + y];
+					if (cell.symbol !== null) continue;
+					if (cell.has(i)) {
+						if (y1 === -1) y1 = y;
+						else if (y2 === -1) y2 = y;
+						else if (y3 === -1) y3 = y;
+						else { y2 = -1; break; }
+					}
 				}
+				if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2, y3));
 			}
-			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2, y3));
-		}
 
-		const len = pairs.length;
-		for (let p1 = 0, last1 = len - 2; p1 < last1; p1++) {
-			const pair1 = pairs[p1];
-			for (let p2 = p1 + 1, last2 = len - 1; p2 < last2; p2++) {
-				const pair2 = pairs[p2];
-				for (let p3 = p2 + 1; p3 < len; p3++) {
-					const pair3 = pairs[p3];
+			const len = pairs.length;
+			for (let p1 = 0, last1 = len - 2; p1 < last1; p1++) {
+				const pair1 = pairs[p1];
+				for (let p2 = p1 + 1, last2 = len - 1; p2 < last2; p2++) {
+					const pair2 = pairs[p2];
+					for (let p3 = p2 + 1; p3 < len; p3++) {
+						const pair3 = pairs[p3];
 
-					set.clear();
+						set.clear();
 
-					set.add(pair1.i1);
-					set.add(pair1.i2);
-					if (pair1.i3 !== -1) set.add(pair1.i3);
+						set.add(pair1.i1);
+						set.add(pair1.i2);
+						if (pair1.i3 !== -1) set.add(pair1.i3);
 
-					set.add(pair2.i1);
-					set.add(pair2.i2);
-					if (pair2.i3 !== -1) set.add(pair2.i3);
+						set.add(pair2.i1);
+						set.add(pair2.i2);
+						if (pair2.i3 !== -1) set.add(pair2.i3);
 
-					set.add(pair3.i1);
-					set.add(pair3.i2);
-					if (pair3.i3 !== -1) set.add(pair3.i3);
+						set.add(pair3.i1);
+						set.add(pair3.i2);
+						if (pair3.i3 !== -1) set.add(pair3.i3);
 
-					if (set.size === 3) {
-						for (let x = 0; x < 9; x++) {
-							if (x === pair1.x || x === pair2.x || x === pair3.x) continue;
+						if (set.size === 3) {
+							for (let x = 0; x < 9; x++) {
+								if (x === pair1.x || x === pair2.x || x === pair3.x) continue;
 
-							for (const pairi of [...set]) {
-								const cell = cells[x * 9 + pairi];
-								if (cell.symbol === null) {
-									const had = cell.delete(i);
-									if (had) {
-										reduced = true;
-										// console.log("Swordfish");
+								for (const pairi of [...set]) {
+									const cell = cells[x * 9 + pairi];
+									if (cell.symbol === null) {
+										const had = cell.delete(i);
+										if (had) {
+											reduced = true;
+											// console.log("Swordfish");
+										}
 									}
 								}
-							}
 
+							}
 						}
 					}
 				}
 			}
 		}
 	}
+	swordfishOrientation(true);
 
 	for (let i = 0; i < 9; i++) {
 		const pairs = [];
@@ -930,21 +885,87 @@ const phistomefel = (cells) => {
 	addGroupIndex(bCells, 60);
 
 	let reduced = false;
+	let filled = false;
 
-	// for (let x = 0; x < 9; x++) {
-	// 	let aCount = 0;
-	// 	let aValid = true;
-	// 	for (const aIndex of aCells) {
-	// 		const aCell = cells[aIndex];
-	// 		if (aCell.symbol === null) {
-	// 			if (aCell.has(x)) {
-	// 				aValid = false;
-	// 				// break;
-	// 			}
-	// 		} else {
-	// 			if (aCell.has(x)) aCount++;
-	// 		}
-	// 	}
+	for (let x = 0; x < 9; x++) {
+		let aCount = 0;
+		let aMarkers = 0;
+		let aFull = true;
+		for (const aIndex of aCells) {
+			const aCell = cells[aIndex];
+			if (aCell.symbol === null) {
+				if (aCell.has(x)) {
+					aFull = false;
+					aMarkers++;
+				}
+			} else {
+				aCount++;
+			}
+		}
+
+		let bCount = 0;
+		let bMarkers = 0;
+		let bFull = true;
+		for (const bIndex of bCells) {
+			const bCell = cells[bIndex];
+			if (bCell.symbol === null) {
+				if (bCell.has(x)) {
+					bFull = false;
+					bMarkers++;
+				}
+			} else {
+				bCount++;
+			}
+		}
+
+		if (aFull) {
+			if (aCount === bCount && bMarkers > 0) {
+				for (const bIndex of bCells) {
+					const bCell = cells[bIndex];
+					if (bCell.symbol === null) {
+						if (bCell.delete(x)) {
+							reduced = true;
+						}
+					}
+				}
+			}
+			if (aCount === bCount + bMarkers) {
+				for (const bIndex of bCells) {
+					const bCell = cells[bIndex];
+					if (bCell.symbol === null) {
+						if (bCell.has(x)) {
+							bCell.setSymbol(x);
+							filled = true;
+						}
+					}
+				}
+			}
+		}
+		if (bFull) {
+			if (bCount === aCount && aMarkers > 0) {
+				for (const aIndex of aCells) {
+					const aCell = cells[aIndex];
+					if (aCell.symbol === null) {
+						if (aCell.delete(x)) {
+							reduced = true;
+						}
+					}
+				}
+			}
+			if (bCount === aCount + aMarkers) {
+				for (const aIndex of aCells) {
+					const aCell = cells[aIndex];
+					if (aCell.symbol === null) {
+						if (aCell.has(x)) {
+							aCell.setSymbol(x);
+							filled = true;
+						}
+					}
+				}
+			}
+		}
+	}
+	return { reduced, filled };
 
 	// 	let bCount = 0;
 	// 	let bValid = true;
