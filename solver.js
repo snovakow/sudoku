@@ -217,47 +217,49 @@ const xWing = (cells) => {
 
 	let reduced = false;
 
-	for (let i = 0; i < 9; i++) {
-		const pairs = [];
-		for (let x = 0; x < 9; x++) {
-			let y1 = -1;
-			let y2 = -1;
-			for (let y = 0; y < 9; y++) {
-				const cell = cells[x * 9 + y];
-				if (cell.symbol !== null) continue;
-				if (cell.has(i)) {
-					if (y1 === -1) y1 = y;
-					else if (y2 === -1) y2 = y;
-					else { y2 = -1; break; }
+	const xWingOrientation = (flip) => {
+		for (let i = 0; i < 9; i++) {
+			const pairs = [];
+			for (let x = 0; x < 9; x++) {
+				let y1 = -1;
+				let y2 = -1;
+				for (let y = 0; y < 9; y++) {
+					const cell = cells[x * 9 + y];
+					if (cell.symbol !== null) continue;
+					if (cell.has(i)) {
+						if (y1 === -1) y1 = y;
+						else if (y2 === -1) y2 = y;
+						else { y2 = -1; break; }
+					}
 				}
+				if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2));
 			}
-			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2));
-		}
 
-		const len = pairs.length;
-		for (let p1 = 0, last = len - 1; p1 < last; p1++) {
-			const pair1 = pairs[p1];
-			for (let p2 = p1 + 1; p2 < len; p2++) {
-				const pair2 = pairs[p2];
-				if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
-					for (let x = 0; x < 9; x++) {
-						if (x === pair1.x || x === pair2.x) continue;
+			const len = pairs.length;
+			for (let p1 = 0, last = len - 1; p1 < last; p1++) {
+				const pair1 = pairs[p1];
+				for (let p2 = p1 + 1; p2 < len; p2++) {
+					const pair2 = pairs[p2];
+					if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
+						for (let x = 0; x < 9; x++) {
+							if (x === pair1.x || x === pair2.x) continue;
 
-						const cell1 = cells[x * 9 + pair1.i1];
-						if (cell1.symbol === null) {
-							const had = cell1.delete(i);
-							if (had) {
-								reduced = true;
-								// console.log("X-Wing");
+							const cell1 = cells[x * 9 + pair1.i1];
+							if (cell1.symbol === null) {
+								const had = cell1.delete(i);
+								if (had) {
+									reduced = true;
+									// console.log("X-Wing");
+								}
 							}
-						}
 
-						const cell2 = cells[x * 9 + pair1.i2];
-						if (cell2.symbol === null) {
-							const had = cell2.delete(i);
-							if (had) {
-								reduced = true;
-								// console.log("X-Wing");
+							const cell2 = cells[x * 9 + pair1.i2];
+							if (cell2.symbol === null) {
+								const had = cell2.delete(i);
+								if (had) {
+									reduced = true;
+									// console.log("X-Wing");
+								}
 							}
 						}
 					}
@@ -265,6 +267,7 @@ const xWing = (cells) => {
 			}
 		}
 	}
+	xWingOrientation(false);
 
 	for (let i = 0; i < 9; i++) {
 		const pairs = [];
@@ -922,38 +925,79 @@ const phistomefel = (cells) => {
 	addGroupIndex(bCells, 58);
 	addGroupIndex(bCells, 59);
 	addGroupIndex(bCells, 60);
-	// let aCount = 0;
-	// let aCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-	// let aCompletes = [true, true, true, true, true, true, true, true, true];
-	// for (const aIndex of aCells) {
-	// 	const aCell = cells[aIndex];
-	// 	if (aCell.symbol === null) {
-	// 		for (let x = 0; x < 9; x++) {
-	// 			if (aCell.has(x)) {
-	// 				aCompletes[x] = false;
-	// 			}
-	// 		}
-	// 	} else {
-	// 		aCounts[aCell.symbol]++;
-	// 		aCount++;
-	// 	}
-	// }
-	// for (let x = 0; x < 9; x++) {
-	// 	if (aCompletes[x]) aCounts[x] -= bCounts[x];
-	// 	else continue;
 
+	let reduced = false;
+
+	// for (let x = 0; x < 9; x++) {
+	// 	let aCount = 0;
+	// 	let aValid = true;
+	// 	for (const aIndex of aCells) {
+	// 		const aCell = cells[aIndex];
+	// 		if (aCell.symbol === null) {
+	// 			if (aCell.has(x)) {
+	// 				aValid = false;
+	// 				// break;
+	// 			}
+	// 		} else {
+	// 			if (aCell.has(x)) aCount++;
+	// 		}
+	// 	}
+
+	// 	let bCount = 0;
+	// 	let bValid = true;
 	// 	for (const bIndex of bCells) {
 	// 		const bCell = cells[bIndex];
-	// 		if (bCell.symbol !== null) continue;
-	// 		if (aCounts[x] === 0) {
-	// 			if (bCell.delete(x)) {
-	// 				console.log(aCount, bCount);
-	// 				reduced = true;
+	// 		if (bCell.symbol === null) {
+	// 			if (bCell.has(x)) {
+	// 				bValid = false;
+	// 				// break;
+	// 			}
+	// 		} else {
+	// 			if (bCell.has(x)) bCount++;
+	// 		}
+	// 	}
+
+	// 	if (aValid && aCount === 0) {
+	// 		for (const bIndex of bCells) {
+	// 			const bCell = cells[bIndex];
+	// 			if (bCell.symbol === null) {
+	// 				if (bCell.delete(x)) {
+	// 					reduced = true;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	if (bValid && bCount === 0) {
+	// 		for (const aIndex of aCells) {
+	// 			const aCell = cells[aIndex];
+	// 			if (aCell.symbol === null) {
+	// 				if (aCell.delete(x)) {
+	// 					reduced = true;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	if (aValid && aCount === bCount) {
+	// 		for (const bIndex of bCells) {
+	// 			const bCell = cells[bIndex];
+	// 			if (bCell.symbol === null) {
+	// 				if (bCell.delete(x)) {
+	// 					reduced = true;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	if (bValid && aCount === bCount) {
+	// 		for (const aIndex of aCells) {
+	// 			const aCell = cells[aIndex];
+	// 			if (aCell.symbol === null) {
+	// 				if (aCell.delete(x)) {
+	// 					reduced = true;
+	// 				}
 	// 			}
 	// 		}
 	// 	}
 	// }
-	let reduced = false;
 
 	let aCount = 0;
 	let aCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -1066,6 +1110,7 @@ const phistomefel = (cells) => {
 			}
 		}
 	}
+
 	return reduced;
 }
 
