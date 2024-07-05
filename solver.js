@@ -224,7 +224,8 @@ const xWing = (cells) => {
 				let y1 = -1;
 				let y2 = -1;
 				for (let y = 0; y < 9; y++) {
-					const cell = cells[x * 9 + y];
+					const index = flip ? x * 9 + y : x * 9 + y;
+					const cell = cells[index];
 					if (cell.symbol !== null) continue;
 					if (cell.has(i)) {
 						if (y1 === -1) y1 = y;
@@ -244,7 +245,8 @@ const xWing = (cells) => {
 						for (let x = 0; x < 9; x++) {
 							if (x === pair1.x || x === pair2.x) continue;
 
-							const cell1 = cells[x * 9 + pair1.i1];
+							const index1 = flip ? x * 9 + pair1.i1 : x * 9 + pair1.i1;
+							const cell1 = cells[index1];
 							if (cell1.symbol === null) {
 								const had = cell1.delete(i);
 								if (had) {
@@ -253,7 +255,8 @@ const xWing = (cells) => {
 								}
 							}
 
-							const cell2 = cells[x * 9 + pair1.i2];
+							const index2 = flip ? x * 9 + pair1.i2 : x * 9 + pair1.i2;
+							const cell2 = cells[index2];
 							if (cell2.symbol === null) {
 								const had = cell2.delete(i);
 								if (had) {
