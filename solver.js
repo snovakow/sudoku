@@ -369,7 +369,6 @@ const xyWing = (cells) => {
 		}
 	}
 
-	// map pairs
 	const pairs = [];
 	for (const cell of cells) {
 		if (cell.symbol !== null) continue;
@@ -395,23 +394,11 @@ const xyWing = (cells) => {
 	const union = new Set();
 	for (let i1 = 0; i1 < pairLen - 2; i1++) {
 		const pair1 = pairs[i1];
-		union.clear();
-		union.add(pair1.s1);
-		union.add(pair1.s2);
 
 		for (let i2 = i1 + 1; i2 < pairLen - 1; i2++) {
 			const pair2 = pairs[i2];
 
 			if (pair1.s1 === pair2.s1 && pair1.s2 === pair2.s2) continue;
-
-			if (union.size === 0) {
-				union.add(pair1.s1);
-				union.add(pair1.s2);
-			}
-			union.add(pair2.s1);
-			union.add(pair2.s2);
-
-			// if (union.size !== 3) continue
 
 			for (let i3 = i2 + 1; i3 < pairLen; i3++) {
 				const pair3 = pairs[i3];
@@ -420,14 +407,11 @@ const xyWing = (cells) => {
 				if (pair2.s1 === pair3.s1 && pair2.s2 === pair3.s2) continue;
 
 				union.clear();
-				if (union.size === 0) {
-					union.add(pair1.s1);
-					union.add(pair1.s2);
-					union.add(pair2.s1);
-					union.add(pair2.s2);
-					if (union.size !== 3) continue
-				}
-
+				union.add(pair1.s1);
+				union.add(pair1.s2);
+				union.add(pair2.s1);
+				union.add(pair2.s2);
+				if (union.size !== 3) continue
 				union.add(pair3.s1);
 				if (union.size !== 3) continue
 				union.add(pair3.s2);
@@ -688,12 +672,7 @@ const xyWing = (cells) => {
 	return false;
 }
 
-const deadlyPattern = () => {
-	// Type 2 Unique Rectangles
-	// https://www.sudokuwiki.org/Unique_Rectangles
-}
-
-// Deadly Pattern: Type 1 Unique Rectangles
+// Deadly Pattern: Unique Rectangle
 const uniqueRectangle = (cells) => {
 	const pairs = [];
 	for (let i = 0; i < 81; i++) {
