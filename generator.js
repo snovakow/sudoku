@@ -35,23 +35,6 @@ function isValidCell(board, row, col, x) {
 	return true;
 }
 
-// const puzzle = [
-// 	[0, 0, 0, 1, 0, 0, 3, 0, 0],
-// 	[6, 0, 5, 0, 0, 0, 0, 0, 0],
-// 	[2, 0, 0, 0, 0, 0, 0, 0, 0],
-// 	[0, 1, 0, 4, 0, 0, 0, 0, 0],
-// 	[0, 0, 0, 0, 0, 0, 0, 6, 8],
-// 	[0, 0, 0, 0, 0, 0, 0, 5, 0],
-// 	[0, 9, 0, 0, 0, 0, 1, 4, 0],
-// 	[0, 0, 0, 2, 6, 0, 0, 0, 0],
-// 	[0, 0, 0, 0, 0, 8, 7, 0, 0],
-// ];
-// for (let i = 0, index = 0; i < 9; i++) {
-// 	for (let j = 0; j < 9; j++, index++) {
-// 		grid[index] = puzzle[i][j];
-// 	}
-// }
-
 const isValidGrid = (grid) => {
 	let symbols = 0;
 	for (let i = 0; i < 81; i++) {
@@ -204,7 +187,7 @@ const sudokuGenerator = (cells) => {
 	return { clueCount: hits, grid };
 }
 
-const sudokuGeneratorPhistomefel = (cells) => {
+const sudokuGeneratorPhistomefel = (cells, mode) => {
 
 	if (once % 1 === 0) {
 		for (let i = 0; i < 81; i++) grid[i] = 0;
@@ -220,11 +203,22 @@ const sudokuGeneratorPhistomefel = (cells) => {
 
 	randomize(rndi);
 
-	const groupCells = once % 2 === 0 ? aCells : bCells;
+	const rndb = [];
+	if (mode !== 0) {
+		const rndChanceRing = Math.random();
+		for (const cell of bCells) {
+			if (mode === 2 || Math.random() < rndChanceRing) rndb.push(cell);
+		}
+	}
+
+	const rndAll = [...rndb];
+	randomize(rndAll);
+	const rndAllSet = new Set(rndAll);
+
 	for (let i = 0; i < 81; i++) {
 		const index = rndi[i];
 
-		if (groupCells.has(index)) continue;
+		if (rndAllSet.has(index)) continue;
 
 		// const index = i;
 		const symbol = grid[index];
@@ -240,7 +234,9 @@ const sudokuGeneratorPhistomefel = (cells) => {
 			grid[index] = symbol;
 		}
 	}
-	for (const index of groupCells) {
+
+	for (const i of rndAll) {
+		const index = rndAll[i];
 		// const index = i;
 		const symbol = grid[index];
 		if (symbol === 0) continue;
@@ -254,6 +250,12 @@ const sudokuGeneratorPhistomefel = (cells) => {
 		if (result !== 1) {
 			grid[index] = symbol;
 		}
+	}
+
+	for (let i = 0; i < 81; i++) {
+		const cell = cells[i];
+		const symbol = grid[i];
+		cell.setSymbol(symbol === 0 ? null : symbol - 1);
 	}
 
 	let hits = 0;
@@ -265,26 +267,8 @@ const sudokuGeneratorPhistomefel = (cells) => {
 	// console.log(hits);
 	totalPuzzles++;
 
-	for (let i = 0; i < 81; i++) {
-		const cell = cells[i];
-		const symbol = grid[i];
-		cell.setSymbol(symbol === 0 ? null : symbol - 1);
-	}
-
-	if (hits < min || hits > max) {
-		if (hits < min) {
-			min = hits;
-		}
-
-		if (hits > max) {
-			max = hits;
-		}
-
-		console.log(min, max, totalPuzzles);
-		cells.log();
-	}
-
 	return { clueCount: hits, grid };
 }
 
+export { totalPuzzles };
 export { sudokuGenerator, sudokuGeneratorPhistomefel };

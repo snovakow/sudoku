@@ -287,9 +287,9 @@ const swordfish = (cells) => {
 	}
 
 	let reduced = false;
+	const set = new Set();
 
 	const swordfishOrientation = (flip) => {
-		const set = new Set();
 		for (let i = 0; i < 9; i++) {
 			const pairs = [];
 			for (let x = 0; x < 9; x++) {
@@ -297,7 +297,8 @@ const swordfish = (cells) => {
 				let y2 = -1;
 				let y3 = -1;
 				for (let y = 0; y < 9; y++) {
-					const cell = cells[x * 9 + y];
+					const index = flip ? x * 9 + y : y * 9 + x;
+					const cell = cells[index];
 					if (cell.symbol !== null) continue;
 					if (cell.has(i)) {
 						if (y1 === -1) y1 = y;
@@ -336,7 +337,8 @@ const swordfish = (cells) => {
 								if (x === pair1.x || x === pair2.x || x === pair3.x) continue;
 
 								for (const pairi of [...set]) {
-									const cell = cells[x * 9 + pairi];
+									const index = flip ? x * 9 + pairi : pairi * 9 + x;
+									const cell = cells[index];
 									if (cell.symbol === null) {
 										const had = cell.delete(i);
 										if (had) {
@@ -345,7 +347,6 @@ const swordfish = (cells) => {
 										}
 									}
 								}
-
 							}
 						}
 					}
@@ -354,68 +355,7 @@ const swordfish = (cells) => {
 		}
 	}
 	swordfishOrientation(true);
-
-	for (let i = 0; i < 9; i++) {
-		const pairs = [];
-		for (let x = 0; x < 9; x++) {
-			let y1 = -1;
-			let y2 = -1;
-			let y3 = -1;
-			for (let y = 0; y < 9; y++) {
-				const cell = cells[y * 9 + x];
-				if (cell.symbol !== null) continue;
-				if (cell.has(i)) {
-					if (y1 === -1) y1 = y;
-					else if (y2 === -1) y2 = y;
-					else if (y3 === -1) y3 = y;
-					else { y2 = -1; break; }
-				}
-			}
-			if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2, y3));
-		}
-
-		const len = pairs.length;
-		for (let p1 = 0, last1 = len - 2; p1 < last1; p1++) {
-			const pair1 = pairs[p1];
-			for (let p2 = p1 + 1, last2 = len - 1; p2 < last2; p2++) {
-				const pair2 = pairs[p2];
-				for (let p3 = p2 + 1; p3 < len; p3++) {
-					const pair3 = pairs[p3];
-
-					set.clear();
-
-					set.add(pair1.i1);
-					set.add(pair1.i2);
-					if (pair1.i3 !== -1) set.add(pair1.i3);
-
-					set.add(pair2.i1);
-					set.add(pair2.i2);
-					if (pair2.i3 !== -1) set.add(pair2.i3);
-
-					set.add(pair3.i1);
-					set.add(pair3.i2);
-					if (pair3.i3 !== -1) set.add(pair3.i3);
-
-					if (set.size === 3) {
-						for (let x = 0; x < 9; x++) {
-							if (x === pair1.x || x === pair2.x || x === pair3.x) continue;
-
-							for (const pairi of [...set]) {
-								const cell = cells[pairi * 9 + x];
-								if (cell.symbol === null) {
-									const had = cell.delete(i);
-									if (had) {
-										reduced = true;
-										// console.log("Swordfish");
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+	swordfishOrientation(false);
 
 	return reduced;
 }
