@@ -839,7 +839,7 @@ const phistomefel = (cells) => {
 					aMarkers++;
 				}
 			} else {
-				aCount++;
+				if (aCell.symbol === x) aCount++;
 			}
 		}
 
@@ -854,7 +854,7 @@ const phistomefel = (cells) => {
 					bMarkers++;
 				}
 			} else {
-				bCount++;
+				if (bCell.symbol === x) bCount++;
 			}
 		}
 
@@ -874,6 +874,7 @@ const phistomefel = (cells) => {
 					const bCell = cells[bIndex];
 					if (bCell.symbol === null) {
 						if (bCell.has(x)) {
+							console.log("B");
 							bCell.setSymbol(x);
 							filled = true;
 						}
@@ -897,6 +898,7 @@ const phistomefel = (cells) => {
 					const aCell = cells[aIndex];
 					if (aCell.symbol === null) {
 						if (aCell.has(x)) {
+							console.log(aCell, x + 1, bCount, aCount, aMarkers);
 							aCell.setSymbol(x);
 							filled = true;
 						}
@@ -906,176 +908,6 @@ const phistomefel = (cells) => {
 		}
 	}
 	return { reduced, filled };
-
-	// 	let bCount = 0;
-	// 	let bValid = true;
-	// 	for (const bIndex of bCells) {
-	// 		const bCell = cells[bIndex];
-	// 		if (bCell.symbol === null) {
-	// 			if (bCell.has(x)) {
-	// 				bValid = false;
-	// 				// break;
-	// 			}
-	// 		} else {
-	// 			if (bCell.has(x)) bCount++;
-	// 		}
-	// 	}
-
-	// 	if (aValid && aCount === 0) {
-	// 		for (const bIndex of bCells) {
-	// 			const bCell = cells[bIndex];
-	// 			if (bCell.symbol === null) {
-	// 				if (bCell.delete(x)) {
-	// 					reduced = true;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// 	if (bValid && bCount === 0) {
-	// 		for (const aIndex of aCells) {
-	// 			const aCell = cells[aIndex];
-	// 			if (aCell.symbol === null) {
-	// 				if (aCell.delete(x)) {
-	// 					reduced = true;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// 	if (aValid && aCount === bCount) {
-	// 		for (const bIndex of bCells) {
-	// 			const bCell = cells[bIndex];
-	// 			if (bCell.symbol === null) {
-	// 				if (bCell.delete(x)) {
-	// 					reduced = true;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// 	if (bValid && aCount === bCount) {
-	// 		for (const aIndex of aCells) {
-	// 			const aCell = cells[aIndex];
-	// 			if (aCell.symbol === null) {
-	// 				if (aCell.delete(x)) {
-	// 					reduced = true;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-	let aCount = 0;
-	let aCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-	for (const aIndex of aCells) {
-		const aCell = cells[aIndex];
-		if (aCell.symbol === null) continue;
-		aCounts[aCell.symbol]++;
-		aCount++;
-	}
-	let bCount = 0;
-	let bCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-	for (const bIndex of bCells) {
-		const bCell = cells[bIndex];
-		if (bCell.symbol === null) continue;
-		bCounts[bCell.symbol]++;
-		bCount++;
-	}
-	if (aCount !== bCount) {
-		if (aCount === 16) {
-			for (let x = 0; x < 9; x++) {
-				aCounts[x] -= bCounts[x];
-			}
-			for (const bIndex of bCells) {
-				const bCell = cells[bIndex];
-				if (bCell.symbol !== null) continue;
-				for (let x = 0; x < 9; x++) {
-					if (aCounts[x] === 0) {
-						if (bCell.delete(x)) {
-							reduced = true;
-						}
-					}
-				}
-			}
-		}
-		if (bCount === 16) {
-			for (let x = 0; x < 9; x++) {
-				bCounts[x] -= aCounts[x];
-			}
-			for (const aIndex of aCells) {
-				const aCell = cells[aIndex];
-				if (aCell.symbol !== null) continue;
-				for (let x = 0; x < 9; x++) {
-					if (bCounts[x] === 0) {
-						if (aCell.delete(x)) {
-							reduced = true;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	for (const aIndex of aCells) {
-		const aCell = cells[aIndex];
-		if (aCell.symbol !== null) continue;
-		for (let x = 0; x < 9; x++) {
-			if (!aCell.has(x)) continue;
-
-			let possible = false;
-			for (const bIndex of bCells) {
-				const bCell = cells[bIndex];
-				if (bCell.symbol === null) {
-					if (bCell.has(x)) {
-						possible = true;
-						break;
-					}
-				} else {
-					if (bCell.symbol === x) {
-						possible = true;
-						break;
-					}
-				}
-			}
-
-			if (!possible) {
-				// console.log("A !!!");
-				reduced = true;
-				aCell.delete(x);
-				// return true;
-			}
-		}
-	}
-	for (const bIndex of bCells) {
-		const bCell = cells[bIndex];
-		if (bCell.symbol !== null) continue;
-		for (let x = 0; x < 9; x++) {
-			if (!bCell.has(x)) continue;
-
-			let possible = false;
-			for (const aIndex of aCells) {
-				const aCell = cells[aIndex];
-				if (aCell.symbol === null) {
-					if (aCell.has(x)) {
-						possible = true;
-						break;
-					}
-				} else {
-					if (aCell.symbol === x) {
-						possible = true;
-						break;
-					}
-				}
-			}
-
-			if (!possible) {
-				// console.log("B !!!");
-				reduced = true;
-				bCell.delete(x);
-				// return true;
-			}
-		}
-	}
-
-	return reduced;
 }
 
 const bruteForce = (cells) => {

@@ -171,14 +171,8 @@ const sudokuGenerator = (cells) => {
 		cell.setSymbol(symbol === 0 ? null : symbol - 1);
 	}
 
-	if (hits < min || hits > max) {
-		if (hits < min) {
-			min = hits;
-		}
-
-		if (hits > max) {
-			max = hits;
-		}
+	if (hits < 21) {
+		min = hits;
 
 		console.log(min, max, totalPuzzles);
 		cells.log();
@@ -203,22 +197,27 @@ const sudokuGeneratorPhistomefel = (cells, mode) => {
 
 	randomize(rndi);
 
-	const rndb = [];
-	if (mode !== 0) {
-		const rndChanceRing = Math.random();
-		for (const cell of bCells) {
-			if (mode === 2 || Math.random() < rndChanceRing) rndb.push(cell);
+	const rnd = [];
+	if (mode > 0) {
+		if (mode === 1 || mode === 3) {
+			for (const cell of aCells) {
+				rnd.push(cell);
+			}
+		}
+		if (mode === 2 || mode === 3) {
+			for (const cell of bCells) {
+				rnd.push(cell);
+			}
 		}
 	}
 
-	const rndAll = [...rndb];
-	randomize(rndAll);
-	const rndAllSet = new Set(rndAll);
+	const rndSet = new Set(rnd);
+	randomize(rnd);
 
 	for (let i = 0; i < 81; i++) {
 		const index = rndi[i];
 
-		if (rndAllSet.has(index)) continue;
+		if (rndSet.has(index)) continue;
 
 		// const index = i;
 		const symbol = grid[index];
@@ -235,8 +234,8 @@ const sudokuGeneratorPhistomefel = (cells, mode) => {
 		}
 	}
 
-	for (const i of rndAll) {
-		const index = rndAll[i];
+	for (const i of rnd) {
+		const index = rnd[i];
 		// const index = i;
 		const symbol = grid[index];
 		if (symbol === 0) continue;
