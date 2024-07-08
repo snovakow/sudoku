@@ -39,9 +39,9 @@ const candidates = (cells) => {
 
 const openSingles = (cells) => {
 	let progressCount = 0;
-	let progress=true;
-	while(progress) {
-		progress=false;
+	let progress = true;
+	while (progress) {
+		progress = false;
 
 		for (const group of Grid.groupTypes) {
 			let symbolCell = null;
@@ -54,16 +54,16 @@ const openSingles = (cells) => {
 			if (symbolCell !== null) {
 				const symbol = symbolCell.remainder;
 				symbolCell.setSymbol(symbol);
-	
+
 				for (const i of symbolCell.group) {
 					const linked = cells[i];
 					if (linked.symbol === 0) linked.delete(symbol);
 				}
-		
+
 				progressCount++;
-				progress=true;
+				progress = true;
 			}
-		}	
+		}
 	}
 	return progressCount;
 }
