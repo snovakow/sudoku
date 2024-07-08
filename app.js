@@ -563,7 +563,7 @@ const fillSolve = () => {
 	do {
 		candidates(board.cells);
 
-		if(window.location.search === "?markers") continue;
+		if (window.location.search === "?markers") continue;
 
 		progress = loneSingles(board.cells);
 		if (progress) continue;
@@ -592,45 +592,7 @@ const fillSolve = () => {
 		progress = xyWing(board.cells);
 		if (progress) { xyWingReduced++; continue; }
 
-		let config = "";
-		if (window.location.search !== "?phist") {
-			// for (let r1 = 0; r1 < 6; r1++) {
-			// 	for (let r2 = 0; r2 < 6; r2++) {
-			// 		for (let r3 = 0; r3 < 6; r3++) {
-			// 			for (let c1 = 0; c1 < 6; c1++) {
-			// 				for (let c2 = 0; c2 < 6; c2++) {
-			// 					for (let c3 = 0; c3 < 6; c3++) {
-			// 						for (let b1 = 0; b1 < 6; b1++) {
-			// 							for (let b2 = 0; b2 < 6; b2++) {
-											const { reduced, filled } = phistomefel(board.cells);
-											progress = reduced || filled;
-											if (reduced) phistomefelReduced++;
-											if (filled) phistomefelFilled++;
-											if (progress) {
-												// r1 = 6;
-												// r2 = 6;
-												// r3 = 6;
-												// c1 = 6;
-												// c2 = 6;
-												// c3 = 6;
-												// b1 = 6;
-												// b2 = 6;
-												// config = [r1, r2, r3, c2, c2, c3, b1, b2];
-												continue;
-											}
-			// 							}
-			// 						}
-			// 					}
-			// 				}
-			// 			}
-			// 		}
-			// 	}
-			// }
-
-			bruteForceFill = !isFinished();
-			if (!bruteForceFill && config) console.log(config);
-			// if (bruteForceFill) bruteForce(board.cells);
-		}
+		bruteForceFill = !isFinished();
 	} while (progress);
 
 	return {
@@ -646,6 +608,43 @@ const fillSolve = () => {
 		bruteForceFill
 	};
 }
+
+const fillSolvePhistomefel = () => {
+	let phistomefelReduced = 0;
+	let phistomefelFilled = 0;
+
+	let bruteForceFill = false;
+
+	let progress = false;
+	do {
+		candidates(board.cells);
+
+		if (window.location.search === "?markers") continue;
+
+		progress = loneSingles(board.cells);
+		if (progress) continue;
+
+		progress = hiddenSingles(board.cells);
+		if (progress) continue;
+
+		const { reduced, filled } = phistomefel(board.cells);
+		progress = reduced || filled;
+		if (reduced) phistomefelReduced++;
+		if (filled) phistomefelFilled++;
+		if (progress) continue;
+
+		bruteForceFill = !isFinished();
+		// if (bruteForceFill) bruteForce(board.cells);
+
+	} while (progress);
+
+	return {
+		phistomefelReduced,
+		phistomefelFilled,
+		bruteForceFill
+	};
+}
+
 markerButton.addEventListener('click', () => {
 	for (const cell of board.cells) {
 		if (cell.symbol !== null) continue;
@@ -710,37 +709,47 @@ generateButton.addEventListener('click', () => {
 		// console.log(`Time: ${Math.round(now - time) / 1000}`);
 
 		const {
-			uniqueRectangleReduced,
-			nakedSetsReduced,
-			hiddenSetsReduced,
-			omissionsReduced,
-			xWingReduced,
-			swordfishReduced,
-			xyWingReduced,
-			phistomefelReduced,
-			phistomefelFilled,
-			bruteForceFill
-		} = fillSolve();
+			phistomefelReducedBase,
+			phistomefelFilledBase,
+			bruteForceFillBase
+		} = fillSolvePhistomefel();
 
-		let simple = xyWingReduced === 0 && swordfishReduced === 0 && xWingReduced === 0 && uniqueRectangleReduced === 0;
-		if ((phistomefelReduced > 0 || phistomefelFilled > 0) && simple && !bruteForceFill) {
-			console.log("Phistomefel: " + phistomefelReduced + (phistomefelFilled > 0 ? " + " + phistomefelFilled + " filled" : "") + " " + totalPuzzles);
-			console.log("nakedSetsReduced: " + nakedSetsReduced);
-			console.log("hiddenSetsReduced: " + hiddenSetsReduced);
-			console.log("omissionsReduced: " + omissionsReduced);
-			console.log(grid.toString());
+		if ((phistomefelReducedBase > 0 || phistomefelFilledBase > 0) && !bruteForceFillBase) {
+			const {
+				uniqueRectangleReduced,
+				nakedSetsReduced,
+				hiddenSetsReduced,
+				omissionsReduced,
+				xWingReduced,
+				swordfishReduced,
+				xyWingReduced,
+				phistomefelReduced,
+				phistomefelFilled,
+				bruteForceFill
+			} = fillSolve();
 
-			// console.log("Deadly Pattern Unique Rectangle: " + uniqueRectangleReduced);
-			// console.log("Naked Sets: " + nakedSetsReduced);
-			// console.log("Hidden Sets: " + hiddenSetsReduced);
-			// console.log("Omissions: " + omissionsReduced);
-			// console.log("X Wing: " + xWingReduced);
-			// console.log("Swordfish: " + swordfishReduced);
-			// console.log("XY Wing: " + xyWingReduced);
-			// console.log("Phistomefel: " + phistomefelReduced + (phistomefelFilled > 0 ? " + " + phistomefelFilled + " filled" : ""));
-			// console.log("Brute Force: " + bruteForceFill);
-			// console.log("Phistomefel: " + grid.toString());
+			if (bruteForceFill) {
+				console.log("Phistomefel: " + phistomefelReducedBase + (phistomefelFilledBase > 0 ? " + " + phistomefelFilledBase + " filled" : "") + " " + totalPuzzles);
+				console.log(grid.toString());
+				// console.log("Phistomefel: " + phistomefelReduced + (phistomefelFilled > 0 ? " + " + phistomefelFilled + " filled" : "") + " " + totalPuzzles);
+				// console.log("nakedSetsReduced: " + nakedSetsReduced);
+				// console.log("hiddenSetsReduced: " + hiddenSetsReduced);
+				// console.log("omissionsReduced: " + omissionsReduced);
+				// console.log(grid.toString());
+
+				// console.log("Deadly Pattern Unique Rectangle: " + uniqueRectangleReduced);
+				// console.log("Naked Sets: " + nakedSetsReduced);
+				// console.log("Hidden Sets: " + hiddenSetsReduced);
+				// console.log("Omissions: " + omissionsReduced);
+				// console.log("X Wing: " + xWingReduced);
+				// console.log("Swordfish: " + swordfishReduced);
+				// console.log("XY Wing: " + xyWingReduced);
+				// console.log("Phistomefel: " + phistomefelReduced + (phistomefelFilled > 0 ? " + " + phistomefelFilled + " filled" : ""));
+				// console.log("Brute Force: " + bruteForceFill);
+				// console.log("Phistomefel: " + grid.toString());
+			}
 		}
+
 
 		if (running) window.setTimeout(step, 0);
 	};
