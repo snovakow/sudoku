@@ -181,7 +181,7 @@ const sudokuGenerator = (cells) => {
 	return { clueCount: hits, grid };
 }
 
-const sudokuGeneratorPhistomefel = (cells, mode) => {
+const sudokuGeneratorPhistomefel = (cells) => {
 
 	if (once % 1 === 0) {
 		for (let i = 0; i < 81; i++) grid[i] = 0;
@@ -198,17 +198,13 @@ const sudokuGeneratorPhistomefel = (cells, mode) => {
 	randomize(rndi);
 
 	const rnd = [];
-	if (mode > 0) {
-		if (mode === 1 || mode === 3) {
-			for (const cell of aCells) {
-				rnd.push(cell);
-			}
-		}
-		if (mode === 2 || mode === 3) {
-			for (const cell of bCells) {
-				rnd.push(cell);
-			}
-		}
+	const rndChanceA = Math.random() * 1.5;
+	for (const cell of aCells) {
+		if (Math.random() < rndChanceA) rnd.push(cell);
+	}
+	const rndChanceB = Math.random() * 1.5;
+	for (const cell of bCells) {
+		if (Math.random() < rndChanceB) rnd.push(cell);
 	}
 
 	const rndSet = new Set(rnd);

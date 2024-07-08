@@ -37,23 +37,6 @@ const candidates = (cells) => {
 	}
 }
 
-const openSingles = (cells) => {
-	for (const group of Grid.groupTypes) {
-		let symbolCell = null;
-		for (const index of group) {
-			const cell = cells[index];
-			if (cell.symbol !== null) continue;
-			if (symbolCell === null) symbolCell = cell;
-			else { symbolCell = null; break; }
-		}
-		if (symbolCell !== null) {
-			symbolCell.setSymbol(symbolCell.remainder);
-			return true;
-		}
-	}
-	return false;
-}
-
 const loneSingles = (cells) => {
 	for (const cell of cells) {
 		if (cell.symbol !== null || cell.size !== 1) continue;
@@ -84,8 +67,8 @@ const hiddenSingles = (cells) => {
 }
 
 class SetUnit {
-	constructor(index, set) {
-		this.index = index;
+	constructor(cell, set) {
+		this.cell = cell;
 		this.set = set;
 	}
 }
@@ -102,7 +85,7 @@ const nakedSets = (cells) => { // Naked Pairs Triplets Quads
 			for (let i = 0; i < 9; i++) {
 				if (cell.has(i)) set.add(i);
 			}
-			if (set.size > 0) sets.push(new SetUnit(index, set));
+			if (set.size > 0) sets.push(new SetUnit(cell, set));
 		}
 
 		const len = sets.length;
@@ -135,7 +118,7 @@ const nakedSets = (cells) => { // Naked Pairs Triplets Quads
 						if ((setHitMask & (0x1 << shift)) > 0) continue;
 
 						const set = sets[shift];
-						const cell = cells[set.index];
+						const cell = set.cell;
 
 						for (const symbol of union) {
 							const had = cell.delete(symbol);
@@ -152,6 +135,7 @@ const nakedSets = (cells) => { // Naked Pairs Triplets Quads
 }
 
 const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
+	return false;
 	const union = new Set();
 
 	for (const groupType of Grid.groupTypes) {
@@ -163,10 +147,15 @@ const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
 			for (let i = 0; i < 9; i++) {
 				if (cell.has(i)) set.add(i);
 			}
-			if (set.size > 0) sets.push(new SetUnit(index, set));
+			if (set.size > 0) sets.push(new SetUnit(cell, set));
 		}
 
-		const len = sets.length;
+		for (let i1 = 0, len1 = sets.length - 1; i1 < len1; i1++) {
+			for (let i2 = i1 + 1, len2 = sets.length; i2 < len2; i2++) {
+				const cell1 = sets[i1];
+			}
+		}
+		continue;
 		for (let i = 0; i < len - 1; i++) {
 			const remainder = len - i - 1;
 			const setUnit = sets[i];
@@ -182,8 +171,15 @@ const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
 				for (let j = i + 1; j < len; j++) {
 					const state = inc & mask;
 					if (state > 0) {
-						const compare = sets[j];
-						for (const x of compare.set) union.add(x);
+						const compare = sets[j].set;
+
+						for (let i of union) {
+							if (!compare.has(i)) {
+								union.delete(i);
+							}
+						}
+
+						// for (const x of compare.set) union.add(x);
 						unionCount++;
 						setHitMask |= 0x1 << j;
 					}
@@ -192,15 +188,42 @@ const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
 
 				let reduced = false;
 				if (unionCount === union.size && unionCount < sets.length) {
+					mask = 0x1;
+					for (let j = i + 1; j < len; j++) {
+						const state = inc & mask;
+						if (state > 0) {
+							const compare = sets[j].set;
+
+							for (let i of union) {
+								if (!compare.has(i)) {
+									union.delete(i);
+								}
+							}
+
+							// for (const x of compare.set) union.add(x);
+							unionCount++;
+							setHitMask |= 0x1 << j;
+						}
+						mask <<= 1;
+					}
+
+					const it = union.values();
+					const first = it.next();
+					const symbol = first.value;
+
 					for (let shift = 0; shift < len; shift++) {
 						if ((setHitMask & (0x1 << shift)) > 0) continue;
 
 						const set = sets[shift];
 						const cell = cells[set.index];
 
-						for (const symbol of union) {
-							const had = cell.delete(symbol);
-							if (had) reduced = true;
+						if (cell.has(symbol)) {
+							for (let x = 0; x < 9; x++) {
+								if (!union.has(x)) {
+									const had = cell.delete(x);
+									if (had) reduced = true;
+								}
+							}
 						}
 					}
 				}
@@ -795,7 +818,7 @@ const uniqueRectangle = (cells) => {
 
 export const aCells = new Set();
 export const bCells = new Set();
-const phistomefel = (cells) => {
+const phistomefel = (cells, rows1Config = 0, rows2Config = 0, rows3Config = 0, cols1Config = 0, cols2Config = 0, cols3Config = 0, boxs1Config = 0, boxs2Config = 0) => {
 	// 00 01 02|03 04 05|06 07 08
 	// 09 10 11|12 13 14|15 16 17
 	// 18 19 20|21 22 23|24 25 26
@@ -864,6 +887,87 @@ const phistomefel = (cells) => {
 	addGroupIndex(bCells, 59);
 	addGroupIndex(bCells, 60);
 
+	// 0 123
+	// 1 132
+	// 2 213
+	// 3 231
+	// 4 312
+	// 5 321
+	const swapRow = (r1, r2) => {
+		for (let i = 0; i < 9; i++) {
+			const i1 = r1 * 9 + i;
+			const i2 = r2 * 9 + i;
+			const tmp = cells[i1];
+			cells[i1] = cells[i2];
+			cells[i2] = tmp;
+		}
+	}
+	const swapCol = (c1, c2) => {
+		for (let i = 0; i < 9; i++) {
+			const i1 = i * 9 + c1;
+			const i2 = i * 9 + c2;
+			const tmp = cells[i1];
+			cells[i1] = cells[i2];
+			cells[i2] = tmp;
+		}
+	}
+
+	if (rows1Config === 2 || rows1Config === 3 || rows1Config === 4) swapRow(0, 1);
+	if (rows1Config === 1 || rows1Config === 3) swapRow(1, 2);
+	if (rows1Config === 4 || rows1Config === 5) swapRow(0, 2);
+
+	if (rows2Config === 2 || rows2Config === 3 || rows2Config === 4) swapRow(3, 4);
+	if (rows2Config === 1 || rows2Config === 3) swapRow(4, 5);
+	if (rows2Config === 4 || rows2Config === 5) swapRow(3, 5);
+
+	if (rows3Config === 2 || rows3Config === 3 || rows3Config === 4) swapRow(6, 7);
+	if (rows3Config === 1 || rows3Config === 3) swapRow(7, 8);
+	if (rows3Config === 4 || rows3Config === 5) swapRow(6, 8);
+
+	if (cols1Config === 2 || cols1Config === 3 || cols1Config === 4) swapCol(0, 1);
+	if (cols1Config === 1 || cols1Config === 3) swapCol(1, 2);
+	if (cols1Config === 4 || cols1Config === 5) swapCol(0, 2);
+
+	if (cols2Config === 2 || cols2Config === 3 || cols2Config === 4) swapCol(3, 4);
+	if (cols2Config === 1 || cols2Config === 3) swapCol(4, 5);
+	if (cols2Config === 4 || cols2Config === 5) swapCol(3, 5);
+
+	if (cols3Config === 2 || cols3Config === 3 || cols3Config === 4) swapCol(6, 7);
+	if (cols3Config === 1 || cols3Config === 3) swapCol(7, 8);
+	if (cols3Config === 4 || cols3Config === 5) swapCol(6, 8);
+
+	if (boxs1Config === 2 || boxs1Config === 3 || boxs1Config === 4) {
+		swapRow(0, 3);
+		swapRow(1, 4);
+		swapRow(2, 5);
+	}
+	if (boxs1Config === 1 || boxs1Config === 3) {
+		swapRow(3, 6);
+		swapRow(4, 7);
+		swapRow(5, 8);
+	}
+	if (boxs1Config === 4 || boxs1Config === 5) {
+		swapRow(0, 6);
+		swapRow(1, 7);
+		swapRow(2, 8);
+	}
+
+	if (boxs2Config === 2 || boxs2Config === 3 || boxs2Config === 4) {
+		swapCol(0, 3);
+		swapCol(1, 4);
+		swapCol(2, 5);
+	}
+	if (boxs2Config === 1 || boxs2Config === 3) {
+		swapCol(3, 6);
+		swapCol(4, 7);
+		swapCol(5, 8);
+	}
+	if (boxs2Config === 4 || boxs2Config === 5) {
+		swapCol(0, 6);
+		swapCol(1, 7);
+		swapCol(2, 8);
+	}
+
 	let reduced = false;
 	let filled = false;
 
@@ -914,7 +1018,6 @@ const phistomefel = (cells) => {
 					const bCell = cells[bIndex];
 					if (bCell.symbol === null) {
 						if (bCell.has(x)) {
-							console.log("B");
 							bCell.setSymbol(x);
 							filled = true;
 						}
@@ -938,7 +1041,6 @@ const phistomefel = (cells) => {
 					const aCell = cells[aIndex];
 					if (aCell.symbol === null) {
 						if (aCell.has(x)) {
-							console.log(aCell, x + 1, bCount, aCount, aMarkers);
 							aCell.setSymbol(x);
 							filled = true;
 						}
@@ -947,6 +1049,63 @@ const phistomefel = (cells) => {
 			}
 		}
 	}
+
+	if (rows1Config === 2 || rows1Config === 3 || rows1Config === 4) swapRow(0, 1);
+	if (rows1Config === 1 || rows1Config === 3) swapRow(1, 2);
+	if (rows1Config === 4 || rows1Config === 5) swapRow(0, 2);
+
+	if (rows2Config === 2 || rows2Config === 3 || rows2Config === 4) swapRow(3, 4);
+	if (rows2Config === 1 || rows2Config === 3) swapRow(4, 5);
+	if (rows2Config === 4 || rows2Config === 5) swapRow(3, 5);
+
+	if (rows3Config === 2 || rows3Config === 3 || rows3Config === 4) swapRow(6, 7);
+	if (rows3Config === 1 || rows3Config === 3) swapRow(7, 8);
+	if (rows3Config === 4 || rows3Config === 5) swapRow(6, 8);
+
+	if (cols1Config === 2 || cols1Config === 3 || cols1Config === 4) swapCol(0, 1);
+	if (cols1Config === 1 || cols1Config === 3) swapCol(1, 2);
+	if (cols1Config === 4 || cols1Config === 5) swapCol(0, 2);
+
+	if (cols2Config === 2 || cols2Config === 3 || cols2Config === 4) swapCol(3, 4);
+	if (cols2Config === 1 || cols2Config === 3) swapCol(4, 5);
+	if (cols2Config === 4 || cols2Config === 5) swapCol(3, 5);
+
+	if (cols3Config === 2 || cols3Config === 3 || cols3Config === 4) swapCol(6, 7);
+	if (cols3Config === 1 || cols3Config === 3) swapCol(7, 8);
+	if (cols3Config === 4 || cols3Config === 5) swapCol(6, 8);
+
+	if (boxs1Config === 2 || boxs1Config === 3 || boxs1Config === 4) {
+		swapRow(0, 3);
+		swapRow(1, 4);
+		swapRow(2, 5);
+	}
+	if (boxs1Config === 1 || boxs1Config === 3) {
+		swapRow(3, 6);
+		swapRow(4, 7);
+		swapRow(5, 8);
+	}
+	if (boxs1Config === 4) {
+		swapRow(0, 6);
+		swapRow(1, 7);
+		swapRow(2, 8);
+	}
+
+	if (boxs2Config === 2 || boxs2Config === 3 || boxs2Config === 4) {
+		swapCol(0, 3);
+		swapCol(1, 4);
+		swapCol(2, 5);
+	}
+	if (boxs2Config === 1 || boxs2Config === 3) {
+		swapCol(3, 6);
+		swapCol(4, 7);
+		swapCol(5, 8);
+	}
+	if (boxs2Config === 4) {
+		swapCol(0, 6);
+		swapCol(1, 7);
+		swapCol(2, 8);
+	}
+
 	return { reduced, filled };
 }
 
