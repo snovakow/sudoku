@@ -37,6 +37,30 @@ const candidates = (cells) => {
 	}
 }
 
+const openSingles = (cells) => {
+	for (const group of Grid.groupTypes) {
+		let symbolCell = null;
+		for (const index of group) {
+			const cell = cells[index];
+			if (cell.symbol !== 0) continue;
+			if (symbolCell === null) symbolCell = cell;
+			else { symbolCell = null; break; }
+		}
+		if (symbolCell !== null) {
+			const symbol = symbolCell.remainder;
+			symbolCell.setSymbol(symbol);
+
+			for (const i of symbolCell.group) {
+				const linked = cells[i];
+				if (linked.symbol === 0) linked.delete(symbol);
+			}
+	
+			return true;
+		}
+	}
+	return false;
+}
+
 const loneSingles = (cells) => {
 	for (const cell of cells) {
 		if (cell.symbol !== null || cell.size !== 1) continue;
@@ -47,9 +71,9 @@ const loneSingles = (cells) => {
 }
 
 const visualElimination = (cells) => {
-	for(let symbol=0; symbol<9; symbol++) {
-		for(let boxRow=0; boxRow<3; boxRow++) {
-			
+	for (let symbol = 0; symbol < 9; symbol++) {
+		for (let boxRow = 0; boxRow < 3; boxRow++) {
+
 		}
 	}
 }

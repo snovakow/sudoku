@@ -227,6 +227,51 @@ export class CellMarker extends Cell {
 	}
 }
 
+class GridCell {
+	static indices = indices;
+
+	static groupRows = groupRows;
+	static groupCols = groupCols;
+	static groupBoxs = groupBoxs;
+	static groupTypes = groupTypes;
+
+	constructor(symbol = 0) {
+		this.setSymbol(symbol);
+	}
+
+	setSymbol(symbol) {
+		this.symbol = symbol;
+		if (symbol === 0) {
+			this.mask = 0x03fe; // 0000 0011 1111 1110
+			this.size = 9;
+			this.remainder = 45; // 1+2+3+4+5+6+7+8+9	
+		} else {
+			this.mask = 0x0001 << symbol;
+			this.size = 1;
+			this.remainder = symbol;
+		}
+	}
+	has(symbol) {
+		return ((this.mask >> symbol) & 0x0001) === 0x0001;
+	}
+	delete(symbol) {
+		const mask = this.mask;
+		this.mask &= ~(0x0001 << symbol);
+		if (mask === this.mask) return false;
+		this.size--;
+		this.remainder -= symbol;
+		return true;
+	}
+	add(symbol) {
+		const mask = this.mask;
+		this.mask |= 0x0001 << symbol;
+		if (mask === this.mask) return false;
+		this.size++;
+		this.remainder += symbol;
+		return true;
+	}
+}
+
 class Grid extends Array {
 	static indices = indices;
 
@@ -241,7 +286,7 @@ class Grid extends Array {
 
 	log() {
 		let string = "";
-		for (const cell of this) string += cell.symbol===null ? "0" : cell.symbol+1;
+		for (const cell of this) string += cell.symbol === null ? "0" : cell.symbol + 1;
 		console.log(string);
 	}
 
