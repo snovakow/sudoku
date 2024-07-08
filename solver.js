@@ -46,6 +46,9 @@ const loneSingles = (cells) => {
 	return false;
 }
 
+const visualElimination = (cells) => {
+}
+
 const hiddenSingles = (cells) => {
 	for (let x = 0; x < 9; x++) {
 		for (const group of Grid.groupTypes) {
