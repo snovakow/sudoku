@@ -47,6 +47,11 @@ const loneSingles = (cells) => {
 }
 
 const visualElimination = (cells) => {
+	for(let symbol=0; symbol<9; symbol++) {
+		for(let boxRow=0; boxRow<3; boxRow++) {
+			
+		}
+	}
 }
 
 const hiddenSingles = (cells) => {
