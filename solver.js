@@ -38,27 +38,34 @@ const candidates = (cells) => {
 }
 
 const openSingles = (cells) => {
-	for (const group of Grid.groupTypes) {
-		let symbolCell = null;
-		for (const index of group) {
-			const cell = cells[index];
-			if (cell.symbol !== 0) continue;
-			if (symbolCell === null) symbolCell = cell;
-			else { symbolCell = null; break; }
-		}
-		if (symbolCell !== null) {
-			const symbol = symbolCell.remainder;
-			symbolCell.setSymbol(symbol);
+	let progressCount = 0;
+	let progress=true;
+	while(progress) {
+		progress=false;
 
-			for (const i of symbolCell.group) {
-				const linked = cells[i];
-				if (linked.symbol === 0) linked.delete(symbol);
+		for (const group of Grid.groupTypes) {
+			let symbolCell = null;
+			for (const index of group) {
+				const cell = cells[index];
+				if (cell.symbol !== 0) continue;
+				if (symbolCell === null) symbolCell = cell;
+				else { symbolCell = null; break; }
 			}
+			if (symbolCell !== null) {
+				const symbol = symbolCell.remainder;
+				symbolCell.setSymbol(symbol);
 	
-			return true;
-		}
+				for (const i of symbolCell.group) {
+					const linked = cells[i];
+					if (linked.symbol === 0) linked.delete(symbol);
+				}
+		
+				progressCount++;
+				progress=true;
+			}
+		}	
 	}
-	return false;
+	return progressCount;
 }
 
 const loneSingles = (cells) => {
