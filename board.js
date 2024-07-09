@@ -144,7 +144,7 @@ class Board {
 					}
 				} else {
 					const symbol = cell.symbol;
-					if (symbol === null) continue;
+					if (symbol === 0) continue;
 
 					ctx.font = "100 " + pixAlign(unitSize * 0.7) + "px " + FONT;
 					// ctx.font = "100 " + unitSize * 0.75 + "px " + FONTS[fontCurrent];
@@ -154,7 +154,7 @@ class Board {
 
 					const x = coff;
 					const y = roff + (measure.actualBoundingBoxAscent * 0.5 - measure.actualBoundingBoxDescent * 0.5);
-					ctx.fillText(symbol + 1, pixAlign(x), pixAlign(y));
+					ctx.fillText(symbol, pixAlign(x), pixAlign(y));
 				}
 			}
 		}

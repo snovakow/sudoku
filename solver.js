@@ -1,4 +1,4 @@
-import { Grid } from "./Grid.js";
+import { Grid, GridCell, Marker } from "./Grid.js";
 
 const floor3 = x => Math.floor(x / 3);
 const mod3 = x => x % 3;
@@ -25,73 +25,74 @@ const indexForBox = (x, i) => {
 	return row * 9 + col;
 }
 
-const candidates = (cells) => {
-	for (const cell of cells) {
-		const symbol = cell.symbol;
-		if (symbol === null) continue;
-
-		for (const i of cell.group) {
-			const linked = cells[i];
-			if (linked.symbol === null) linked.delete(symbol);
-		}
-	}
-}
-
-const openSingles = (cells) => {
-	let progressCount = 0;
-	let progress = true;
-	while (progress) {
-		progress = false;
-
-		for (const group of Grid.groupTypes) {
-			let symbolCell = null;
-			for (const index of group) {
-				const cell = cells[index];
-				if (cell.symbol !== 0) continue;
-				if (symbolCell === null) symbolCell = cell;
-				else { symbolCell = null; break; }
-			}
-			if (symbolCell !== null) {
-				const symbol = symbolCell.remainder;
-				symbolCell.setSymbol(symbol);
-
-				for (const i of symbolCell.group) {
-					const linked = cells[i];
-					if (linked.symbol === 0) linked.delete(symbol);
-				}
-
-				progressCount++;
-				progress = true;
+const openSingles = (grid) => {
+	let marker = new Marker();
+	for (const group of Grid.groupTypes) {
+		let gridIndex = -1;
+		marker.clear();
+		for (const index of group) {
+			const symbol = grid[index];
+			if (symbol === 0) {
+				if (gridIndex === -1) { gridIndex = index; }
+				else { gridIndex = -1; break; }
+			} else {
+				marker.delete(symbol);
 			}
 		}
-	}
-	return progressCount;
-}
-
-const loneSingles = (cells) => {
-	for (const cell of cells) {
-		if (cell.symbol !== null || cell.size !== 1) continue;
-		cell.setSymbol(cell.remainder);
-		return true;
+		if (gridIndex !== -1) {
+			assert(marker.size === 1, "Invalid remainder for marker size " + marker.size);
+			grid[gridIndex] = marker.remainder;
+			return true;
+		}
 	}
 	return false;
 }
 
 const visualElimination = (cells) => {
-	for (let symbol = 0; symbol < 9; symbol++) {
+	for (let symbol = 1; symbol <= 9; symbol++) {
 		for (let boxRow = 0; boxRow < 3; boxRow++) {
 
 		}
 	}
 }
 
+// 2 visuals block the same 2 row/col
+const hiddenVisualElimination = (cells) => {
+	for (let symbol = 1; symbol <= 9; symbol++) {
+		for (let boxRow = 0; boxRow < 3; boxRow++) {
+
+		}
+	}
+}
+
+const candidates = (cells) => {
+	for (const cell of cells) {
+		const symbol = cell.symbol;
+		if (symbol === 0) continue;
+
+		for (const i of cell.group) {
+			const linked = cells[i];
+			if (linked.symbol === 0) linked.delete(symbol);
+		}
+	}
+}
+
+const loneSingles = (cells) => {
+	for (const cell of cells) {
+		if (cell.symbol !== 0 || cell.size !== 1) continue;
+		cell.setSymbol(cell.remainder);
+		return true;
+	}
+	return false;
+}
+
 const hiddenSingles = (cells) => {
-	for (let x = 0; x < 9; x++) {
+	for (let x = 1; x <= 9; x++) {
 		for (const group of Grid.groupTypes) {
 			let symbolCell = null;
 			for (const index of group) {
 				const cell = cells[index];
-				if (cell.symbol !== null) continue;
+				if (cell.symbol !== 0) continue;
 				if (!cell.has(x)) continue;
 				if (symbolCell === null) symbolCell = cell;
 				else { symbolCell = null; break; }
@@ -121,8 +122,8 @@ const nakedSets = (cells) => { // Naked Pairs Triplets Quads
 			const cell = cells[index];
 
 			const set = new Set();
-			for (let i = 0; i < 9; i++) {
-				if (cell.has(i)) set.add(i);
+			for (let x = 1; x <= 9; x++) {
+				if (cell.has(x)) set.add(x);
 			}
 			if (set.size > 0) sets.push(new SetUnit(cell, set));
 		}
@@ -183,8 +184,8 @@ const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
 			const cell = cells[index];
 
 			const set = new Set();
-			for (let i = 0; i < 9; i++) {
-				if (cell.has(i)) set.add(i);
+			for (let x = 1; x <= 9; x++) {
+				if (cell.has(x)) set.add(x);
 			}
 			if (set.size > 0) sets.push(new SetUnit(cell, set));
 		}
@@ -257,7 +258,7 @@ const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
 						const cell = cells[set.index];
 
 						if (cell.has(symbol)) {
-							for (let x = 0; x < 9; x++) {
+							for (let x = 1; x <= 9; x++) {
 								if (!union.has(x)) {
 									const had = cell.delete(x);
 									if (had) reduced = true;
@@ -281,7 +282,7 @@ const omissions = (cells) => {
 			let groupForGroup = -1;
 			for (const index of group) {
 				const cell = cells[index];
-				if (cell.symbol !== null) continue;
+				if (cell.symbol !== 0) continue;
 				if (!cell.has(x)) continue;
 
 				const typeIndex = cell[srcGroupType];
@@ -298,7 +299,7 @@ const omissions = (cells) => {
 			if (groupForGroup !== -1) {
 				for (const index of dstGroups[groupForGroup]) {
 					const cell = cells[index];
-					if (cell.symbol !== null) continue;
+					if (cell.symbol !== 0) continue;
 					if (cell[dstGroupType] === groupIndex) continue;
 					const had = cell.delete(x);
 					if (had) reduced = true;
@@ -318,7 +319,7 @@ const omissions = (cells) => {
 		return groupInGroup(x, Grid.groupBoxs, groupProperty, groups, 'box');
 	}
 
-	for (let x = 0; x < 9; x++) {
+	for (let x = 1; x <= 9; x++) {
 		if (groupInBox(x, Grid.groupRows, 'row')) return true;
 		if (groupInBox(x, Grid.groupCols, 'col')) return true;
 
@@ -341,7 +342,7 @@ const xWing = (cells) => {
 	let reduced = false;
 
 	const xWingOrientation = (flip) => {
-		for (let i = 0; i < 9; i++) {
+		for (let i = 1; i <= 9; i++) {
 			const pairs = [];
 			for (let x = 0; x < 9; x++) {
 				let y1 = -1;
@@ -349,7 +350,7 @@ const xWing = (cells) => {
 				for (let y = 0; y < 9; y++) {
 					const index = flip ? x * 9 + y : y * 9 + x;
 					const cell = cells[index];
-					if (cell.symbol !== null) continue;
+					if (cell.symbol !== 0) continue;
 					if (cell.has(i)) {
 						if (y1 === -1) y1 = y;
 						else if (y2 === -1) y2 = y;
@@ -370,7 +371,7 @@ const xWing = (cells) => {
 
 							const index1 = flip ? x * 9 + pair1.i1 : pair1.i1 * 9 + x;
 							const cell1 = cells[index1];
-							if (cell1.symbol === null) {
+							if (cell1.symbol === 0) {
 								const had = cell1.delete(i);
 								if (had) {
 									reduced = true;
@@ -380,7 +381,7 @@ const xWing = (cells) => {
 
 							const index2 = flip ? x * 9 + pair1.i2 : pair1.i2 * 9 + x;
 							const cell2 = cells[index2];
-							if (cell2.symbol === null) {
+							if (cell2.symbol === 0) {
 								const had = cell2.delete(i);
 								if (had) {
 									reduced = true;
@@ -413,7 +414,7 @@ const swordfish = (cells) => {
 	const set = new Set();
 
 	const swordfishOrientation = (flip) => {
-		for (let i = 0; i < 9; i++) {
+		for (let i = 1; i <= 9; i++) {
 			const pairs = [];
 			for (let x = 0; x < 9; x++) {
 				let y1 = -1;
@@ -422,7 +423,7 @@ const swordfish = (cells) => {
 				for (let y = 0; y < 9; y++) {
 					const index = flip ? x * 9 + y : y * 9 + x;
 					const cell = cells[index];
-					if (cell.symbol !== null) continue;
+					if (cell.symbol !== 0) continue;
 					if (cell.has(i)) {
 						if (y1 === -1) y1 = y;
 						else if (y2 === -1) y2 = y;
@@ -462,7 +463,7 @@ const swordfish = (cells) => {
 								for (const pairi of [...set]) {
 									const index = flip ? x * 9 + pairi : pairi * 9 + x;
 									const cell = cells[index];
-									if (cell.symbol === null) {
+									if (cell.symbol === 0) {
 										const had = cell.delete(i);
 										if (had) {
 											reduced = true;
@@ -494,21 +495,21 @@ const xyWing = (cells) => {
 
 	const pairs = [];
 	for (const cell of cells) {
-		if (cell.symbol !== null) continue;
-		let s1 = -1;
-		let s2 = -1;
-		for (let s = 0; s < 9; s++) {
+		if (cell.symbol !== 0) continue;
+		let s1 = 0;
+		let s2 = 0;
+		for (let s = 1; s <= 9; s++) {
 			if (!cell.has(s)) continue;
-			if (s1 === -1) {
+			if (s1 === 0) {
 				s1 = s;
-			} else if (s2 === -1) {
+			} else if (s2 === 0) {
 				s2 = s;
 			} else {
-				s2 = -1;
+				s2 = 0;
 				break;
 			}
 		}
-		if (s2 !== -1) {
+		if (s2 !== 0) {
 			pairs.push(new Pair(cell.index, s1, s2));
 		}
 	}
@@ -800,7 +801,7 @@ const uniqueRectangle = (cells) => {
 	const pairs = [];
 	for (let i = 0; i < 81; i++) {
 		const cell = cells[i];
-		if (cell.symbol !== null) continue;
+		if (cell.symbol !== 0) continue;
 		if (cell.size !== 2) continue;
 		pairs.push(cell);
 	}
@@ -843,7 +844,7 @@ const uniqueRectangle = (cells) => {
 				if (col === -1) continue;
 
 				const cell = cells[row * 9 + col];
-				for (let x = 0; x < 9; x++) {
+				for (let x = 1; x <= 9; x++) {
 					if (cell1.has(x)) {
 						if (cell.delete(x)) {
 							return true;
@@ -857,7 +858,7 @@ const uniqueRectangle = (cells) => {
 
 export const aCells = new Set();
 export const bCells = new Set();
-const phistomefel = (cells, rows1Config = 0, rows2Config = 0, rows3Config = 0, cols1Config = 0, cols2Config = 0, cols3Config = 0, boxs1Config = 0, boxs2Config = 0) => {
+const phistomefel = (cells) => {
 	// 00 01 02|03 04 05|06 07 08
 	// 09 10 11|12 13 14|15 16 17
 	// 18 19 20|21 22 23|24 25 26
@@ -926,97 +927,16 @@ const phistomefel = (cells, rows1Config = 0, rows2Config = 0, rows3Config = 0, c
 	addGroupIndex(bCells, 59);
 	addGroupIndex(bCells, 60);
 
-	// 0 123
-	// 1 132
-	// 2 213
-	// 3 231
-	// 4 312
-	// 5 321
-	const swapRow = (r1, r2) => {
-		for (let i = 0; i < 9; i++) {
-			const i1 = r1 * 9 + i;
-			const i2 = r2 * 9 + i;
-			const tmp = cells[i1];
-			cells[i1] = cells[i2];
-			cells[i2] = tmp;
-		}
-	}
-	const swapCol = (c1, c2) => {
-		for (let i = 0; i < 9; i++) {
-			const i1 = i * 9 + c1;
-			const i2 = i * 9 + c2;
-			const tmp = cells[i1];
-			cells[i1] = cells[i2];
-			cells[i2] = tmp;
-		}
-	}
-
-	if (rows1Config === 2 || rows1Config === 3 || rows1Config === 4) swapRow(0, 1);
-	if (rows1Config === 1 || rows1Config === 3) swapRow(1, 2);
-	if (rows1Config === 4 || rows1Config === 5) swapRow(0, 2);
-
-	if (rows2Config === 2 || rows2Config === 3 || rows2Config === 4) swapRow(3, 4);
-	if (rows2Config === 1 || rows2Config === 3) swapRow(4, 5);
-	if (rows2Config === 4 || rows2Config === 5) swapRow(3, 5);
-
-	if (rows3Config === 2 || rows3Config === 3 || rows3Config === 4) swapRow(6, 7);
-	if (rows3Config === 1 || rows3Config === 3) swapRow(7, 8);
-	if (rows3Config === 4 || rows3Config === 5) swapRow(6, 8);
-
-	if (cols1Config === 2 || cols1Config === 3 || cols1Config === 4) swapCol(0, 1);
-	if (cols1Config === 1 || cols1Config === 3) swapCol(1, 2);
-	if (cols1Config === 4 || cols1Config === 5) swapCol(0, 2);
-
-	if (cols2Config === 2 || cols2Config === 3 || cols2Config === 4) swapCol(3, 4);
-	if (cols2Config === 1 || cols2Config === 3) swapCol(4, 5);
-	if (cols2Config === 4 || cols2Config === 5) swapCol(3, 5);
-
-	if (cols3Config === 2 || cols3Config === 3 || cols3Config === 4) swapCol(6, 7);
-	if (cols3Config === 1 || cols3Config === 3) swapCol(7, 8);
-	if (cols3Config === 4 || cols3Config === 5) swapCol(6, 8);
-
-	if (boxs1Config === 2 || boxs1Config === 3 || boxs1Config === 4) {
-		swapRow(0, 3);
-		swapRow(1, 4);
-		swapRow(2, 5);
-	}
-	if (boxs1Config === 1 || boxs1Config === 3) {
-		swapRow(3, 6);
-		swapRow(4, 7);
-		swapRow(5, 8);
-	}
-	if (boxs1Config === 4 || boxs1Config === 5) {
-		swapRow(0, 6);
-		swapRow(1, 7);
-		swapRow(2, 8);
-	}
-
-	if (boxs2Config === 2 || boxs2Config === 3 || boxs2Config === 4) {
-		swapCol(0, 3);
-		swapCol(1, 4);
-		swapCol(2, 5);
-	}
-	if (boxs2Config === 1 || boxs2Config === 3) {
-		swapCol(3, 6);
-		swapCol(4, 7);
-		swapCol(5, 8);
-	}
-	if (boxs2Config === 4 || boxs2Config === 5) {
-		swapCol(0, 6);
-		swapCol(1, 7);
-		swapCol(2, 8);
-	}
-
 	let reduced = false;
 	let filled = false;
 
-	for (let x = 0; x < 9; x++) {
+	for (let x = 1; x <= 9; x++) {
 		let aCount = 0;
 		let aMarkers = 0;
 		let aFull = true;
 		for (const aIndex of aCells) {
 			const aCell = cells[aIndex];
-			if (aCell.symbol === null) {
+			if (aCell.symbol === 0) {
 				if (aCell.has(x)) {
 					aFull = false;
 					aMarkers++;
@@ -1031,7 +951,7 @@ const phistomefel = (cells, rows1Config = 0, rows2Config = 0, rows3Config = 0, c
 		let bFull = true;
 		for (const bIndex of bCells) {
 			const bCell = cells[bIndex];
-			if (bCell.symbol === null) {
+			if (bCell.symbol === 0) {
 				if (bCell.has(x)) {
 					bFull = false;
 					bMarkers++;
@@ -1045,7 +965,7 @@ const phistomefel = (cells, rows1Config = 0, rows2Config = 0, rows3Config = 0, c
 			if (aCount === bCount && bMarkers > 0) {
 				for (const bIndex of bCells) {
 					const bCell = cells[bIndex];
-					if (bCell.symbol === null) {
+					if (bCell.symbol === 0) {
 						if (bCell.delete(x)) {
 							reduced = true;
 						}
@@ -1055,7 +975,7 @@ const phistomefel = (cells, rows1Config = 0, rows2Config = 0, rows3Config = 0, c
 			if (aCount === bCount + bMarkers) {
 				for (const bIndex of bCells) {
 					const bCell = cells[bIndex];
-					if (bCell.symbol === null) {
+					if (bCell.symbol === 0) {
 						if (bCell.has(x)) {
 							bCell.setSymbol(x);
 							filled = true;
@@ -1068,7 +988,7 @@ const phistomefel = (cells, rows1Config = 0, rows2Config = 0, rows3Config = 0, c
 			if (bCount === aCount && aMarkers > 0) {
 				for (const aIndex of aCells) {
 					const aCell = cells[aIndex];
-					if (aCell.symbol === null) {
+					if (aCell.symbol === 0) {
 						if (aCell.delete(x)) {
 							reduced = true;
 						}
@@ -1078,7 +998,7 @@ const phistomefel = (cells, rows1Config = 0, rows2Config = 0, rows3Config = 0, c
 			if (bCount === aCount + aMarkers) {
 				for (const aIndex of aCells) {
 					const aCell = cells[aIndex];
-					if (aCell.symbol === null) {
+					if (aCell.symbol === 0) {
 						if (aCell.has(x)) {
 							aCell.setSymbol(x);
 							filled = true;
@@ -1087,62 +1007,6 @@ const phistomefel = (cells, rows1Config = 0, rows2Config = 0, rows3Config = 0, c
 				}
 			}
 		}
-	}
-
-	if (rows1Config === 2 || rows1Config === 3 || rows1Config === 4) swapRow(0, 1);
-	if (rows1Config === 1 || rows1Config === 3) swapRow(1, 2);
-	if (rows1Config === 4 || rows1Config === 5) swapRow(0, 2);
-
-	if (rows2Config === 2 || rows2Config === 3 || rows2Config === 4) swapRow(3, 4);
-	if (rows2Config === 1 || rows2Config === 3) swapRow(4, 5);
-	if (rows2Config === 4 || rows2Config === 5) swapRow(3, 5);
-
-	if (rows3Config === 2 || rows3Config === 3 || rows3Config === 4) swapRow(6, 7);
-	if (rows3Config === 1 || rows3Config === 3) swapRow(7, 8);
-	if (rows3Config === 4 || rows3Config === 5) swapRow(6, 8);
-
-	if (cols1Config === 2 || cols1Config === 3 || cols1Config === 4) swapCol(0, 1);
-	if (cols1Config === 1 || cols1Config === 3) swapCol(1, 2);
-	if (cols1Config === 4 || cols1Config === 5) swapCol(0, 2);
-
-	if (cols2Config === 2 || cols2Config === 3 || cols2Config === 4) swapCol(3, 4);
-	if (cols2Config === 1 || cols2Config === 3) swapCol(4, 5);
-	if (cols2Config === 4 || cols2Config === 5) swapCol(3, 5);
-
-	if (cols3Config === 2 || cols3Config === 3 || cols3Config === 4) swapCol(6, 7);
-	if (cols3Config === 1 || cols3Config === 3) swapCol(7, 8);
-	if (cols3Config === 4 || cols3Config === 5) swapCol(6, 8);
-
-	if (boxs1Config === 2 || boxs1Config === 3 || boxs1Config === 4) {
-		swapRow(0, 3);
-		swapRow(1, 4);
-		swapRow(2, 5);
-	}
-	if (boxs1Config === 1 || boxs1Config === 3) {
-		swapRow(3, 6);
-		swapRow(4, 7);
-		swapRow(5, 8);
-	}
-	if (boxs1Config === 4) {
-		swapRow(0, 6);
-		swapRow(1, 7);
-		swapRow(2, 8);
-	}
-
-	if (boxs2Config === 2 || boxs2Config === 3 || boxs2Config === 4) {
-		swapCol(0, 3);
-		swapCol(1, 4);
-		swapCol(2, 5);
-	}
-	if (boxs2Config === 1 || boxs2Config === 3) {
-		swapCol(3, 6);
-		swapCol(4, 7);
-		swapCol(5, 8);
-	}
-	if (boxs2Config === 4) {
-		swapCol(0, 6);
-		swapCol(1, 7);
-		swapCol(2, 8);
 	}
 
 	return { reduced, filled };
@@ -1183,11 +1047,11 @@ const bruteForce = (cells) => {
 	function sodokoSolver() {
 		for (let index = 0; index < 81; index++) {
 			const cell = cells[rnd[index]];
-			if (cell.symbol === null) {
+			if (cell.symbol === 0) {
 
 				const rndx = makeRand(9);
 				for (let x = 0; x < 9; x++) {
-					const symbol = rndx[x];
+					const symbol = rndx[x] + 1;
 					if (!cell.has(symbol)) continue;
 
 					const state = cell.toData();
@@ -1208,8 +1072,7 @@ const bruteForce = (cells) => {
 		return true;
 	}
 
-	const result = sodokoSolver();
-	return result;
+	return sodokoSolver();
 }
 
 const indices = new Uint8Array(81);
@@ -1231,10 +1094,10 @@ const generate = (cells) => {
 	for (let i = 0; i < 81; i++) {
 		const index = indices[i];
 		const cell = cells[index];
-		if (cell.symbol !== null) continue;
+		if (cell.symbol !== 0) continue;
 		let found = -1;
 
-		const random = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+		const random = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 		for (let i = 0; i < 9; i++) {
 			const position = Math.floor(Math.random() * 9);
 			if (position !== i) {

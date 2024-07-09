@@ -226,8 +226,8 @@ const selector = createSelect(["-", ...names], (select) => {
 		for (let i = 0; i < 81; i++) {
 			const cell = board.cells[i];
 			cell.show = false;
-			cell.setSymbol(null);
-			board.startCells[i].symbol = null;
+			cell.setSymbol(0);
+			board.startCells[i].symbol = 0;
 		}
 		localStorage.removeItem("gridName");
 		saveGrid();
@@ -245,7 +245,7 @@ const selector = createSelect(["-", ...names], (select) => {
 selector.style.position = 'absolute';
 selector.style.width = '40px';
 
-const DataVersion = "0.1";
+const DataVersion = "0.2";
 
 const saveGrid = (selectedIndex = null) => {
 	if (selectedIndex !== null) localStorage.setItem("gridName", selectedIndex);
@@ -290,7 +290,7 @@ const click = (event) => {
 
 	if (row < 0 || col < 0) return;
 
-	if (board.startCells[row * 9 + col].symbol !== null) return;
+	if (board.startCells[row * 9 + col].symbol !== 0) return;
 
 	if (selected && selectedRow === row && selectedCol === col) {
 		selected = false;
@@ -323,13 +323,13 @@ const pickerClick = (event) => {
 
 	const [r, c] = clickLocation(event);
 
-	const index = r * 3 + c;
+	const index = r * 3 + c + 1;
 	const selectedIndex = selectedRow * 9 + selectedCol;
 	const symbol = board.cells[selectedIndex].symbol;
 	if (symbol === index) {
 		const cell = board.cells[selectedIndex];
 		cell.show = false;
-		cell.setSymbol(null);
+		cell.setSymbol(0);
 	} else {
 		board.cells[selectedIndex].setSymbol(index);
 	}
@@ -371,8 +371,8 @@ const onFocus = () => {
 const offFocus = () => {
 
 };
-window.addEventListener("focus", onFocus);
-window.addEventListener("blur", offFocus);
+// window.addEventListener("focus", onFocus);
+// window.addEventListener("blur", offFocus);
 
 const orientationchange = (event) => {
 	draw();
@@ -468,6 +468,14 @@ const fillSolvePhistomefel = () => {
 	let phistomefelReduced = 0;
 	let phistomefelFilled = 0;
 
+	let uniqueRectangleReduced = 0;
+	let nakedSetsReduced = 0;
+	let hiddenSetsReduced = 0;
+	let omissionsReduced = 0;
+	let xWingReduced = 0;
+	let swordfishReduced = 0;
+	let xyWingReduced = 0;
+
 	let bruteForceFill = false;
 
 	let progress = false;
@@ -476,17 +484,38 @@ const fillSolvePhistomefel = () => {
 
 		if (window.location.search === "?markers") continue;
 
+		const { reduced, filled } = phistomefel(board.cells);
+		progress = reduced || filled;
+		if (reduced) phistomefelReduced++;
+		if (filled) phistomefelFilled++;
+		if (progress) continue;
+
 		progress = loneSingles(board.cells);
 		if (progress) continue;
 
 		progress = hiddenSingles(board.cells);
 		if (progress) continue;
 
-		const { reduced, filled } = phistomefel(board.cells);
-		progress = reduced || filled;
-		if (reduced) phistomefelReduced++;
-		if (filled) phistomefelFilled++;
-		if (progress) continue;
+		progress = uniqueRectangle(board.cells);
+		if (progress) { uniqueRectangleReduced++; continue; }
+
+		progress = nakedSets(board.cells);
+		if (progress) { nakedSetsReduced++; continue; }
+
+		progress = hiddenSets(board.cells);
+		if (progress) { hiddenSetsReduced++; continue; }
+
+		progress = omissions(board.cells);
+		if (progress) { omissionsReduced++; continue; }
+
+		progress = xWing(board.cells);
+		if (progress) { xWingReduced++; continue; }
+
+		progress = swordfish(board.cells);
+		if (progress) { swordfishReduced++; continue; }
+
+		progress = xyWing(board.cells);
+		if (progress) { xyWingReduced++; continue; }
 
 		bruteForceFill = !isFinished();
 		// if (bruteForceFill) bruteForce(board.cells);
@@ -502,7 +531,7 @@ const fillSolvePhistomefel = () => {
 
 markerButton.addEventListener('click', () => {
 	for (const cell of board.cells) {
-		if (cell.symbol !== null) continue;
+		if (cell.symbol !== 0) continue;
 		cell.show = true;
 	}
 
@@ -541,7 +570,7 @@ const isFinished = () => {
 	const cells = board.cells;
 	for (let i = 0; i < 81; i++) {
 		const cell = cells[i];
-		if (cell.symbol === null) return false;
+		if (cell.symbol === 0) return false;
 	}
 	return true;
 }
@@ -564,9 +593,9 @@ generateButton.addEventListener('click', () => {
 		// console.log(`Time: ${Math.round(now - time) / 1000}`);
 
 		const {
-			phistomefelReducedBase,
-			phistomefelFilledBase,
-			bruteForceFillBase
+			phistomefelReduced: phistomefelReducedBase,
+			phistomefelFilled: phistomefelFilledBase,
+			bruteForceFill: bruteForceFillBase
 		} = fillSolvePhistomefel();
 
 		if ((phistomefelReducedBase > 0 || phistomefelFilledBase > 0) && !bruteForceFillBase) {
@@ -685,148 +714,3 @@ const resize = () => {
 resize();
 
 window.addEventListener('resize', resize);
-
-const bitSequence = new Uint8Array(146);
-let bitIndex = 0;
-let remainder = 0;
-const combosToBits = (x, combos) => {
-	combos -= remainder;
-	let bitCount = 0;
-	if (combos & 0x08) {
-		bitSequence[bitIndex] = x & 0x01;
-		x >>= 1;
-		bitIndex++;
-
-		bitSequence[bitIndex] = x & 0x01;
-		x >>= 1;
-		bitIndex++;
-
-		bitSequence[bitIndex] = x & 0x01;
-		bitIndex++;
-
-		remainder = combos - 0x08;
-	} else if (combos & 0x04) {
-		bitSequence[bitIndex] = x & 0x01;
-		x >>= 1;
-		bitIndex++;
-
-		bitSequence[bitIndex] = x & 0x01;
-		bitIndex++;
-
-		remainder = combos - 0x04;
-	} else if (combos & 0x02) {
-		bitCount = 1;
-		bitSequence[bitIndex] = x;
-		bitIndex++;
-
-		remainder = combos - 0x02;
-	}
-}
-let string = "";
-const setRandom = (combos) => {
-	const random = Math.floor(Math.random() * combos);
-	string += random + " ";
-	combosToBits(random, combos);
-}
-
-combosToBits(0, 5);
-combosToBits(1, 5);
-combosToBits(3, 5);
-combosToBits(4, 5);
-combosToBits(0, 5);
-combosToBits(4, 5);
-
-// setRandom(10);
-// setRandom(9);
-// setRandom(8);
-// setRandom(7);
-// setRandom(6);
-// setRandom(5);
-// setRandom(4);
-// setRandom(3);
-// setRandom(2);
-
-// setRandom(7);
-// setRandom(6);
-// setRandom(5);
-// setRandom(7);
-// setRandom(6);
-// setRandom(5);
-// setRandom(4);
-// setRandom(3);
-// setRandom(2);
-
-// setRandom(4);
-// setRandom(3);
-// setRandom(2);
-// setRandom(4);
-// setRandom(3);
-// setRandom(2);
-// setRandom(4);
-// setRandom(3);
-// setRandom(2);
-
-// setRandom(7);
-// setRandom(6);
-// setRandom(5);
-// setRandom(4);
-// setRandom(3);
-// setRandom(2);
-
-// setRandom(7);
-// setRandom(6);
-// setRandom(5);
-// setRandom(4);
-// setRandom(3);
-// setRandom(2);
-
-// setRandom(4);
-// setRandom(3);
-// setRandom(2);
-// setRandom(4);
-// setRandom(3);
-// setRandom(2);
-
-// setRandom(7);
-// setRandom(6);
-// setRandom(5);
-// setRandom(4);
-// setRandom(3);
-// setRandom(2);
-
-// setRandom(6);
-// setRandom(5);
-// setRandom(3);
-// setRandom(4);
-// setRandom(3);
-// setRandom(2);
-
-// setRandom(5);
-// setRandom(4);
-// setRandom(2);
-// setRandom(4);
-// setRandom(3);
-// setRandom(2);
-
-// setRandom(4);
-// setRandom(4);
-// setRandom(4);
-// setRandom(2);
-// setRandom(2);
-// setRandom(2);
-
-// setRandom(3);
-// setRandom(3);
-// setRandom(3);
-// setRandom(2);
-// setRandom(2);
-// setRandom(2);
-
-// setRandom(2);
-// setRandom(2);
-// setRandom(2);
-// setRandom(2);
-// setRandom(2);
-// setRandom(2);
-// console.log(bitIndex);
-// console.log(bitSequence.join(''));

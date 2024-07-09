@@ -167,8 +167,7 @@ const sudokuGenerator = (cells) => {
 
 	for (let i = 0; i < 81; i++) {
 		const cell = cells[i];
-		const symbol = grid[i];
-		cell.setSymbol(symbol === 0 ? null : symbol - 1);
+		cell.setSymbol(grid[i]);
 	}
 
 	if (hits < 21) {
@@ -198,11 +197,11 @@ const sudokuGeneratorPhistomefel = (cells) => {
 	randomize(rndi);
 
 	const rnd = [];
-	const rndChanceA = Math.random() * 1.5;
+	const rndChanceA = Math.random() * 1.5 - 0.25;
 	for (const cell of aCells) {
 		if (Math.random() < rndChanceA) rnd.push(cell);
 	}
-	const rndChanceB = Math.random() * 1.5;
+	const rndChanceB = Math.random() * 1.5 - 0.25;
 	for (const cell of bCells) {
 		if (Math.random() < rndChanceB) rnd.push(cell);
 	}
@@ -249,8 +248,7 @@ const sudokuGeneratorPhistomefel = (cells) => {
 
 	for (let i = 0; i < 81; i++) {
 		const cell = cells[i];
-		const symbol = grid[i];
-		cell.setSymbol(symbol === 0 ? null : symbol - 1);
+		cell.setSymbol(grid[i]);
 	}
 
 	let hits = 0;
