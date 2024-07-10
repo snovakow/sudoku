@@ -617,7 +617,7 @@ generateButton.addEventListener('click', () => {
 			} = fillSolve();
 
 			if (bruteForceFill) {
-				console.log("Phistomefel: " + phistomefelReducedBase + (phistomefelFilledBase > 0 ? " + " + phistomefelFilledBase + " filled" : "") + " " + totalPuzzles);
+				console.log("Phistomefel: " + reduced + (filled > 0 ? " + " + filled + " filled" : "") + " " + totalPuzzles);
 				console.log(grid.toString());
 				// console.log("Phistomefel: " + phistomefelReduced + (phistomefelFilled > 0 ? " + " + phistomefelFilled + " filled" : "") + " " + totalPuzzles);
 				// console.log("nakedSetsReduced: " + nakedSetsReduced);
