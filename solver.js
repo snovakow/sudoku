@@ -48,16 +48,8 @@ const openSingles = (grid) => {
 	return false;
 }
 
-const visualElimination = (cells) => {
-	for (let symbol = 1; symbol <= 9; symbol++) {
-		for (let boxRow = 0; boxRow < 3; boxRow++) {
-
-		}
-	}
-}
-
 // 2 visuals block the same 2 row/col
-const hiddenVisualElimination = (cells) => {
+const blockElimination = (cells) => {
 	class HitBox {
 		constructor() {
 			this.group1 = -1;
@@ -167,9 +159,20 @@ const nakedSets = (cells) => { // Naked Pairs Triplets Quads
 				for (let j = i + 1; j < len; j++) {
 					const state = inc & mask;
 					if (state > 0) {
+						unionCount++;
+						if (unionCount > 4) break;
+					}
+					mask <<= 1;
+				}
+
+				if (unionCount > 4) continue;
+
+				mask = 0x1;
+				for (let j = i + 1; j < len; j++) {
+					const state = inc & mask;
+					if (state > 0) {
 						const compare = sets[j];
 						for (const x of compare.set) union.add(x);
-						unionCount++;
 						setHitMask |= 0x1 << j;
 					}
 					mask <<= 1;
@@ -198,7 +201,6 @@ const nakedSets = (cells) => { // Naked Pairs Triplets Quads
 }
 
 const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
-	return false;
 	const union = new Set();
 
 	for (const groupType of Grid.groupTypes) {
@@ -213,12 +215,7 @@ const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
 			if (set.size > 0) sets.push(new SetUnit(cell, set));
 		}
 
-		for (let i1 = 0, len1 = sets.length - 1; i1 < len1; i1++) {
-			for (let i2 = i1 + 1, len2 = sets.length; i2 < len2; i2++) {
-				const cell1 = sets[i1];
-			}
-		}
-		continue;
+		const len = sets.length;
 		for (let i = 0; i < len - 1; i++) {
 			const remainder = len - i - 1;
 			const setUnit = sets[i];
@@ -250,43 +247,18 @@ const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
 				}
 
 				let reduced = false;
-				if (unionCount === union.size && unionCount < sets.length) {
-					mask = 0x1;
-					for (let j = i + 1; j < len; j++) {
-						const state = inc & mask;
-						if (state > 0) {
-							const compare = sets[j].set;
-
-							for (let i of union) {
-								if (!compare.has(i)) {
-									union.delete(i);
-								}
-							}
-
-							// for (const x of compare.set) union.add(x);
-							unionCount++;
-							setHitMask |= 0x1 << j;
-						}
-						mask <<= 1;
-					}
-
-					const it = union.values();
-					const first = it.next();
-					const symbol = first.value;
-
+				if (unionCount === union.size && unionCount < sets.length && unionCount <= 4) {
 					for (let shift = 0; shift < len; shift++) {
-						if ((setHitMask & (0x1 << shift)) > 0) continue;
+						if ((setHitMask & (0x1 << shift)) === 0) continue;
 
 						const set = sets[shift];
-						const cell = cells[set.index];
+						const cell = set.cell;
 
-						if (cell.has(symbol)) {
-							for (let x = 1; x <= 9; x++) {
-								if (!union.has(x)) {
-									const had = cell.delete(x);
-									if (had) reduced = true;
-								}
-							}
+						for (let x = 1; x <= 9; x++) {
+							if (union.has(x)) continue;
+
+							const had = cell.delete(x);
+							if (had) reduced = true;
 						}
 					}
 				}

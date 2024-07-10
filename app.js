@@ -349,14 +349,15 @@ const pickerMarkerClick = (event) => {
 
 	const [r, c] = clickLocation(event);
 
-	const index = r * 3 + c;
+	const symbol = r * 3 + c + 1;
 	const selectedIndex = selectedRow * 9 + selectedCol;
 	const cell = board.cells[selectedIndex];
 	if (cell.show) {
-		cell.toggle(index);
+		const had = cell.delete(symbol);
+		if (!had) cell.add(symbol);
 	} else {
 		cell.clear();
-		cell.add(index);
+		cell.add(symbol);
 		cell.show = true;
 	}
 
@@ -506,6 +507,7 @@ const fillSolvePhistomefel = () => {
 
 		progress = hiddenSets(board.cells);
 		if (progress) { hiddenSetsReduced++; continue; }
+		if(progress) console.log("!!!");
 
 		progress = omissions(board.cells);
 		if (progress) { omissionsReduced++; continue; }
@@ -533,7 +535,6 @@ const fillSolvePhistomefel = () => {
 
 markerButton.addEventListener('click', () => {
 	for (const cell of board.cells) {
-		if (cell.symbol !== 0) continue;
 		cell.show = true;
 	}
 

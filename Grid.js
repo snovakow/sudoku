@@ -220,10 +220,6 @@ export class CellMarker extends Cell {
 		this.size++;
 		this.remainder += value;
 	}
-	toggle(value) {
-		const had = this.delete(value);
-		if (!had) this.add(value);
-	}
 }
 
 class Marker {

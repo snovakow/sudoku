@@ -134,10 +134,10 @@ class Board {
 
 					for (let x = 0; x < 3; x++) {
 						for (let y = 0; y < 3; y++) {
-							if (cell.has(y * 3 + x)) {
+							const symbol = y * 3 + x + 1;
+							if (cell.has(symbol)) {
 								const xx = coff + unitSize * (x - 1) / 3 * 1;
 								const yy = roff + (measureMarker.actualBoundingBoxAscent * 0.5 - measureMarker.actualBoundingBoxDescent * 0.5) + unitSize * (y - 1) / 3 * 1;
-								const symbol = y * 3 + x + 1;
 								ctx.fillText(symbol, xx, yy);
 							}
 						}
