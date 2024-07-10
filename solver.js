@@ -128,7 +128,8 @@ class SetUnit {
 	}
 }
 
-const nakedSets = (cells) => { // Naked Pairs Triplets Quads
+// intersection=false: Naked Pairs Triplets Quads, intersection=true: Hidden Pairs Triplets Quads
+const nakedSets = (cells, intersection) => {
 	const union = new Set();
 
 	for (const groupType of Grid.groupTypes) {
