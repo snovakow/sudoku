@@ -182,7 +182,11 @@ const nakedSets = (cells, intersection) => {
 				let reduced = false;
 				if (unionCount === union.size && unionCount < sets.length) {
 					for (let shift = 0; shift < len; shift++) {
-						if ((setHitMask & (0x1 << shift)) > 0) continue;
+						if (intersection) {
+							if ((setHitMask & (0x1 << shift)) === 0) continue;
+						} else {
+							if ((setHitMask & (0x1 << shift)) > 0) continue;
+						}
 
 						const set = sets[shift];
 						const cell = set.cell;
