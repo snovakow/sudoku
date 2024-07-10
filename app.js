@@ -523,9 +523,9 @@ const fillSolvePhistomefel = () => {
 	} while (progress);
 
 	return {
-		phistomefelReduced,
-		phistomefelFilled,
-		bruteForceFill
+		reduced: phistomefelReduced,
+		filled: phistomefelFilled,
+		bruteForced: bruteForceFill
 	};
 }
 
@@ -586,6 +586,8 @@ generateButton.addEventListener('click', () => {
 	running = !running;
 	const step = () => {
 		const { clueCount, grid } = sudokuGeneratorPhistomefel(board.cells);
+
+		const save = board.cells.toData();
 		// const { clueCount, grid } = sudokuGenerator(board.cells);
 		draw();
 
@@ -593,12 +595,14 @@ generateButton.addEventListener('click', () => {
 		// console.log(`Time: ${Math.round(now - time) / 1000}`);
 
 		const {
-			phistomefelReduced: phistomefelReducedBase,
-			phistomefelFilled: phistomefelFilledBase,
-			bruteForceFill: bruteForceFillBase
+			reduced,
+			filled,
+			bruteForced
 		} = fillSolvePhistomefel();
 
-		if ((phistomefelReducedBase > 0 || phistomefelFilledBase > 0) && !bruteForceFillBase) {
+		if ((reduced > 0 || filled > 0) && !bruteForced) {
+			board.cells.fromData(save);
+
 			const {
 				uniqueRectangleReduced,
 				nakedSetsReduced,
