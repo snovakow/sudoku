@@ -62,7 +62,6 @@ const hiddenVisualElimination = (cells) => {
 		constructor() {
 			this.group1 = -1;
 			this.group2 = -1;
-
 		}
 	}
 	for (let symbol = 1; symbol <= 9; symbol++) {
