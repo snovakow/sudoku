@@ -231,16 +231,22 @@ const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
 				for (let j = i + 1; j < len; j++) {
 					const state = inc & mask;
 					if (state > 0) {
-						const compare = sets[j].set;
-
-						for (let i of union) {
-							if (!compare.has(i)) {
-								union.delete(i);
-							}
-						}
-
-						// for (const x of compare.set) union.add(x);
 						unionCount++;
+						if (unionCount > 4) break;
+					}
+					mask <<= 1;
+				}
+
+				if (unionCount > 4) continue;
+
+				mask = 0x1;
+				for (let j = i + 1; j < len; j++) {
+					const state = inc & mask;
+					if (state > 0) {
+						const compare = sets[j].set;
+						for (let i of union) {
+							if (!compare.has(i)) union.delete(i);
+						}
 						setHitMask |= 0x1 << j;
 					}
 					mask <<= 1;
@@ -256,7 +262,6 @@ const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
 
 						for (let x = 1; x <= 9; x++) {
 							if (union.has(x)) continue;
-
 							const had = cell.delete(x);
 							if (had) reduced = true;
 						}
