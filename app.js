@@ -143,6 +143,7 @@ const rawNames = [
 	"Phistomefel - XY Wing",
 	"Phistomefel - XY Wing",
 	"Phistomefel 7",
+	"Phistomefel 8",
 	"20",
 ];
 rawNames.reverse();
@@ -163,6 +164,7 @@ const raws = [
 	[0, 0, 0, 0, 5, 0, 7, 0, 9, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 8, 1, 3, 7, 6, 0, 0, 0, 0, 5, 0, 0, 0, 3, 4, 0, 0, 0, 2, 0, 0, 0, 0, 6, 0, 9, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 6, 0, 8, 0, 0, 3, 0, 0, 8, 0, 0, 0, 5, 0, 0, 1, 0, 7, 0, 0, 0, 0, 0],
 	[1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 1, 9, 7, 5, 0, 0, 0, 9, 1, 0, 0, 0, 8, 2, 0, 7, 8, 2, 0, 0, 0, 9, 0, 4, 0, 0, 4, 0, 2, 0, 6, 0, 0, 0, 0, 8, 2, 7, 1, 4, 0, 0, 0, 0, 0, 0, 0, 4, 0, 1, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0],
 	[0, 0, 0, 4, 0, 0, 0, 8, 9, 7, 0, 0, 0, 8, 0, 0, 6, 0, 0, 0, 6, 7, 1, 9, 3, 0, 0, 0, 0, 7, 0, 0, 0, 4, 0, 0, 0, 0, 9, 5, 0, 0, 0, 0, 0, 3, 0, 2, 0, 0, 0, 8, 0, 0, 0, 0, 8, 0, 7, 1, 2, 0, 0, 0, 7, 0, 0, 0, 2, 0, 0, 8, 0, 6, 0, 0, 0, 0, 0, 4, 0],
+	[0, 2, 0, 0, 0, 0, 0, 0, 9, 5, 6, 0, 7, 0, 8, 0, 0, 0, 0, 8, 0, 0, 1, 0, 4, 0, 0, 9, 0, 0, 0, 4, 0, 5, 0, 2, 0, 0, 0, 0, 0, 0, 1, 7, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 2, 0, 3, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 3, 4, 0, 0, 0, 0, 0, 0, 0],
 	'100006000000000013908000600006000200030070000070003800000140900000930000050000000'.split(''),
 ];
 raws.reverse();
@@ -485,9 +487,9 @@ const fillSolvePhistomefel = () => {
 		if (window.location.search === "?markers") continue;
 
 		const { reduced, filled } = phistomefel(board.cells);
-		progress = reduced || filled;
-		if (reduced) phistomefelReduced++;
-		if (filled) phistomefelFilled++;
+		progress = reduced > 0 || filled > 0;
+		if (reduced > 0) phistomefelReduced++;
+		if (filled > 0) phistomefelFilled++;
 		if (progress) continue;
 
 		progress = loneSingles(board.cells);
