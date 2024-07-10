@@ -202,7 +202,6 @@ const processSets = (cells, intersection) => {
 const nakedSets = (cells) => { // Naked Pairs Triplets Quads
 	return processSets(cells, false);
 }
-
 const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
 	const union = new Set();
 
