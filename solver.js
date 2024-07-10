@@ -128,6 +128,8 @@ class SetUnit {
 	}
 }
 
+const processSets = (cells, intersection) => {
+}
 const nakedSets = (cells) => { // Naked Pairs Triplets Quads
 	const union = new Set();
 
@@ -253,7 +255,7 @@ const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
 				}
 
 				let reduced = false;
-				if (unionCount === union.size && unionCount < sets.length && unionCount <= 4) {
+				if (unionCount === union.size && unionCount < sets.length) {
 					for (let shift = 0; shift < len; shift++) {
 						if ((setHitMask & (0x1 << shift)) === 0) continue;
 
