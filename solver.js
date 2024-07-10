@@ -128,8 +128,7 @@ class SetUnit {
 	}
 }
 
-// intersection=false: Naked Pairs Triplets Quads, intersection=true: Hidden Pairs Triplets Quads
-const nakedSets = (cells, intersection) => {
+const nakedSets = (cells) => { // Naked Pairs Triplets Quads
 	const union = new Set();
 
 	for (const groupType of Grid.groupTypes) {
@@ -182,11 +181,7 @@ const nakedSets = (cells, intersection) => {
 				let reduced = false;
 				if (unionCount === union.size && unionCount < sets.length) {
 					for (let shift = 0; shift < len; shift++) {
-						if (intersection) {
-							if ((setHitMask & (0x1 << shift)) === 0) continue;
-						} else {
-							if ((setHitMask & (0x1 << shift)) > 0) continue;
-						}
+						if ((setHitMask & (0x1 << shift)) > 0) continue;
 
 						const set = sets[shift];
 						const cell = set.cell;
