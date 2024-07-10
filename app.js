@@ -507,7 +507,7 @@ const fillSolvePhistomefel = () => {
 
 		progress = hiddenSets(board.cells);
 		if (progress) { hiddenSetsReduced++; continue; }
-		if(progress) console.log("!!!");
+		if (progress) console.log("!!!");
 
 		progress = omissions(board.cells);
 		if (progress) { omissionsReduced++; continue; }
@@ -621,23 +621,14 @@ generateButton.addEventListener('click', () => {
 
 			if (bruteForceFill) {
 				console.log("Phistomefel: " + reduced + (filled > 0 ? " + " + filled + " filled" : "") + " " + totalPuzzles);
+				console.log("Deadly Pattern Unique Rectangle: " + uniqueRectangleReduced);
+				console.log("Naked Sets: " + nakedSetsReduced);
+				console.log("Hidden Sets: " + hiddenSetsReduced);
+				console.log("Omissions: " + omissionsReduced);
+				console.log("X Wing: " + xWingReduced);
+				console.log("Swordfish: " + swordfishReduced);
+				console.log("XY Wing: " + xyWingReduced);
 				console.log(grid.toString());
-				// console.log("Phistomefel: " + phistomefelReduced + (phistomefelFilled > 0 ? " + " + phistomefelFilled + " filled" : "") + " " + totalPuzzles);
-				// console.log("nakedSetsReduced: " + nakedSetsReduced);
-				// console.log("hiddenSetsReduced: " + hiddenSetsReduced);
-				// console.log("omissionsReduced: " + omissionsReduced);
-				// console.log(grid.toString());
-
-				// console.log("Deadly Pattern Unique Rectangle: " + uniqueRectangleReduced);
-				// console.log("Naked Sets: " + nakedSetsReduced);
-				// console.log("Hidden Sets: " + hiddenSetsReduced);
-				// console.log("Omissions: " + omissionsReduced);
-				// console.log("X Wing: " + xWingReduced);
-				// console.log("Swordfish: " + swordfishReduced);
-				// console.log("XY Wing: " + xyWingReduced);
-				// console.log("Phistomefel: " + phistomefelReduced + (phistomefelFilled > 0 ? " + " + phistomefelFilled + " filled" : ""));
-				// console.log("Brute Force: " + bruteForceFill);
-				// console.log("Phistomefel: " + grid.toString());
 			}
 		}
 
