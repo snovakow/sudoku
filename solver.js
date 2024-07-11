@@ -48,38 +48,6 @@ const openSingles = (grid) => {
 	return false;
 }
 
-// 2 visuals block the same 2 row/col
-const blockElimination = (cells) => {
-	class HitBox {
-		constructor() {
-			this.group1 = -1;
-			this.group2 = -1;
-		}
-	}
-	for (let symbol = 1; symbol <= 9; symbol++) {
-		for (let boxRow = 0; boxRow < 3; boxRow++) {
-			let hitBoxs = [];
-			for (let boxCol = 0; boxCol < 3; boxCol++) {
-				const hitBox = new HitBox();
-				const group = Grid.groupBoxs[boxRow * 3 + boxCol];
-				for (const cell of group) {
-					if (cell.symbol === 0) {
-						if (hitBox.group1 === -1) {
-						}
-					} else {
-						if (cell.symbol === symbol) {
-							hitBox.group1 = cell.row;
-							hitBox.group2 = -1;
-							break;
-						}
-					}
-				}
-				hitBoxs[boxCol] = hitRows;
-			}
-		}
-	}
-}
-
 const candidates = (cells) => {
 	for (const cell of cells) {
 		const symbol = cell.symbol;
@@ -93,12 +61,13 @@ const candidates = (cells) => {
 }
 
 const loneSingles = (cells) => {
+	let reduced = false;
 	for (const cell of cells) {
 		if (cell.symbol !== 0 || cell.size !== 1) continue;
 		cell.setSymbol(cell.remainder);
-		return true;
+		reduced = true;
 	}
-	return false;
+	return reduced;
 }
 
 const hiddenSingles = (cells) => {
@@ -198,7 +167,6 @@ const nakedHiddenSets = (cells) => { // Naked and Hidden Pairs Triplets Quads
 				if (reduced) {
 					const hidden = unionCount > 4;
 					return {
-						reduced: true,
 						hidden: hidden,
 						size: hidden ? sets.length - unionCount : unionCount,
 					};
