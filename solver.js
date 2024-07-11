@@ -128,7 +128,7 @@ class SetUnit {
 	}
 }
 
-const processSets = (cells, intersection) => {
+const nakedHiddenSets = (cells) => { // Naked and Hidden Pairs Triplets Quads
 	const union = new Set();
 
 	for (const groupType of Grid.groupTypes) {
