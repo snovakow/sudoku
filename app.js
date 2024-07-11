@@ -507,7 +507,6 @@ const fillSolvePhistomefel = () => {
 
 		progress = hiddenSets(board.cells);
 		if (progress) { hiddenSetsReduced++; continue; }
-		if (progress) console.log("!!!");
 
 		progress = omissions(board.cells);
 		if (progress) { omissionsReduced++; continue; }
