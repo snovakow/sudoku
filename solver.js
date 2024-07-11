@@ -145,10 +145,13 @@ const nakedHiddenSets = (cells) => { // Naked and Hidden Pairs Triplets Quads
 
 		const len = sets.length;
 		for (let i = 0; i < len - 1; i++) {
-			const remainder = len - i - 1;
+			const remainder = len - i;
 			const setUnit = sets[i];
 
-			const endLen = 0x1 << remainder;
+			let endLen = 0x0;
+			for (let j = 0; j < remainder; j++) {
+				endLen |= 0x1 << j;
+			}
 			for (let inc = 1; inc < endLen; inc++) {
 				union.clear();
 				for (const x of setUnit.set) union.add(x);
@@ -160,12 +163,11 @@ const nakedHiddenSets = (cells) => { // Naked and Hidden Pairs Triplets Quads
 					const state = inc & mask;
 					if (state > 0) {
 						unionCount++;
-						if (unionCount > 4) break;
 					}
 					mask <<= 1;
 				}
 
-				if (unionCount > 4) continue;
+				if (unionCount >= sets.length - 1) continue;
 
 				mask = 0x1;
 				for (let j = i + 1; j < len; j++) {
@@ -179,7 +181,7 @@ const nakedHiddenSets = (cells) => { // Naked and Hidden Pairs Triplets Quads
 				}
 
 				let reduced = false;
-				if (unionCount === union.size && unionCount < sets.length) {
+				if (unionCount === union.size) {
 					for (let shift = 0; shift < len; shift++) {
 						if ((setHitMask & (0x1 << shift)) > 0) continue;
 
@@ -192,89 +194,20 @@ const nakedHiddenSets = (cells) => { // Naked and Hidden Pairs Triplets Quads
 						}
 					}
 				}
-				if (reduced) return true;
+
+				if (reduced) {
+					const hidden = unionCount > 4;
+					return {
+						reduced: true,
+						hidden: hidden,
+						size: hidden ? sets.length - unionCount : unionCount,
+					};
+				}
 			}
 		}
 	}
 
-	return false;
-}
-const nakedSets = (cells) => { // Naked Pairs Triplets Quads
-	return processSets(cells, false);
-}
-const hiddenSets = (cells) => { // Hidden Pairs Triplets Quads
-	const union = new Set();
-
-	for (const groupType of Grid.groupTypes) {
-		const sets = [];
-		for (const index of groupType) {
-			const cell = cells[index];
-
-			const set = new Set();
-			for (let x = 1; x <= 9; x++) {
-				if (cell.has(x)) set.add(x);
-			}
-			if (set.size > 0) sets.push(new SetUnit(cell, set));
-		}
-
-		const len = sets.length;
-		for (let i = 0; i < len - 1; i++) {
-			const remainder = len - i - 1;
-			const setUnit = sets[i];
-
-			const endLen = 0x1 << remainder;
-			for (let inc = 1; inc < endLen; inc++) {
-				union.clear();
-				for (const x of setUnit.set) union.add(x);
-				let unionCount = 1;
-				let setHitMask = 0x1 << i;
-
-				let mask = 0x1;
-				for (let j = i + 1; j < len; j++) {
-					const state = inc & mask;
-					if (state > 0) {
-						unionCount++;
-						if (unionCount > 4) break;
-					}
-					mask <<= 1;
-				}
-
-				if (unionCount > 4) continue;
-
-				mask = 0x1;
-				for (let j = i + 1; j < len; j++) {
-					const state = inc & mask;
-					if (state > 0) {
-						const compare = sets[j].set;
-						for (let i of union) {
-							if (!compare.has(i)) union.delete(i);
-						}
-						setHitMask |= 0x1 << j;
-					}
-					mask <<= 1;
-				}
-
-				let reduced = false;
-				if (unionCount === union.size && unionCount < sets.length) {
-					for (let shift = 0; shift < len; shift++) {
-						if ((setHitMask & (0x1 << shift)) === 0) continue;
-
-						const set = sets[shift];
-						const cell = set.cell;
-
-						for (let x = 1; x <= 9; x++) {
-							if (union.has(x)) continue;
-							const had = cell.delete(x);
-							if (had) reduced = true;
-						}
-					}
-				}
-				if (reduced) return true;
-			}
-		}
-	}
-
-	return false;
+	return null;
 }
 
 const omissions = (cells) => {
@@ -1123,6 +1056,6 @@ const generate = (cells) => {
 }
 
 export {
-	candidates, generate, loneSingles, hiddenSingles, nakedSets, hiddenSets, omissions, xWing, swordfish, xyWing,
+	candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing,
 	uniqueRectangle, phistomefel, bruteForce
 };

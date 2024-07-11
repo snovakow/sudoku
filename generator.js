@@ -197,14 +197,14 @@ const sudokuGeneratorPhistomefel = (cells) => {
 	randomize(rndi);
 
 	const rnd = [];
-	// const rndChanceA = Math.random() * 1.5 - 0.25;
-	// for (const cell of aCells) {
-	// 	if (Math.random() < rndChanceA) rnd.push(cell);
-	// }
-	// const rndChanceB = Math.random() * 1.5 - 0.25;
-	// for (const cell of bCells) {
-	// 	if (Math.random() < rndChanceB) rnd.push(cell);
-	// }
+	const rndChanceA = Math.random() * 1.5 - 0.25;
+	for (const cell of aCells) {
+		if (Math.random() < rndChanceA) rnd.push(cell);
+	}
+	const rndChanceB = Math.random() * 1.5 - 0.25;
+	for (const cell of bCells) {
+		if (Math.random() < rndChanceB) rnd.push(cell);
+	}
 
 	const rndSet = new Set(rnd);
 	randomize(rnd);
