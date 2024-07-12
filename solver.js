@@ -761,7 +761,7 @@ const uniqueRectangle = (cells) => {
 
 export const aCells = new Set();
 export const bCells = new Set();
-const phistomefel = (cells) => {
+const phistomefel = (cells, test = false) => {
 	// 00 01 02|03 04 05|06 07 08
 	// 09 10 11|12 13 14|15 16 17
 	// 18 19 20|21 22 23|24 25 26
@@ -844,6 +844,10 @@ const phistomefel = (cells) => {
 	b4Cells.add(47);
 
 	const b5Cells = new Set();
+	b5Cells.add(20);
+	b5Cells.add(24);
+	b5Cells.add(60);
+	b5Cells.add(56);
 
 	for (const i of a1Cells) aCells.add(i);
 	for (const i of a2Cells) aCells.add(i);
@@ -854,13 +858,15 @@ const phistomefel = (cells) => {
 	for (const i of b2Cells) bCells.add(i);
 	for (const i of b3Cells) bCells.add(i);
 	for (const i of b4Cells) bCells.add(i);
-	bCells.add(20);
-	bCells.add(24);
-	bCells.add(60);
-	bCells.add(56);
+	for (const i of b5Cells) bCells.add(i);
 
 	let reduced = false;
 	let filled = false;
+
+	let a1Markers = new Map();
+	let a2Markers = new Map();
+	let a3Markers = new Map();
+	let a4Markers = new Map();
 
 	for (let x = 1; x <= 9; x++) {
 		let aCount = 0;
@@ -871,7 +877,45 @@ const phistomefel = (cells) => {
 			if (aCell.symbol === 0) {
 				if (aCell.has(x)) {
 					aFull = false;
-					aMarkers++;
+					if (test) {
+						if (a1Cells.has(aCell.index)) {
+							const a1Marker = a1Markers.get(x);
+							if (a1Marker) {
+								a1Marker.push(aCell.index);
+							} else {
+								a1Markers.set(x, [aCell.index]);
+								aMarkers++;
+							}
+						} else if (a2Cells.has(aCell.index)) {
+							const a2Marker = a2Markers.get(x);
+							if (a2Marker) {
+								a2Marker.push(aCell.index);
+							} else {
+								a2Markers.set(x, [aCell.index]);
+								aMarkers++;
+							}
+						} else if (a3Cells.has(aCell.index)) {
+							const a3Marker = a3Markers.get(x);
+							if (a3Marker) {
+								a3Marker.push(aCell.index);
+							} else {
+								a3Markers.set(x, [aCell.index]);
+								aMarkers++;
+							}
+						} else if (a4Cells.has(aCell.index)) {
+							const a4Marker = a4Markers.get(x);
+							if (a4Marker) {
+								a4Marker.push(aCell.index);
+							} else {
+								a4Markers.set(x, [aCell.index]);
+								aMarkers++;
+							}
+						} else {
+							aMarkers++;
+						}
+					} else {
+						aMarkers++;
+					}
 				}
 			} else {
 				if (aCell.symbol === x) aCount++;
@@ -897,21 +941,19 @@ const phistomefel = (cells) => {
 			if (aCount === bCount && bMarkers > 0) {
 				for (const bIndex of bCells) {
 					const bCell = cells[bIndex];
-					if (bCell.symbol === 0) {
-						if (bCell.delete(x)) {
-							reduced = true;
-						}
+					if (bCell.symbol !== 0) continue;
+					if (bCell.delete(x)) {
+						reduced = true;
 					}
 				}
 			}
 			if (aCount === bCount + bMarkers) {
 				for (const bIndex of bCells) {
 					const bCell = cells[bIndex];
-					if (bCell.symbol === 0) {
-						if (bCell.has(x)) {
-							bCell.setSymbol(x);
-							filled = true;
-						}
+					if (bCell.symbol !== 0) continue;
+					if (bCell.has(x)) {
+						bCell.setSymbol(x);
+						filled = true;
 					}
 				}
 			}
@@ -920,17 +962,63 @@ const phistomefel = (cells) => {
 			if (bCount === aCount && aMarkers > 0) {
 				for (const aIndex of aCells) {
 					const aCell = cells[aIndex];
-					if (aCell.symbol === 0) {
-						if (aCell.delete(x)) {
-							reduced = true;
-						}
+					if (aCell.symbol !== 0) continue;
+					if (aCell.delete(x)) {
+						reduced = true;
 					}
 				}
 			}
 			if (bCount === aCount + aMarkers) {
 				for (const aIndex of aCells) {
 					const aCell = cells[aIndex];
-					if (aCell.symbol === 0) {
+					if (aCell.symbol !== 0) continue;
+
+					const a1Marker = a1Markers.get(x);
+					const a2Marker = a2Markers.get(x);
+					const a3Marker = a3Markers.get(x);
+					const a4Marker = a4Markers.get(x);
+					if (test) {
+						if (a1Marker && a1Marker.length > 1) {
+							for (const i of Grid.groupBoxs[0]) {
+								if (a1Cells.has(i)) continue;
+								const cell = cells[i];
+								if (cell.delete(x)) {
+									reduced = true;
+									console.log("0");
+								}
+							}
+						} else if (a2Marker && a2Marker.length > 1) {
+							for (const i of Grid.groupBoxs[2]) {
+								if (a2Cells.has(i)) continue;
+								const cell = cells[i];
+								if (cell.delete(x)) {
+									reduced = true;
+									console.log("2");
+								}
+							}
+						} else if (a3Marker && a3Marker.length > 1) {
+							for (const i of Grid.groupBoxs[8]) {
+								if (a3Cells.has(i)) continue;
+								const cell = cells[i];
+								if (cell.delete(x)) {
+									reduced = true;
+								}
+							}
+						} else if (a4Marker && a4Marker.length > 1) {
+							for (const i of Grid.groupBoxs[6]) {
+								if (a4Cells.has(i)) continue;
+								const cell = cells[i];
+								if (cell.delete(x)) {
+									reduced = true;
+								}
+							}
+						} else {
+							if (aCell.has(x)) {
+								aCell.setSymbol(x);
+								filled = true;
+							}
+						}
+					} else {
 						if (aCell.has(x)) {
 							aCell.setSymbol(x);
 							filled = true;
