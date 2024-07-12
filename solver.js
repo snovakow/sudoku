@@ -786,49 +786,78 @@ const phistomefel = (cells) => {
 	// ..B|BBB|B..
 	// AA.|...|.AA
 	// AA.|...|.AA
-	const addGroupIndex = (set, index) => {
-		set.add(index);
-	};
-	addGroupIndex(aCells, 0);
-	addGroupIndex(aCells, 1);
-	addGroupIndex(aCells, 9);
-	addGroupIndex(aCells, 10);
 
-	addGroupIndex(aCells, 7);
-	addGroupIndex(aCells, 8);
-	addGroupIndex(aCells, 16);
-	addGroupIndex(aCells, 17);
+	// A1.|...|.A2
+	// A1.|...|.A2
+	// ..5|B1B|5..
+	// ---|---|---
+	// ..B|...|B..
+	// ..4|...|2..
+	// ..B|...|B..
+	// ---|---|---
+	// ..5|B3B|5..
+	// A3.|...|.A4
+	// A3.|...|.A4
 
-	addGroupIndex(aCells, 63);
-	addGroupIndex(aCells, 64);
-	addGroupIndex(aCells, 72);
-	addGroupIndex(aCells, 73);
+	const a1Cells = new Set();
+	a1Cells.add(0);
+	a1Cells.add(1);
+	a1Cells.add(9);
+	a1Cells.add(10);
 
-	addGroupIndex(aCells, 70);
-	addGroupIndex(aCells, 71);
-	addGroupIndex(aCells, 79);
-	addGroupIndex(aCells, 80);
+	const a2Cells = new Set();
+	a2Cells.add(7);
+	a2Cells.add(8);
+	a2Cells.add(16);
+	a2Cells.add(17);
 
-	addGroupIndex(bCells, 20);
-	addGroupIndex(bCells, 21);
-	addGroupIndex(bCells, 22);
-	addGroupIndex(bCells, 23);
-	addGroupIndex(bCells, 24);
+	const a3Cells = new Set();
+	a3Cells.add(63);
+	a3Cells.add(64);
+	a3Cells.add(72);
+	a3Cells.add(73);
 
-	addGroupIndex(bCells, 29);
-	addGroupIndex(bCells, 33);
+	const a4Cells = new Set();
+	a4Cells.add(70);
+	a4Cells.add(71);
+	a4Cells.add(79);
+	a4Cells.add(80);
 
-	addGroupIndex(bCells, 38);
-	addGroupIndex(bCells, 42);
+	const b1Cells = new Set();
+	b1Cells.add(21);
+	b1Cells.add(22);
+	b1Cells.add(23);
 
-	addGroupIndex(bCells, 47);
-	addGroupIndex(bCells, 51);
+	const b2Cells = new Set();
+	b2Cells.add(33);
+	b2Cells.add(42);
+	b2Cells.add(51);
 
-	addGroupIndex(bCells, 56);
-	addGroupIndex(bCells, 57);
-	addGroupIndex(bCells, 58);
-	addGroupIndex(bCells, 59);
-	addGroupIndex(bCells, 60);
+	const b3Cells = new Set();
+	b3Cells.add(57);
+	b3Cells.add(58);
+	b3Cells.add(59);
+
+	const b4Cells = new Set();
+	b4Cells.add(29);
+	b4Cells.add(38);
+	b4Cells.add(47);
+
+	const b5Cells = new Set();
+
+	for (const i of a1Cells) aCells.add(i);
+	for (const i of a2Cells) aCells.add(i);
+	for (const i of a3Cells) aCells.add(i);
+	for (const i of a4Cells) aCells.add(i);
+
+	for (const i of b1Cells) bCells.add(i);
+	for (const i of b2Cells) bCells.add(i);
+	for (const i of b3Cells) bCells.add(i);
+	for (const i of b4Cells) bCells.add(i);
+	bCells.add(20);
+	bCells.add(24);
+	bCells.add(60);
+	bCells.add(56);
 
 	let reduced = false;
 	let filled = false;
