@@ -1,5 +1,25 @@
 import { Grid, GridCell, Marker } from "./Grid.js";
 
+let reduce_i = 0;
+const REDUCE = {
+	Candidates: reduce_i++,
+	Lone_Singles: reduce_i++,
+	Hidden_Singles: reduce_i++,
+	Omissions: reduce_i++,
+	Naked_2: reduce_i++,
+	Naked_3: reduce_i++,
+	Naked_4: reduce_i++,
+	Hidden_2: reduce_i++,
+	Hidden_3: reduce_i++,
+	Hidden_4: reduce_i++,
+	UniqueRectangle: reduce_i++,
+	X_Wing: reduce_i++,
+	XY_Wing: reduce_i++,
+	Swordfish: reduce_i++,
+	Phistomefel: reduce_i++,
+	Brute_Force: reduce_i++,
+};
+
 const floor3 = x => Math.floor(x / 3);
 const mod3 = x => x % 3;
 
@@ -973,11 +993,12 @@ const phistomefel = (cells, test = false) => {
 					const aCell = cells[aIndex];
 					if (aCell.symbol !== 0) continue;
 
-					const a1Marker = a1Markers.get(x);
-					const a2Marker = a2Markers.get(x);
-					const a3Marker = a3Markers.get(x);
-					const a4Marker = a4Markers.get(x);
 					if (test) {
+						const a1Marker = a1Markers.get(x);
+						const a2Marker = a2Markers.get(x);
+						const a3Marker = a3Markers.get(x);
+						const a4Marker = a4Markers.get(x);
+
 						if (a1Marker && a1Marker.length > 1) {
 							for (const i of Grid.groupBoxs[0]) {
 								if (a1Cells.has(i)) continue;
