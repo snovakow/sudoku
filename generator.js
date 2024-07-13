@@ -1,8 +1,5 @@
 import { aCells, bCells } from "./solver.js";
 
-let min = 81;
-let max = 16;
-
 const makeArray = (size) => {
 	const array = new Uint8Array(size);
 	for (let i = 0; i < size; i++) array[i] = i;
@@ -171,9 +168,7 @@ const sudokuGenerator = (cells) => {
 	}
 
 	if (hits < 21) {
-		min = hits;
-
-		console.log(min, max, totalPuzzles);
+		console.log(hits, totalPuzzles);
 		cells.log();
 	}
 
