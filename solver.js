@@ -1162,6 +1162,6 @@ const generate = (cells) => {
 }
 
 export {
-	candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing,
+	REDUCE, candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing,
 	uniqueRectangle, phistomefel, bruteForce
 };
