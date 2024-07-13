@@ -432,29 +432,6 @@ markerButton.style.position = 'absolute';
 markerButton.style.width = '32px';
 markerButton.style.height = '32px';
 
-/*
-Deadly Pattern Unique Rectangle: 0
-app.js:488 Naked Hidden Sets: 1
-app.js:490     Hidden: false Size: 4
-app.js:492 Omissions: 5
-app.js:493 X Wing: 0
-app.js:494 Swordfish: 0
-app.js:495 XY Wing: 0
-app.js:496 Phistomefel: 0
-app.js:497 Brute Force: true
-
-Deadly Pattern Unique Rectangle: 0
-app.js:502 Naked Hidden Sets: 0
-app.js:506 Omissions: 0
-app.js:507 X Wing: 0
-app.js:508 Swordfish: 0
-app.js:509 XY Wing: 0
-app.js:510 Phistomefel: 1 + 5 filled
-app.js:511 Brute Force: false
-
-
-*/
-
 const fillSolve = () => {
 	let uniqueRectangleReduced = 0;
 
