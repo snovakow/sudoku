@@ -2,15 +2,6 @@ import { Grid, GridCell, Marker } from "./Grid.js";
 
 let reduce_i = 0;
 const REDUCE = {
-	Candidates: reduce_i++,
-	Lone_Singles: reduce_i++,
-	Hidden_Singles: reduce_i++,
-	Omissions: reduce_i++,
-	Naked_2: reduce_i++,
-	Naked_3: reduce_i++,
-	Naked_4: reduce_i++,
-	Hidden_2: reduce_i++,
-	Hidden_3: reduce_i++,
 	Hidden_4: reduce_i++,
 	UniqueRectangle: reduce_i++,
 	X_Wing: reduce_i++,

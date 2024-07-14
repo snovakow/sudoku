@@ -167,7 +167,7 @@ const sudokuGenerator = (cells) => {
 		cell.setSymbol(grid[i]);
 	}
 
-	if (hits < 21) {
+	if (hits < 20) {
 		console.log(hits, totalPuzzles);
 		cells.log();
 	}
