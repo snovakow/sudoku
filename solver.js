@@ -184,7 +184,13 @@ const nakedHiddenSets2 = (cells) => { // Naked and Hidden Pairs Triplets Quads
 					for (const x of setUnit2.set) union.add(x);
 
 					if (hidden) {
-						if (union.size === size) {
+						if (union.size === 2) {
+							const cell1 = sets[i1].cell;
+							const cell2 = sets[i2].cell;
+							for (const symbol of union) {
+								const had = cell1.delete(symbol);
+								if (had) return true;
+							}
 						}
 						const result2 = reduceInvert(union, 2, i1, i2);
 						if (result2) return result2;
