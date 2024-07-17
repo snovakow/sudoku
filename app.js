@@ -1,7 +1,7 @@
 import { FONT, board } from "./board.js";
 import { sudokuGenerator, sudokuGeneratorPhistomefel, totalPuzzles } from "./generator.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing, generate, bruteForce, phistomefel, uniqueRectangle, REDUCE } from "./solver.js";
+import { candidates, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing, generate, bruteForce, phistomefel, uniqueRectangle, REDUCE, NakedHiddenGroups } from "./solver.js";
 
 const sudokuSamples = [
 	// [
@@ -26,11 +26,24 @@ const sudokuSamples = [
 		[0, 4, 3, 0, 0, 0, 5, 6, 0],
 		[9, 5, 0, 0, 0, 0, 7, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0, 0],
-		"20"
+		"20 XYZ Wing"
+	],
+	[
+		[6, 0, 7, 9, 0, 1, 3, 0, 0],
+		[9, 0, 3, 0, 7, 0, 0, 0, 0],
+		[0, 5, 0, 0, 3, 0, 0, 0, 0],
+		[0, 0, 0, 1, 2, 0, 6, 8, 0],
+		[0, 0, 2, 5, 8, 9, 0, 0, 0],
+		[5, 0, 0, 0, 0, 0, 0, 0, 0],
+		[3, 0, 0, 0, 0, 7, 9, 0, 6],
+		[0, 0, 0, 0, 6, 0, 4, 0, 0],
+		[7, 0, 0, 3, 0, 0, 8, 0, 0],
+		"Snake"
 	],
 ];
 
 const rawNames = [
+	"Swordfish x2",
 	"Hidden4 1",
 	"Hidden4 2",
 	"Hidden4 Hard",
@@ -63,16 +76,17 @@ const rawNames = [
 	"20",
 	"20",
 	"20",
+	"20 X",
 	"20",
 	"20",
 	"20",
-	"20",
-	"20",
+	"20 X",
 	"20",
 	"20",
 ];
 rawNames.reverse();
 const raws = [
+	[0, 0, 0, 4, 0, 0, 0, 8, 0, 0, 0, 4, 9, 2, 0, 0, 0, 0, 6, 9, 0, 0, 0, 0, 5, 0, 0, 9, 0, 0, 0, 0, 0, 6, 0, 8, 0, 0, 7, 1, 4, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 3, 0, 0, 0, 9, 0, 0, 0, 0, 5, 0, 0, 0, 4, 3, 0, 0, 1, 0, 0, 0, 0, 7, 0],
 	[0, 2, 0, 4, 0, 6, 7, 0, 0, 0, 9, 0, 2, 0, 8, 0, 0, 6, 0, 0, 7, 0, 0, 0, 5, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 8, 0, 0, 2, 9, 8, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1, 0, 4, 0, 0, 0, 0, 3, 0, 0, 0, 7, 0, 5, 0, 0, 9, 0, 0, 2],
 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 4, 0, 8, 0, 0, 0, 0, 0, 8, 0, 0, 0, 7, 0, 1, 4, 0, 0, 0, 8, 0, 1, 9, 5, 0, 0, 0, 0, 0, 2, 0, 4, 0, 0, 0, 0, 9, 0, 6, 0, 0, 0, 0, 4, 0, 0, 0, 1, 2, 0, 0, 7, 6, 0, 0, 0, 9, 3, 0, 0, 8, 0, 0, 0, 6, 0, 0, 1, 3, 0],
 	[0, 2, 0, 0, 5, 0, 0, 8, 9, 0, 0, 0, 9, 0, 0, 4, 0, 0, 0, 0, 0, 7, 1, 0, 0, 0, 0, 0, 0, 0, 5, 9, 0, 0, 0, 7, 6, 7, 0, 1, 0, 0, 0, 0, 0, 8, 0, 0, 6, 0, 0, 5, 1, 4, 0, 0, 7, 0, 0, 0, 0, 2, 0, 0, 5, 1, 0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0],
@@ -352,7 +366,6 @@ const fillSolve = (reduce = null) => {
 	let uniqueRectangleReduced = 0;
 
 	let nakedHiddenSetsReduced = [];
-	let omissionsReduced = 0;
 	let xWingReduced = 0;
 	let swordfishReduced = 0;
 	let xyWingReduced = 0;
@@ -374,7 +387,7 @@ const fillSolve = (reduce = null) => {
 		if (progress) continue;
 
 		progress = omissions(board.cells);
-		if (progress) { omissionsReduced++; continue; }
+		if (progress) continue;
 
 		if (window.location.search === "?markers") continue;
 
@@ -384,47 +397,38 @@ const fillSolve = (reduce = null) => {
 
 			switch (strategy) {
 				case REDUCE.Hidden_4:
-					result = nakedHiddenSets(board.cells);
+					let result = nakedHiddenSets(board.cells);
+					// let result2 = new NakedHiddenGroups(board.cells).nakedHiddenSets();
+
 					if (result) {
 						progress = true;
 						nakedHiddenSetsReduced.push(result);
-						// continue;
 					}
-
 					break;
 				case REDUCE.UniqueRectangle:
 					progress = uniqueRectangle(board.cells);
 					if (progress) uniqueRectangleReduced++;
-
 					break;
 				case REDUCE.X_Wing:
 					progress = xWing(board.cells);
 					if (progress) xWingReduced++;
-
 					break;
 				case REDUCE.XY_Wing:
 					progress = xyWing(board.cells);
 					if (progress) xyWingReduced++;
-
 					break;
 				case REDUCE.Swordfish:
 					progress = swordfish(board.cells);
 					if (progress) swordfishReduced++;
-
 					break;
 				case REDUCE.Phistomefel:
-					if (window.location.search === "?phist") {
-						const { reduced, filled } = phistomefel(board.cells, true);
-						progress = reduced > 0 || filled > 0;
-						if (progress) {
-							if (reduced > 0) phistomefelReduced++;
-							if (filled > 0) phistomefelFilled++;
-							// continue;
-						}
+					const { reduced, filled } = phistomefel(board.cells);
+					progress = reduced > 0 || filled > 0;
+					if (progress) {
+						if (reduced > 0) phistomefelReduced++;
+						if (filled > 0) phistomefelFilled++;
 					}
-
 					break;
-
 				default:
 					break;
 			}
@@ -441,41 +445,32 @@ const fillSolve = (reduce = null) => {
 					nakedHiddenSetsReduced.push(result);
 					continue;
 				}
-
 				break;
 			case REDUCE.UniqueRectangle:
 				progress = uniqueRectangle(board.cells);
 				if (progress) { uniqueRectangleReduced++; continue; }
-
 				break;
 			case REDUCE.X_Wing:
 				progress = xWing(board.cells);
 				if (progress) { xWingReduced++; continue; }
-
 				break;
 			case REDUCE.XY_Wing:
 				progress = xyWing(board.cells);
 				if (progress) { xyWingReduced++; continue; }
-
 				break;
 			case REDUCE.Swordfish:
 				progress = swordfish(board.cells);
 				if (progress) { swordfishReduced++; continue; }
-
 				break;
 			case REDUCE.Phistomefel:
-				if (window.location.search === "?phist") {
-					const { reduced, filled } = phistomefel(board.cells, true);
-					progress = reduced > 0 || filled > 0;
-					if (progress) {
-						if (reduced > 0) phistomefelReduced++;
-						if (filled > 0) phistomefelFilled++;
-						continue;
-					}
+				const { reduced, filled } = phistomefel(board.cells);
+				progress = reduced > 0 || filled > 0;
+				if (progress) {
+					if (reduced > 0) phistomefelReduced++;
+					if (filled > 0) phistomefelFilled++;
+					continue;
 				}
-
 				break;
-
 			default:
 				break;
 		}
@@ -485,7 +480,6 @@ const fillSolve = (reduce = null) => {
 	} while (progress);
 
 	return {
-		omissionsReduced,
 		nakedHiddenSetsReduced,
 		uniqueRectangleReduced,
 		xWingReduced,
@@ -500,7 +494,6 @@ const fillSolve = (reduce = null) => {
 const consoleOut = (result) => {
 	const phistomefelReduced = result.phistomefelReduced;
 	const phistomefelFilled = result.phistomefelFilled;
-	console.log("Omissions: " + result.omissionsReduced);
 	console.log("Naked Hidden Sets: " + result.nakedHiddenSetsReduced.length);
 	for (const nakedHiddenSet of result.nakedHiddenSetsReduced) {
 		console.log("    Hidden: " + nakedHiddenSet.hidden + " Size: " + nakedHiddenSet.size);
@@ -548,18 +541,25 @@ let running = false;
 generateButton.addEventListener('click', () => {
 	running = !running;
 	const step = () => {
-		// const { clueCount, grid } = sudokuGeneratorPhistomefel(board.cells);
-		// draw();
-		// const result = fillSolve();
-		// if (!result.bruteForceFill && (result.phistomefelReduced > 0 || result.phistomefelFilled > 0)) {
-		// 	console.log("Tries: " + totalPuzzles);
-		// 	consoleOut(result);
-		// 	console.log(grid.toString());
-		// }
-
-		const { clueCount, grid } = sudokuGenerator(board.cells);
+		const { clueCount, grid } = sudokuGeneratorPhistomefel(board.cells);
 		draw();
-		const result = fillSolve(REDUCE.Swordfish);
+		const result = fillSolve();
+		let basic = result.swordfishReduced === 0 && result.xyWingReduced === 0 && result.xWingReduced === 0 && result.uniqueRectangleReduced === 0;
+		for (const nakedHiddenSet of result.nakedHiddenSetsReduced) {
+			if (nakedHiddenSet.hidden || nakedHiddenSet.size === 4) {
+				basic = false;
+			}
+		}
+
+		if (!result.bruteForceFill && basic && (result.phistomefelReduced > 0 || result.phistomefelFilled > 0)) {
+			console.log("Tries: " + totalPuzzles);
+			consoleOut(result);
+			console.log(grid.toString());
+		}
+
+		// const { clueCount, grid } = sudokuGenerator(board.cells);
+		// draw();
+		// const result = fillSolve(REDUCE.Swordfish);
 
 		// REDUCE.Hidden_4
 		// REDUCE.UniqueRectangle
@@ -569,7 +569,7 @@ generateButton.addEventListener('click', () => {
 		// REDUCE.Phistomefel
 		// REDUCE.Brute_Force
 
-		// if (!result.bruteForceFill && result.nakedHiddenSetsReduced && result.uniqueRectangleReduced === 0 && result.swordfishReduced === 0 && result.xyWingReduced === 0 && result.xWingReduced === 0) {
+		// if (!result.bruteForceFill && result.nakedHiddenSetsReduced.length > 0 && result.uniqueRectangleReduced === 0 && result.swordfishReduced === 0 && result.xyWingReduced === 0 && result.xWingReduced === 0) {
 		// 	for (const nakedHiddenSet of result.nakedHiddenSetsReduced) {
 		// 		if (nakedHiddenSet.hidden && nakedHiddenSet.size === 4) {
 		// 			console.log("nakedHiddenSet hidden 4 Tries: " + totalPuzzles);
@@ -578,18 +578,6 @@ generateButton.addEventListener('click', () => {
 		// 		}
 		// 	}
 		// }
-		if (!result.bruteForceFill && result.swordfishReduced > 0) {
-			// const simple = result.xyWingReduced === 0 && result.xWingReduced === 0 && result.uniqueRectangleReduced === 0 && result.nakedHiddenSetsReduced.length === 0 && result.omissions === 0;
-			const brutal = result.swordfishReduced > 1;
-			// if (simple) console.log("Swordfish Isolated! Tries: " + totalPuzzles);
-
-			// else console.log("Swordfish Tries: " + totalPuzzles);
-			if (brutal) {
-				console.log("Swordfish Brutal! Tries: " + totalPuzzles);
-				consoleOut(result);
-				console.log(grid.toString());
-			}
-		}
 
 		if (running) window.setTimeout(step, 0);
 	};

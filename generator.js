@@ -117,14 +117,19 @@ const savedGrid = new Uint8Array(81);
 const rndi = makeArray(81);
 
 let once = 0;
+const samePuzzle = false;
 const sudokuGenerator = (cells) => {
 
-	if (once % 1 === 0) {
+	if(samePuzzle) {
+		if (once === 0) {
+			for (let i = 0; i < 81; i++) grid[i] = cells[i].symbol;	
+			sodokoSolver(grid);
+		}
+	} else {
 		for (let i = 0; i < 81; i++) grid[i] = 0;
 		for (let i = 0; i < 9; i++) grid[i] = i + 1;
+		sodokoSolver(grid);	
 	}
-	once++;
-	sodokoSolver(grid);
 
 	if (!isValidGrid(grid)) {
 		console.log("INVALID!");
@@ -159,7 +164,6 @@ const sudokuGenerator = (cells) => {
 			hits++;
 		}
 	}
-	// console.log(hits);
 	totalPuzzles++;
 
 	for (let i = 0; i < 81; i++) {

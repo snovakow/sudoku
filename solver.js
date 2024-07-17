@@ -109,11 +109,14 @@ class GroupUnit {
 	}
 }
 class SetUnion {
-	constructor() {
-		this.mask = 0x0000;
+	constructor(mask = 0x0000) {
+		this.mask = mask;
 	}
 	add(set) {
 		this.mask |= set.mask;
+	}
+	invert() {
+		this.mask = ~this.mask & 0x03f;
 	}
 	has(x) {
 		return (this.mask >> x) & 0x0001 === 0x0001;
@@ -134,6 +137,14 @@ class SetUnion {
 }
 class NakedHiddenGroups {
 	constructor(cells) {
+		class SetUnit {
+			constructor(cell, union, invert) {
+				this.cell = cell;
+				this.union = union;
+				this.invert = invert;
+			}
+		}
+
 		this.cells = cells;
 		this.groupSets = [];
 		for (const groupType of Grid.groupTypes) {
@@ -143,18 +154,16 @@ class NakedHiddenGroups {
 				const cell = cells[index];
 				if (cell.symbol !== 0) continue;
 
-				const union = new SetUnion();
-				const invert = new SetUnion();
-				for (let x = 1; x <= 9; x++) {
-					if (cell.has(x)) union.add(x);
-					else invert.add(x);
-				}
+				const union = new SetUnion(cell.mask);
+				const invert = new SetUnion(cell.mask);
+				invert.invert(cell);
+
 				sets.push(new SetUnit(cell, union, invert));
 			}
 			if (sets.length >= 3) this.groupSets.push(sets);
 		}
 	}
-	reduceUnion = (sets, union, size, ...indices) => {
+	reduceUnion(sets, union, size, ...indices) {
 		const hasIndex = (index) => {
 			for (const i of indices) if (i === index) return true;
 			return false;
@@ -168,15 +177,17 @@ class NakedHiddenGroups {
 
 			const cell = sets[i].cell;
 			for (let x = 1; x <= 9; x++) {
-				if (union.missing(x)) continue;
-				reduced ||= cell.delete(symbol);
+				// if (union.missing(x)) continue;
+				if (union.has(x)) {
+					reduced = reduced || cell.delete(x);
+				}
 			}
 		}
 
 		return reduced;
 	}
-	reduceInvert = (sets, invert, size, ...indices) => {
-		if (union.size !== size) return false;
+	reduceInvert(sets, invert, size, ...indices) {
+		if (invert.size !== size) return false;
 
 		let reduced = false;
 		for (let x = 1; x <= 9; x++) {
@@ -190,80 +201,85 @@ class NakedHiddenGroups {
 
 		return reduced;
 	}
-
-	nakedPair() {
+	reduce(hidden, ...args) {
+		return hidden ? this.reduceInvert(...args) : this.reduceUnion(...args);
+	}
+	groupPair(hidden = false) {
+		const setType = hidden ? 'invert' : 'union';
 		const union = new SetUnion();
 		for (const sets of this.groupSets) {
 			const len = sets.length;
 			const len_1 = len - 1;
 
 			for (let i1 = 0; i1 < len_1; i1++) {
-				const setUnit1 = sets[i1];
+				const setUnit1 = sets[i1][setType];
 				for (let i2 = i1 + 1; i2 < len; i2++) {
-					const setUnit2 = sets[i2];
+					const setUnit2 = sets[i2][setType];
 
 					union.clear();
-					union.add(setUnit1.union);
-					union.add(setUnit2.union);
+					union.add(setUnit1);
+					union.add(setUnit2);
 
-					const result = this.reduceUnion(sets, union, 2, i1, i2);
-					if (result) return result;
+					const reduced = this.reduce(hidden, sets, union, 2, i1, i2);
+					if (reduced) return reduced;
 				}
 			}
 		}
 		return false;
 	}
-	nakedTriple() {
+	groupTriple(hidden = false) {
+		const setType = hidden ? 'invert' : 'union';
 		const union = new SetUnion();
 		for (const sets of this.groupSets) {
 			const len = sets.length;
 			const len_1 = len - 1;
+			const len_2 = len - 2;
 
-			for (let i1 = 0; i1 < len_1; i1++) {
-				const setUnit1 = sets[i1];
-				for (let i2 = i1 + 1; i2 < len; i2++) {
-					const setUnit2 = sets[i2];
-
-					for (let i3 = i2 + 1; i3 < len_1; i3++) {
-						const setUnit3 = sets[i3];
+			for (let i1 = 0; i1 < len_2; i1++) {
+				const setUnit1 = sets[i1][setType];
+				for (let i2 = i1 + 1; i2 < len_1; i2++) {
+					const setUnit2 = sets[i2][setType];
+					for (let i3 = i2 + 1; i3 < len; i3++) {
+						const setUnit3 = sets[i3][setType];
 
 						union.clear();
-						union.add(setUnit1.union);
-						union.add(setUnit2.union);
-						union.add(setUnit3.union);
+						union.add(setUnit1);
+						union.add(setUnit2);
+						union.add(setUnit3);
 
-						const result = this.reduceUnion(sets, union, 3, i1, i2, i3);
-						if (result) return result;
+						const reduced = this.reduce(hidden, sets, union, 3, i1, i2, i3);
+						if (reduced) return reduced;
 					}
 				}
 			}
 		}
 		return false;
 	}
-	nakedQuad() {
+	groupQuad(hidden = false) {
+		const setType = hidden ? 'invert' : 'union';
 		const union = new SetUnion();
 		for (const sets of this.groupSets) {
 			const len = sets.length;
 			const len_1 = len - 1;
+			const len_2 = len - 2;
+			const len_3 = len - 3;
 
-			for (let i1 = 0; i1 < len_1; i1++) {
-				const setUnit1 = sets[i1];
-				for (let i2 = i1 + 1; i2 < len; i2++) {
-					const setUnit2 = sets[i2];
-
+			for (let i1 = 0; i1 < len_3; i1++) {
+				const setUnit1 = sets[i1][setType];
+				for (let i2 = i1 + 1; i2 < len_2; i2++) {
+					const setUnit2 = sets[i2][setType];
 					for (let i3 = i2 + 1; i3 < len_1; i3++) {
-						const setUnit3 = sets[i3];
-
+						const setUnit3 = sets[i3][setType];
 						for (let i4 = i3 + 1; i4 < len; i4++) {
-							const setUnit4 = sets[i4];
+							const setUnit4 = sets[i4][setType];
 
 							union.clear();
-							union.add(setUnit1.union);
-							union.add(setUnit2.union);
-							union.add(setUnit3.union);
-							union.add(setUnit4.union);
+							union.add(setUnit1);
+							union.add(setUnit2);
+							union.add(setUnit3);
+							union.add(setUnit4);
 
-							const reduced = reduceUnion(sets, union, 4, i1, i2, i3, i4);
+							const reduced = this.reduce(hidden, sets, union, 4, i1, i2, i3, i4);
 							if (reduced) return reduced;
 						}
 					}
@@ -272,94 +288,17 @@ class NakedHiddenGroups {
 		}
 		return false;
 	}
-	hiddenPair() {
-		const union = new SetUnion();
-		for (const sets of this.groupSets) {
-			const len = sets.length;
-			const len_1 = len - 1;
-
-			for (let i1 = 0; i1 < len_1; i1++) {
-				const setUnit1 = sets[i1];
-				for (let i2 = i1 + 1; i2 < len; i2++) {
-					const setUnit2 = sets[i2];
-
-					union.clear();
-					union.add(setUnit1.invert);
-					union.add(setUnit2.invert);
-
-					const result = this.reduceInvert(sets, union, 2, i1, i2);
-					if (result) return result;
-				}
-			}
-		}
-		return false;
-	}
-	hiddenTriple() {
-
-	}
-	hiddenQuad() {
-
-	}
-	nakedQuint = hiddenQuad;
-}
-
-const nakedHiddenSets2 = (cells) => { // Naked and Hidden Pairs Triplets Quads
-	const union2 = new Set();
-	const union3 = new Set();
-	const union4 = new Set();
-
-	const invert2 = new Set();
-	const invert3 = new Set();
-	const invert4 = new Set();
-
-	let result;
-	const results = [];
-	for (let i1 = 0; i1 < len_1; i1++) {
-		const setUnit1 = sets[i1];
-		for (let i2 = i1 + 1; i2 < len; i2++) {
-			const setUnit2 = sets[i2];
-
-			union2.clear();
-			for (const x of setUnit1.set) union2.add(x);
-			for (const x of setUnit2.set) union2.add(x);
-
-			result = reduceUnion(union2, 2, i1, i2);
-			if (result) return {
-				hidden: false,
-				size: 2,
-			};
-
-			invert2.clear();
-			for (const x of union2) invert2.add(x);
-
-			result = reduceUnion(invert2, 2, i1, i2);
-			if (result) results.push(result);
-
-			for (let i3 = i2 + 1; i3 < len_1; i3++) {
-				const setUnit3 = sets[i3];
-
-				union3.clear();
-				for (const x of union2) union3.add(x);
-				for (const x of setUnit3.set) union3.add(x);
-
-				const reduced = reduceUnion(union3, 3, i1, i2, i3);
-				if (reduced) return reduced;
-
-				for (let i4 = i3 + 1; i4 < len; i4++) {
-					const setUnit4 = sets[i4];
-
-					union4.clear();
-					for (const x of union3.set) union4.add(x);
-					for (const x of setUnit4.set) union4.add(x);
-
-					const reduced = reduceUnion(union4, 4, i1, i2, i3, i4);
-					if (reduced) return reduced;
-				}
-
-			}
-		}
+	nakedHiddenSets() {
+		if (this.groupPair()) return { hidden: false, size: 2 };
+		if (this.groupTriple()) return { hidden: false, size: 3 };
+		if (this.groupQuad()) return { hidden: false, size: 4 };
+		if (this.groupPair(true)) return { hidden: true, size: 2 };
+		if (this.groupTriple(true)) return { hidden: true, size: 3 };
+		if (this.groupQuad(true)) return { hidden: true, size: 4 };
+		return null;
 	}
 }
+
 
 const nakedHiddenSets = (cells) => { // Naked and Hidden Pairs Triplets Quads
 	class SetUnit {
@@ -407,6 +346,7 @@ const nakedHiddenSets = (cells) => { // Naked and Hidden Pairs Triplets Quads
 					mask <<= 1;
 				}
 
+				if (unionCount <= 1) continue;
 				if (unionCount >= sets.length - 1) continue;
 
 				mask = 0x1;
@@ -1413,6 +1353,6 @@ const generate = (cells) => {
 }
 
 export {
-	REDUCE, candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, omissions, xWing, swordfish, xyWing,
+	REDUCE, candidates, generate, loneSingles, hiddenSingles, nakedHiddenSets, NakedHiddenGroups, omissions, xWing, swordfish, xyWing,
 	uniqueRectangle, phistomefel, bruteForce
 };

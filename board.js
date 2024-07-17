@@ -1,5 +1,7 @@
 import { Cell, CellMarker, Grid } from "./Grid.js";
-import { pixAlign } from "./picker.js";
+const pixAlign = (val) => {
+	return Math.round(val) + 0.5;
+};
 
 const canvas = document.createElement('canvas');
 
@@ -68,15 +70,17 @@ class Board {
 		const boxSize = size / BOX_SIDE;
 		const unitSize = size / GRID_SIDE;
 
+		let base;
+		base = LINE_THICK_HALF * window.devicePixelRatio;
 		if (pickerVisible) {
+			const off = 0.5;
 			ctx.fillStyle = 'cyan';
-			ctx.fillRect(pixAlign(size * selectedCol / 9) + 1 * window.devicePixelRatio, pixAlign(size * selectedRow / 9) + 1 * window.devicePixelRatio, pixAlign(unitSize), pixAlign(unitSize));
+			const pix = pixAlign(base);
+			ctx.fillRect(size * selectedCol / 9 + pix, pixAlign(size * selectedRow / 9) + pix, pixAlign(unitSize), pixAlign(unitSize));
 		}
 
 		ctx.beginPath();
 		ctx.lineWidth = LINE_THICK * window.devicePixelRatio;
-		let base;
-		base = LINE_THICK_HALF * window.devicePixelRatio;
 		for (let i = 0; i <= BOX_SIDE; i++, base += boxSize) {
 			const pix = pixAlign(base);
 
