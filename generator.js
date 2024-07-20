@@ -120,16 +120,17 @@ let once = 0;
 const samePuzzle = false;
 const sudokuGenerator = (cells) => {
 
-	if(samePuzzle) {
+	if (samePuzzle) {
 		if (once === 0) {
-			for (let i = 0; i < 81; i++) grid[i] = cells[i].symbol;	
+			for (let i = 0; i < 81; i++) grid[i] = cells[i].symbol;
 			sodokoSolver(grid);
 		}
 	} else {
 		for (let i = 0; i < 81; i++) grid[i] = 0;
 		for (let i = 0; i < 9; i++) grid[i] = i + 1;
-		sodokoSolver(grid);	
+		sodokoSolver(grid);
 	}
+	once++;
 
 	if (!isValidGrid(grid)) {
 		console.log("INVALID!");
