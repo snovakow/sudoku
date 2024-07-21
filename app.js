@@ -1,7 +1,7 @@
 import { FONT, board } from "./board.js";
 import { sudokuGenerator, sudokuGeneratorPhistomefel, totalPuzzles } from "./generator.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { generate, candidates, loneSingles, hiddenSingles, omissions, NakedHiddenGroups, uniqueRectangle, xyWing, xWing, swordfish, bruteForce, phistomefel, REDUCE } from "./solver.js";
+import { generate, candidates, loneSingles, omissions, NakedHiddenGroups, uniqueRectangle, xyWing, xWing, swordfish, bruteForce, phistomefel, REDUCE } from "./solver.js";
 
 const sudokuSamples = [
 	// [
@@ -43,10 +43,7 @@ const sudokuSamples = [
 ];
 
 const rawNames = [
-	"Hidden4",
-	"Hidden3 N4",
-	"Hidden2 N34",
-	"Hidden2 N2",
+	"Hidden1",
 	"Phistomefel Easy",
 	"Swordfish x2",
 	"Phistomefel 1",
@@ -88,10 +85,7 @@ const rawNames = [
 ];
 rawNames.reverse();
 const raws = [
-	[0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 9, 0, 3, 0, 0, 0, 0, 0, 0, 3, 7, 0, 0, 4, 8, 0, 0, 0, 7, 0, 0, 0, 0, 6, 0, 9, 0, 0, 0, 2, 0, 0, 0, 1, 5, 0, 0, 0, 0, 0, 8, 0, 8, 0, 0, 0, 0, 9, 0, 2, 3, 0, 0, 0, 4, 0, 0, 0, 0, 2, 7, 0, 0, 0, 9, 0, 3, 6],
-	[0, 0, 3, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 9, 1, 2, 0, 0, 4, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 1, 0, 0, 0, 7, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 2, 0, 6, 0, 8, 0, 0, 0, 0, 0, 0, 2, 0, 0, 9, 0, 0, 0, 6, 0, 0, 8, 3, 4, 0, 0, 7, 0, 9, 0, 0, 0, 0, 8, 4, 0],
-	[1, 2, 0, 0, 0, 0, 0, 0, 9, 0, 0, 4, 3, 0, 1, 0, 0, 2, 0, 0, 0, 8, 0, 9, 0, 0, 0, 0, 0, 0, 5, 0, 0, 3, 0, 8, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 3, 2, 0, 5, 0, 3, 0, 0, 0, 0, 0, 2, 0, 0, 5, 0, 2, 0, 4, 0, 0, 0, 0, 0, 9, 0, 6, 0, 8, 0, 0],
-	[0, 0, 3, 0, 0, 0, 7, 8, 0, 0, 4, 5, 0, 0, 0, 0, 0, 3, 0, 6, 0, 8, 0, 0, 0, 2, 0, 0, 9, 0, 0, 6, 0, 0, 0, 2, 0, 0, 0, 5, 0, 0, 0, 6, 8, 0, 0, 0, 9, 0, 1, 0, 0, 0, 0, 0, 0, 6, 0, 0, 8, 9, 0, 2, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0],
+	[1,0,0,0,5,0,7,8,0,5,0,0,0,2,0,6,0,4,7,0,0,0,3,8,2,5,0,4,0,0,0,0,0,8,0,0,0,0,8,0,0,0,0,9,0,0,0,0,0,1,0,0,0,7,6,0,4,0,0,0,0,0,3,0,0,0,0,0,4,0,0,0,0,0,0,0,7,2,0,0,6],
 	[0, 2, 0, 0, 0, 0, 0, 8, 0, 6, 0, 0, 0, 0, 8, 0, 2, 3, 0, 0, 0, 2, 9, 3, 6, 0, 0, 0, 0, 1, 7, 0, 0, 0, 0, 0, 4, 0, 8, 0, 0, 0, 3, 0, 0, 0, 0, 9, 0, 0, 0, 2, 4, 0, 0, 0, 2, 6, 1, 0, 8, 0, 0, 5, 0, 0, 0, 0, 0, 0, 3, 0, 8, 1, 0, 0, 0, 0, 0, 5, 6],
 	[0, 0, 0, 4, 0, 0, 0, 8, 0, 0, 0, 4, 9, 2, 0, 0, 0, 0, 6, 9, 0, 0, 0, 0, 5, 0, 0, 9, 0, 0, 0, 0, 0, 6, 0, 8, 0, 0, 7, 1, 4, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 3, 0, 0, 0, 9, 0, 0, 0, 0, 5, 0, 0, 0, 4, 3, 0, 0, 1, 0, 0, 0, 0, 7, 0],
 	[1, 2, 0, 0, 0, 6, 0, 8, 9, 6, 9, 0, 0, 0, 0, 0, 5, 2, 0, 0, 7, 0, 0, 0, 6, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 7, 0, 0, 0, 9, 0, 0, 0, 4, 0, 0, 0, 0, 7, 3, 0, 0, 0, 0, 0, 0, 2, 0, 0, 8, 0, 0, 0, 8, 1, 0, 5, 0, 0, 0, 7, 3, 7, 5, 0, 0, 0, 0, 0, 9, 8],
@@ -386,9 +380,6 @@ const fillSolve = (reduce = null) => {
 		progress = loneSingles(board.cells);
 		if (progress) continue;
 
-		progress = hiddenSingles(board.cells);
-		if (progress) continue;
-
 		progress = omissions(board.cells);
 		if (progress) continue;
 
@@ -565,7 +556,7 @@ generateButton.addEventListener('click', () => {
 		} else {
 			const { clueCount, grid } = sudokuGenerator(board.cells);
 			draw();
-			const result = fillSolve(REDUCE.Hidden_4);
+			const result = fillSolve();
 
 			// REDUCE.Hidden_4
 			// REDUCE.UniqueRectangle
@@ -577,8 +568,8 @@ generateButton.addEventListener('click', () => {
 
 			if (!result.bruteForceFill && result.nakedHiddenSetsReduced.length > 0 && result.uniqueRectangleReduced === 0 && result.swordfishReduced === 0 && result.xyWingReduced === 0 && result.xWingReduced === 0) {
 				for (const nakedHiddenSet of result.nakedHiddenSetsReduced) {
-					if (nakedHiddenSet.hidden && nakedHiddenSet.size >= 3) {
-						console.log("Hidden 3 or 4 Tries: " + totalPuzzles);
+					if (nakedHiddenSet.hidden && nakedHiddenSet.size === 4) {
+						console.log("Hidden 4 Tries: " + totalPuzzles);
 						consoleOut(result);
 						console.log(grid.toString());
 						break;
