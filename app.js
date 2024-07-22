@@ -1,7 +1,7 @@
 import { FONT, board } from "./board.js";
 import { sudokuGenerator, sudokuGeneratorPhistomefel, totalPuzzles } from "./generator.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { generate, candidates, loneSingles, omissions, NakedHiddenGroups, uniqueRectangle, xyWing, xWing, swordfish, bruteForce, phistomefel, REDUCE } from "./solver.js";
+import { generate, candidates, loneSingles, hiddenSingles, omissions, NakedHiddenGroups, uniqueRectangle, xyWing, xWing, swordfish, bruteForce, phistomefel, REDUCE } from "./solver.js";
 
 const sudokuSamples = [
 	// [
@@ -85,7 +85,7 @@ const rawNames = [
 ];
 rawNames.reverse();
 const raws = [
-	[1,0,0,0,5,0,7,8,0,5,0,0,0,2,0,6,0,4,7,0,0,0,3,8,2,5,0,4,0,0,0,0,0,8,0,0,0,0,8,0,0,0,0,9,0,0,0,0,0,1,0,0,0,7,6,0,4,0,0,0,0,0,3,0,0,0,0,0,4,0,0,0,0,0,0,0,7,2,0,0,6],
+	[1, 0, 0, 0, 5, 0, 7, 8, 0, 5, 0, 0, 0, 2, 0, 6, 0, 4, 7, 0, 0, 0, 3, 8, 2, 5, 0, 4, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 8, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 1, 0, 0, 0, 7, 6, 0, 4, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 7, 2, 0, 0, 6],
 	[0, 2, 0, 0, 0, 0, 0, 8, 0, 6, 0, 0, 0, 0, 8, 0, 2, 3, 0, 0, 0, 2, 9, 3, 6, 0, 0, 0, 0, 1, 7, 0, 0, 0, 0, 0, 4, 0, 8, 0, 0, 0, 3, 0, 0, 0, 0, 9, 0, 0, 0, 2, 4, 0, 0, 0, 2, 6, 1, 0, 8, 0, 0, 5, 0, 0, 0, 0, 0, 0, 3, 0, 8, 1, 0, 0, 0, 0, 0, 5, 6],
 	[0, 0, 0, 4, 0, 0, 0, 8, 0, 0, 0, 4, 9, 2, 0, 0, 0, 0, 6, 9, 0, 0, 0, 0, 5, 0, 0, 9, 0, 0, 0, 0, 0, 6, 0, 8, 0, 0, 7, 1, 4, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 3, 0, 0, 0, 9, 0, 0, 0, 0, 5, 0, 0, 0, 4, 3, 0, 0, 1, 0, 0, 0, 0, 7, 0],
 	[1, 2, 0, 0, 0, 6, 0, 8, 9, 6, 9, 0, 0, 0, 0, 0, 5, 2, 0, 0, 7, 0, 0, 0, 6, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 7, 0, 0, 0, 9, 0, 0, 0, 4, 0, 0, 0, 0, 7, 3, 0, 0, 0, 0, 0, 0, 2, 0, 0, 8, 0, 0, 0, 8, 1, 0, 5, 0, 0, 0, 7, 3, 7, 5, 0, 0, 0, 0, 0, 9, 8],
@@ -378,6 +378,9 @@ const fillSolve = (reduce = null) => {
 		candidates(board.cells);
 
 		progress = loneSingles(board.cells);
+		if (progress) continue;
+
+		progress = hiddenSingles(board.cells);
 		if (progress) continue;
 
 		progress = omissions(board.cells);
