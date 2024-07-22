@@ -81,6 +81,26 @@ const loneSingles = (cells) => {
 	return reduced;
 }
 
+const hiddenSingles = (cells) => {
+	for (let x = 1; x <= 9; x++) {
+		for (const group of Grid.groupTypes) {
+			let symbolCell = null;
+			for (const index of group) {
+				const cell = cells[index];
+				if (cell.symbol !== 0) continue;
+				if (!cell.has(x)) continue;
+				if (symbolCell === null) symbolCell = cell;
+				else { symbolCell = null; break; }
+			}
+			if (symbolCell !== null) {
+				symbolCell.setSymbol(x);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 const omissions = (cells) => {
 	const groupInGroup = (x, srcGroups, srcGroupType, dstGroups, dstGroupType) => {
 		let groupIndex = 0;
@@ -291,26 +311,6 @@ class NakedHiddenGroups {
 		}
 		return false;
 	}
-	hiddenSingle() {
-		let reduced = false;
-		for (const sets of this.groupSets) {
-			for (let x = 1; x <= 9; x++) {
-				let symbolCell = null;
-
-				for (const cell of sets) {
-					if (!cell.has(x)) continue;
-					if (symbolCell === null) symbolCell = cell;
-					else { symbolCell = null; break; }
-				}
-
-				if (symbolCell !== null) {
-					symbolCell.setSymbol(x);
-					reduced = true;
-				}
-			}
-		}
-		return reduced;
-	}
 	hiddenPair() {
 		const union = new SetUnion();
 		for (const sets of this.groupSets) {
@@ -431,15 +431,13 @@ class NakedHiddenGroups {
 		// 4  2 0 = 2 31
 		// 3  0 0 = 0 21
 
-		// if (this.nakedSingle()) return { hidden: false, size: 1 };
 		if (this.nakedPair()) return { hidden: false, size: 2 };
 		if (this.nakedTriple()) return { hidden: false, size: 3 };
 		if (this.nakedQuad()) return { hidden: false, size: 4 };
+		if (this.hiddenQuad()) return { hidden: false, size: 5 };
 
-		if (this.hiddenSingle()) return { hidden: true, size: 1 };
 		if (this.hiddenPair()) return { hidden: true, size: 2 };
 		if (this.hiddenTriple()) return { hidden: true, size: 3 };
-		if (this.hiddenQuad()) return { hidden: true, size: 4 };
 		return null;
 	}
 }
