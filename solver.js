@@ -434,7 +434,7 @@ class NakedHiddenGroups {
 		if (this.nakedPair()) return { hidden: false, size: 2 };
 		if (this.nakedTriple()) return { hidden: false, size: 3 };
 		if (this.nakedQuad()) return { hidden: false, size: 4 };
-		if (this.hiddenQuad()) return { hidden: false, size: 5 };
+		if (this.hiddenQuad()) return { hidden: false, size: 5 }; // Naked Quint
 
 		if (this.hiddenPair()) return { hidden: true, size: 2 };
 		if (this.hiddenTriple()) return { hidden: true, size: 3 };
@@ -1032,10 +1032,17 @@ const phistomefel = (cells) => {
 	a4Cells.add(79);
 	a4Cells.add(80);
 
-	const b1Cells = new Set();
-	b1Cells.add(21);
-	b1Cells.add(22);
-	b1Cells.add(23);
+	const b1InnerCells = new Set();
+	b1InnerCells.add(21);
+	b1InnerCells.add(22);
+	b1InnerCells.add(23);
+
+	const b1OuterCells = new Set();
+	b1OuterCells.add(20);
+	b1OuterCells.add(21);
+	b1OuterCells.add(22);
+	b1OuterCells.add(23);
+	b1OuterCells.add(24);
 
 	const b2Cells = new Set();
 	b2Cells.add(33);
@@ -1088,43 +1095,41 @@ const phistomefel = (cells) => {
 			if (aCell.symbol === 0) {
 				if (aCell.has(x)) {
 					aFull = false;
-					if (a1Cells.has(aCell.index)) {
+					if (a1Cells.has(aIndex)) {
 						const a1Marker = a1Markers.get(x);
 						if (a1Marker) {
-							a1Marker.push(aCell.index);
+							a1Marker.push(aIndex);
 						} else {
-							a1Markers.set(x, [aCell.index]);
+							a1Markers.set(x, [aIndex]);
 							aMarkers++;
 						}
-					} else if (a2Cells.has(aCell.index)) {
+					} else if (a2Cells.has(aIndex)) {
 						const a2Marker = a2Markers.get(x);
 						if (a2Marker) {
-							a2Marker.push(aCell.index);
+							a2Marker.push(aIndex);
 						} else {
-							a2Markers.set(x, [aCell.index]);
+							a2Markers.set(x, [aIndex]);
 							aMarkers++;
 						}
-					} else if (a3Cells.has(aCell.index)) {
+					} else if (a3Cells.has(aIndex)) {
 						const a3Marker = a3Markers.get(x);
 						if (a3Marker) {
-							a3Marker.push(aCell.index);
+							a3Marker.push(aIndex);
 						} else {
-							a3Markers.set(x, [aCell.index]);
+							a3Markers.set(x, [aIndex]);
 							aMarkers++;
 						}
-					} else if (a4Cells.has(aCell.index)) {
+					} else if (a4Cells.has(aIndex)) {
 						const a4Marker = a4Markers.get(x);
 						if (a4Marker) {
-							a4Marker.push(aCell.index);
+							a4Marker.push(aIndex);
 						} else {
-							a4Markers.set(x, [aCell.index]);
+							a4Markers.set(x, [aIndex]);
 							aMarkers++;
 						}
 					} else {
 						aMarkers++;
 					}
-				} else {
-					aMarkers++;
 				}
 			} else {
 				if (aCell.symbol === x) aCount++;
@@ -1177,52 +1182,38 @@ const phistomefel = (cells) => {
 					}
 				}
 			}
-			if (bCount === aCount + aMarkers) {
+			if (bCount === aCount + aMarkers && aMarkers > 0) {
 				for (const aIndex of aCells) {
 					const aCell = cells[aIndex];
 					if (aCell.symbol !== 0) continue;
 
-					if (false) {
-						const a1Marker = a1Markers.get(x);
-						const a2Marker = a2Markers.get(x);
-						const a3Marker = a3Markers.get(x);
-						const a4Marker = a4Markers.get(x);
-
-						if (a1Marker && a1Marker.length > 1) {
-							for (const i of Grid.groupBoxs[0]) {
-								if (a1Cells.has(i)) continue;
-								const cell = cells[i];
-								if (cell.delete(x)) {
-									reduced = true;
-									console.log("0");
-								}
+					if (a1Cells.has(aIndex)) {
+						const marks = a1Markers.get(x);
+						if (!marks || marks.length === 1) {
+							if (aCell.has(x)) {
+								aCell.setSymbol(x);
+								filled = true;
 							}
-						} else if (a2Marker && a2Marker.length > 1) {
-							for (const i of Grid.groupBoxs[2]) {
-								if (a2Cells.has(i)) continue;
-								const cell = cells[i];
-								if (cell.delete(x)) {
-									reduced = true;
-									console.log("2");
-								}
+						}
+					} else if (a2Cells.has(aIndex)) {
+						const marks = a2Markers.get(x);
+						if (!marks || marks.length === 1) {
+							if (aCell.has(x)) {
+								aCell.setSymbol(x);
+								filled = true;
 							}
-						} else if (a3Marker && a3Marker.length > 1) {
-							for (const i of Grid.groupBoxs[8]) {
-								if (a3Cells.has(i)) continue;
-								const cell = cells[i];
-								if (cell.delete(x)) {
-									reduced = true;
-								}
+						}
+					} else if (a3Cells.has(aIndex)) {
+						const marks = a3Markers.get(x);
+						if (!marks || marks.length === 1) {
+							if (aCell.has(x)) {
+								aCell.setSymbol(x);
+								filled = true;
 							}
-						} else if (a4Marker && a4Marker.length > 1) {
-							for (const i of Grid.groupBoxs[6]) {
-								if (a4Cells.has(i)) continue;
-								const cell = cells[i];
-								if (cell.delete(x)) {
-									reduced = true;
-								}
-							}
-						} else {
+						}
+					} else if (a4Cells.has(aIndex)) {
+						const marks = a4Markers.get(x);
+						if (!marks || marks.length === 1) {
 							if (aCell.has(x)) {
 								aCell.setSymbol(x);
 								filled = true;
