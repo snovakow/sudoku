@@ -15,14 +15,10 @@ const step = (search) => {
 		};
 
 		const result = fillSolve(cells, search, REDUCE.Phistomefel);
-		let basic = true;
-		// let basic = result.swordfishReduced === 0 && result.xyWingReduced === 0 && result.xWingReduced === 0 && result.uniqueRectangleReduced === 0;
-		// for (const nakedHiddenSet of result.nakedHiddenSetsReduced) {
-		// 	if (nakedHiddenSet.hidden || nakedHiddenSet.size > 3) {
-		// 		basic = false;
-		// 		break;
-		// 	}
-		// }
+		let basic = result.swordfishReduced === 0 && result.xyWingReduced === 0 && result.xWingReduced === 0 && result.uniqueRectangleReduced === 0;
+		if (result.nakedHiddenSetsReduced.length > 0) {
+			basic = false;
+		}
 
 		if (!result.bruteForceFill && basic && (result.phistomefelReduced > 0 || result.phistomefelFilled > 0)) {
 			const lines = [];
