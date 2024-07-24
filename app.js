@@ -42,14 +42,14 @@ const sudokuSamples = [
 ];
 
 const rawNames = [
-	"Hidden 1",
-	"Hidden 2",
-	"Hidden 3",
-	"Hidden 4",
-	"Hidden 5",
-	"Hidden 6",
-	"Hidden 7",
-	"Hidden 8",
+	"Hidden5 H2 N5",
+	"Hidden5",
+	"Hidden5 N53222",
+	"Hidden5 N522",
+	"Hidden5 N542",
+	"Hidden5 N532",
+	"Hidden5",
+	"Hidden5",
 	"Hidden N543",
 	"Hidden N52",
 	"Hidden N532",
