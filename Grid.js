@@ -318,10 +318,15 @@ class Grid extends Array {
 		super(81);
 	}
 
+	string() {
+		let string = "";
+		for (const cell of this) string += cell.symbol;
+		return string;
+	}
 	log() {
 		let string = "";
 		for (const cell of this) string += cell.symbol;
-		console.log(string);
+		console.log(this.string());
 	}
 
 	toStorage() {
