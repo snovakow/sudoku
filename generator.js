@@ -248,7 +248,9 @@ const sodokoSolver = (grid) => {
 	return true;
 }
 
+let operations = 0;
 const solutionCount = (grid, solutions = 0) => {
+	operations++;
 	for (let i = 0; i < 81; i++) {
 		if (grid[i] !== 0) continue;
 		const index = i;
@@ -295,6 +297,7 @@ const sudokuGenerator = (cells) => {
 
 	randomize(rndi);
 
+	operations = 0;
 	for (let i = 0; i < 81; i++) {
 		const index = rndi[i];
 
@@ -333,7 +336,7 @@ const sudokuGenerator = (cells) => {
 		cells.log();
 	}
 
-	return { clueCount: hits, grid };
+	return { clueCount: hits, grid, operations };
 }
 
 const sudokuGeneratorPhistomefel = (cells) => {
