@@ -955,14 +955,14 @@ const uniqueRectangle = (cells) => {
 
 				if (col === -1) continue;
 
+				let reduced = false;
 				const cell = cells[row * 9 + col];
 				for (let x = 1; x <= 9; x++) {
 					if (cell1.has(x)) {
-						if (cell.delete(x)) {
-							return true;
-						}
+						if (cell.delete(x)) reduced = true;
 					}
 				}
+				return reduced;
 			}
 		}
 	}
