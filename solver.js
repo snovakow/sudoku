@@ -1193,53 +1193,13 @@ const phistomefel = (cells) => {
 	for (let x = 1; x <= 9; x++) {
 		let aCount = 0;
 		let aMarkers = 0;
-
-		let a1Markers = new Map();
-		let a2Markers = new Map();
-		let a3Markers = new Map();
-		let a4Markers = new Map();
-
 		let aFull = true;
 		for (const aIndex of aCells) {
 			const aCell = cells[aIndex];
 			if (aCell.symbol === 0) {
 				if (aCell.has(x)) {
 					aFull = false;
-					if (a1Cells.has(aIndex)) {
-						const a1Marker = a1Markers.get(x);
-						if (a1Marker) {
-							a1Marker.push(aIndex);
-						} else {
-							a1Markers.set(x, [aIndex]);
-							aMarkers++;
-						}
-					} else if (a2Cells.has(aIndex)) {
-						const a2Marker = a2Markers.get(x);
-						if (a2Marker) {
-							a2Marker.push(aIndex);
-						} else {
-							a2Markers.set(x, [aIndex]);
-							aMarkers++;
-						}
-					} else if (a3Cells.has(aIndex)) {
-						const a3Marker = a3Markers.get(x);
-						if (a3Marker) {
-							a3Marker.push(aIndex);
-						} else {
-							a3Markers.set(x, [aIndex]);
-							aMarkers++;
-						}
-					} else if (a4Cells.has(aIndex)) {
-						const a4Marker = a4Markers.get(x);
-						if (a4Marker) {
-							a4Marker.push(aIndex);
-						} else {
-							a4Markers.set(x, [aIndex]);
-							aMarkers++;
-						}
-					} else {
-						aMarkers++;
-					}
+					aMarkers++;
 				}
 			} else {
 				if (aCell.symbol === x) aCount++;
@@ -1248,55 +1208,13 @@ const phistomefel = (cells) => {
 
 		let bCount = 0;
 		let bMarkers = 0;
-
-		let b1Markers = new Map();
-		let b2Markers = new Map();
-		let b3Markers = new Map();
-		let b4Markers = new Map();
-
 		let bFull = true;
 		for (const bIndex of bCells) {
 			const bCell = cells[bIndex];
 			if (bCell.symbol === 0) {
 				if (bCell.has(x)) {
 					bFull = false;
-
-					if (b1OuterCells.has(bIndex)) {
-						const b1Marker = b1Markers.get(x);
-						if (b1Marker) {
-							b1Marker.push(bIndex);
-						} else {
-							b1Markers.set(x, [bIndex]);
-							bMarkers++;
-						}
-					} else if (b2OuterCells.has(bIndex)) {
-						const b2Marker = b2Markers.get(x);
-						if (b2Marker) {
-							b2Marker.push(bIndex);
-						} else {
-							b2Markers.set(x, [bIndex]);
-							bMarkers++;
-						}
-					} else if (b3OuterCells.has(bIndex)) {
-						const b3Marker = b3Markers.get(x);
-						if (b3Marker) {
-							b3Marker.push(bIndex);
-						} else {
-							b3Markers.set(x, [bIndex]);
-							bMarkers++;
-						}
-					} else if (b4OuterCells.has(bIndex)) {
-						const b4Marker = b4Markers.get(x);
-						if (b4Marker) {
-							b4Marker.push(bIndex);
-						} else {
-							b4Markers.set(x, [bIndex]);
-							bMarkers++;
-						}
-					} else {
-						bMarkers++;
-					}
-
+					bMarkers++;
 				}
 			} else {
 				if (bCell.symbol === x) bCount++;
@@ -1313,58 +1231,7 @@ const phistomefel = (cells) => {
 					}
 				}
 			}
-			if (bCount === aCount + bMarkers && bMarkers > 0) {
-				for (const bIndex of bCells) {
-					const bCell = cells[bIndex];
-					if (bCell.symbol !== 0) continue;
-
-					const reduce = (markers, groupCells, groupOuterCells) => {
-						const marks = markers.get(x);
-						if (marks) {
-							if (marks.length === 1) {
-								if (bCell.has(x)) {
-									bCell.setSymbol(x);
-									filled = true;
-								}
-							} else if (marks.length > 1) {
-								if (groupCells.has(i) && !groupOuterCells.has(i)) {
-									for (const i of bCell.groupBox) {
-										if (groupCells.has(i)) continue;
-										const cell = cells[i];
-										if (cell.delete(x)) {
-											reduced = true;
-										}
-									}
-								}
-								// if (bCell.has(x)) {
-								// 	bCell.setSymbol(x);
-								// 	filled = true;
-								// }
-							}
-						} else {
-							if (bCell.has(x)) {
-								bCell.setSymbol(x);
-								filled = true;
-							}
-						}
-					}
-					if (b1Cells.has(bIndex)) {
-						reduce(b1Markers, b1Cells, b1OuterCells);
-					} else if (b2Cells.has(bIndex)) {
-						reduce(b2Markers, b2Cells, b2OuterCells);
-					} else if (b3Cells.has(bIndex)) {
-						reduce(b3Markers, b3Cells, b3OuterCells);
-					} else if (b4Cells.has(bIndex)) {
-						reduce(b4Markers, b4Cells, b4OuterCells);
-					} else {
-						if (bCell.has(x)) {
-							bCell.setSymbol(x);
-							filled = true;
-						}
-					}
-				}
-			}
-			if (aCount === bCount && bMarkers === 0) {
+			if (aCount === bCount + bMarkers) {
 				for (const bIndex of bCells) {
 					const bCell = cells[bIndex];
 					if (bCell.symbol !== 0) continue;
@@ -1385,56 +1252,7 @@ const phistomefel = (cells) => {
 					}
 				}
 			}
-			if (bCount === aCount + aMarkers && aMarkers > 0) {
-				for (const aIndex of aCells) {
-					const aCell = cells[aIndex];
-					if (aCell.symbol !== 0) continue;
-
-					const reduce = (markers, groupCells) => {
-						const marks = markers.get(x);
-						if (marks) {
-							if (marks.length === 1) {
-								if (aCell.has(x)) {
-									aCell.setSymbol(x);
-									filled = true;
-								}
-							} else if (marks.length > 1) {
-								for (const i of aCell.groupBox) {
-									if (groupCells.has(i)) continue;
-									const cell = cells[i];
-									if (cell.delete(x)) {
-										reduced = true;
-									}
-								}
-								if (aCell.has(x)) {
-									aCell.setSymbol(x);
-									filled = true;
-								}
-							}
-						} else {
-							if (aCell.has(x)) {
-								aCell.setSymbol(x);
-								filled = true;
-							}
-						}
-					}
-					if (a1Cells.has(aIndex)) {
-						reduce(a1Markers, a1Cells);
-					} else if (a2Cells.has(aIndex)) {
-						reduce(a2Markers, a2Cells);
-					} else if (a3Cells.has(aIndex)) {
-						reduce(a3Markers, a3Cells);
-					} else if (a4Cells.has(aIndex)) {
-						reduce(a4Markers, a4Cells);
-					} else {
-						if (aCell.has(x)) {
-							aCell.setSymbol(x);
-							filled = true;
-						}
-					}
-				}
-			}
-			if (bCount === aCount && aMarkers === 0) {
+			if (bCount === aCount + aMarkers) {
 				for (const aIndex of aCells) {
 					const aCell = cells[aIndex];
 					if (aCell.symbol !== 0) continue;
