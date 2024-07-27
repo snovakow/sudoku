@@ -1,5 +1,5 @@
 import { aCells, bCells } from "./solver.js";
-import { generate, candidates, loneSingles, hiddenSingles, omissions, NakedHiddenGroups, uniqueRectangle, xyWing, xWing, swordfish, bruteForce, phistomefel, REDUCE } from "./solver.js";
+import { generate, candidates, loneSingles, hiddenSingles, omissions, NakedHiddenGroups, uniqueRectangle, yWing, xWing, swordfish, jellyfish, bruteForce, phistomefel, REDUCE } from "./solver.js";
 
 const consoleOut = (result) => {
 	const lines = [];
@@ -12,8 +12,9 @@ const consoleOut = (result) => {
 	}
 	lines.push("Deadly Pattern Unique Rectangle: " + result.uniqueRectangleReduced);
 	lines.push("X Wing: " + result.xWingReduced);
-	lines.push("XY Wing: " + result.xyWingReduced);
+	lines.push("Y Wing: " + result.yWingReduced);
 	lines.push("Swordfish: " + result.swordfishReduced);
+	lines.push("Jellyfish: " + result.jellyfishReduced);
 	lines.push("Phistomefel: " + phistomefelReduced + (phistomefelFilled > 0 ? " + " + phistomefelFilled + " filled" : ""));
 	lines.push("Brute Force: " + result.bruteForceFill);
 	return lines;
@@ -33,7 +34,8 @@ const fillSolve = (cells, search, reduce = null) => {
 	let nakedHiddenSetsReduced = [];
 	let xWingReduced = 0;
 	let swordfishReduced = 0;
-	let xyWingReduced = 0;
+	let jellyfishReduced = 0;
+	let yWingReduced = 0;
 
 	let phistomefelReduced = 0;
 	let phistomefelFilled = 0;
@@ -75,13 +77,17 @@ const fillSolve = (cells, search, reduce = null) => {
 					progress = xWing(cells);
 					if (progress) xWingReduced++;
 					break;
-				case REDUCE.XY_Wing:
-					progress = xyWing(cells);
-					if (progress) xyWingReduced++;
+				case REDUCE.Y_Wing:
+					progress = yWing(cells);
+					if (progress) yWingReduced++;
 					break;
 				case REDUCE.Swordfish:
 					progress = swordfish(cells);
 					if (progress) swordfishReduced++;
+					break;
+				case REDUCE.Jellyfish:
+					progress = jellyfish(cells);
+					if (progress) jellyfishReduced++;
 					break;
 				case REDUCE.Phistomefel:
 					if (search === "?phist") {
@@ -117,13 +123,17 @@ const fillSolve = (cells, search, reduce = null) => {
 				progress = xWing(cells);
 				if (progress) { xWingReduced++; continue; }
 				break;
-			case REDUCE.XY_Wing:
-				progress = xyWing(cells);
-				if (progress) { xyWingReduced++; continue; }
+			case REDUCE.Y_Wing:
+				progress = yWing(cells);
+				if (progress) { yWingReduced++; continue; }
 				break;
 			case REDUCE.Swordfish:
 				progress = swordfish(cells);
 				if (progress) { swordfishReduced++; continue; }
+				break;
+			case REDUCE.Jellyfish:
+				progress = jellyfish(cells);
+				if (progress) jellyfishReduced++;
 				break;
 			case REDUCE.Phistomefel:
 				if (search === "?phist") {
@@ -148,8 +158,9 @@ const fillSolve = (cells, search, reduce = null) => {
 		nakedHiddenSetsReduced,
 		uniqueRectangleReduced,
 		xWingReduced,
-		xyWingReduced,
+		yWingReduced,
 		swordfishReduced,
+		jellyfishReduced,
 		phistomefelReduced,
 		phistomefelFilled,
 		bruteForceFill
@@ -329,11 +340,6 @@ const sudokuGenerator = (cells) => {
 	for (let i = 0; i < 81; i++) {
 		const cell = cells[i];
 		cell.setSymbol(grid[i]);
-	}
-
-	if (hits < 20) {
-		console.log(hits, totalPuzzles);
-		cells.log();
 	}
 
 	return { clueCount: hits, grid, operations };

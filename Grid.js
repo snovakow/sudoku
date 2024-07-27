@@ -323,11 +323,6 @@ class Grid extends Array {
 		for (const cell of this) string += cell.symbol;
 		return string;
 	}
-	log() {
-		let string = "";
-		for (const cell of this) string += cell.symbol;
-		console.log(this.string());
-	}
 
 	toStorage() {
 		const data = [];

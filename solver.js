@@ -1,12 +1,13 @@
-import { Grid, GridCell, Marker } from "./Grid.js";
+import { Grid, Marker } from "./Grid.js";
 
 let reduce_i = 0;
 const REDUCE = {
 	Hidden_4: reduce_i++,
 	UniqueRectangle: reduce_i++,
 	X_Wing: reduce_i++,
-	XY_Wing: reduce_i++,
+	Y_Wing: reduce_i++,
 	Swordfish: reduce_i++,
+	Jellyfish: reduce_i++,
 	Phistomefel: reduce_i++,
 	Brute_Force: reduce_i++,
 };
@@ -546,12 +547,14 @@ const swordfish = (cells) => {
 				if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2, y3));
 			}
 
-			const len = pairs.length;
-			for (let p1 = 0, last1 = len - 2; p1 < last1; p1++) {
+			const len_0 = pairs.length;
+			const len_1 = len_0 - 1;
+			const len_2 = len_0 - 2;
+			for (let p1 = 0; p1 < len_2; p1++) {
 				const pair1 = pairs[p1];
-				for (let p2 = p1 + 1, last2 = len - 1; p2 < last2; p2++) {
+				for (let p2 = p1 + 1; p2 < len_1; p2++) {
 					const pair2 = pairs[p2];
-					for (let p3 = p2 + 1; p3 < len; p3++) {
+					for (let p3 = p2 + 1; p3 < len_0; p3++) {
 						const pair3 = pairs[p3];
 
 						set.clear();
@@ -568,20 +571,15 @@ const swordfish = (cells) => {
 						set.add(pair3.i2);
 						if (pair3.i3 !== -1) set.add(pair3.i3);
 
-						if (set.size === 3) {
-							for (let x = 0; x < 9; x++) {
-								if (x === pair1.x || x === pair2.x || x === pair3.x) continue;
+						if (set.size !== 3) continue;
+						for (let x = 0; x < 9; x++) {
+							if (x === pair1.x || x === pair2.x || x === pair3.x) continue;
 
-								for (const pairi of [...set]) {
-									const index = flip ? x * 9 + pairi : pairi * 9 + x;
-									const cell = cells[index];
-									if (cell.symbol === 0) {
-										const had = cell.delete(i);
-										if (had) {
-											reduced = true;
-											// console.log("Swordfish");
-										}
-									}
+							for (const pairi of [...set]) {
+								const index = flip ? x * 9 + pairi : pairi * 9 + x;
+								const cell = cells[index];
+								if (cell.symbol === 0) {
+									if (cell.delete(i)) reduced = true;
 								}
 							}
 						}
@@ -596,7 +594,103 @@ const swordfish = (cells) => {
 	return reduced;
 }
 
-const xyWing = (cells) => {
+const jellyfish = (cells) => {
+	class GroupPair {
+		constructor(x, i1, i2, i3, i4) {
+			this.x = x;
+			this.i1 = i1;
+			this.i2 = i2;
+			this.i3 = i3;
+			this.i4 = i4;
+		}
+	}
+
+	let reduced = false;
+	const set = new Set();
+
+	const jellyfishOrientation = (flip) => {
+		for (let i = 1; i <= 9; i++) {
+			const pairs = [];
+			for (let x = 0; x < 9; x++) {
+				let y1 = -1;
+				let y2 = -1;
+				let y3 = -1;
+				let y4 = -1;
+				for (let y = 0; y < 9; y++) {
+					const index = flip ? x * 9 + y : y * 9 + x;
+					const cell = cells[index];
+					if (cell.symbol !== 0) continue;
+					if (cell.has(i)) {
+						if (y1 === -1) y1 = y;
+						else if (y2 === -1) y2 = y;
+						else if (y3 === -1) y3 = y;
+						else if (y4 === -1) y4 = y;
+						else { y2 = -1; break; }
+					}
+				}
+				if (y2 >= 0) pairs.push(new GroupPair(x, y1, y2, y3, y4));
+			}
+
+			const len_0 = pairs.length;
+			const len_1 = len_0 - 1;
+			const len_2 = len_0 - 2;
+			const len_3 = len_0 - 3;
+			for (let p1 = 0; p1 < len_3; p1++) {
+				const pair1 = pairs[p1];
+				for (let p2 = p1 + 1; p2 < len_2; p2++) {
+					const pair2 = pairs[p2];
+					for (let p3 = p2 + 1; p3 < len_1; p3++) {
+						const pair3 = pairs[p3];
+						for (let p4 = p3 + 1; p4 < len_0; p4++) {
+							const pair4 = pairs[p4];
+
+							set.clear();
+
+							set.add(pair1.i1);
+							set.add(pair1.i2);
+							if (pair1.i3 !== -1) set.add(pair1.i3);
+							if (pair1.i4 !== -1) set.add(pair1.i4);
+
+							set.add(pair2.i1);
+							set.add(pair2.i2);
+							if (pair2.i3 !== -1) set.add(pair2.i3);
+							if (pair2.i4 !== -1) set.add(pair2.i4);
+
+							set.add(pair3.i1);
+							set.add(pair3.i2);
+							if (pair3.i3 !== -1) set.add(pair3.i3);
+							if (pair3.i4 !== -1) set.add(pair3.i4);
+
+							set.add(pair4.i1);
+							set.add(pair4.i2);
+							if (pair4.i3 !== -1) set.add(pair4.i3);
+							if (pair4.i4 !== -1) set.add(pair4.i4);
+
+							if (set.size !== 4) continue;
+							for (let x = 0; x < 9; x++) {
+								if (x === pair1.x || x === pair2.x || x === pair3.x || x === pair4.x) continue;
+
+								for (const pairi of [...set]) {
+									const index = flip ? x * 9 + pairi : pairi * 9 + x;
+									const cell = cells[index];
+									if (cell.symbol === 0) {
+										if (cell.delete(i)) reduced = true;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	jellyfishOrientation(true);
+	jellyfishOrientation(false);
+
+	return reduced;
+}
+
+const yWing = (cells) => {
 	class Pair {
 		constructor(index, s1, s2) {
 			this.index = index;
@@ -1466,6 +1560,6 @@ const generate = (cells) => {
 }
 
 export {
-	REDUCE, generate, candidates, loneSingles, hiddenSingles, omissions, uniqueRectangle, NakedHiddenGroups, xyWing, xWing, swordfish,
+	REDUCE, generate, candidates, loneSingles, hiddenSingles, omissions, uniqueRectangle, NakedHiddenGroups, yWing, xWing, swordfish, jellyfish,
 	phistomefel, bruteForce
 };

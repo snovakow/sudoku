@@ -1,4 +1,4 @@
-import { CellMarker, Grid, Marker } from "./Grid.js";
+import { CellMarker, Grid } from "./Grid.js";
 import { sudokuGenerator, sudokuGeneratorPhistomefel, fillSolve, totalPuzzles, consoleOut } from "./generator.js";
 import { REDUCE } from "./solver.js";
 
@@ -14,16 +14,14 @@ let nakedSets4 = 0;
 let nakedSets5 = 0;
 let uniqueRectangleReduced = 0;
 let xWingReduced = 0;
-let xyWingReduced = 0;
+let yWingReduced = 0;
 let swordfishReduced = 0;
+let jellyfishReduced = 0;
 let simples = 0;
 let markers = 0;
 let bruteForceFill = 0;
 
 let maxTime = 0;
-let maxTimeSolved = 0;
-const maxTimePuzzle = new Grid();
-for (let i = 0; i < 81; i++) 	maxTimePuzzle[i] = new CellMarker(i);
 
 let percentTime = 0;
 let totalTime = 0;
@@ -39,7 +37,7 @@ const step = (search) => {
 		};
 
 		const result = fillSolve(cells, search, REDUCE.Phistomefel);
-		let basic = result.swordfishReduced === 0 && result.xyWingReduced === 0 && result.xWingReduced === 0 && result.uniqueRectangleReduced === 0;
+		let basic = result.swordfishReduced === 0 && result.jellyfishReduced === 0 && result.yWingReduced === 0 && result.xWingReduced === 0 && result.uniqueRectangleReduced === 0;
 		if (result.nakedHiddenSetsReduced.length > 0) {
 			basic = false;
 		}
@@ -55,6 +53,7 @@ const step = (search) => {
 	} else {
 		let time = performance.now();
 		const { clueCount, grid, operations } = sudokuGenerator(cells);
+		const test = cells.string();
 		const data = {
 			cells: cells.toData(),
 			message: null
@@ -78,35 +77,22 @@ const step = (search) => {
 
 		const result = fillSolve(cells, search);
 
-		// REDUCE.Hidden_4
-		// REDUCE.UniqueRectangle
-		// REDUCE.X_Wing
-		// REDUCE.XY_Wing
-		// REDUCE.Swordfish
-		// REDUCE.Phistomefel
-		// REDUCE.Brute_Force
-
-		if (!result.bruteForceFill) {
-			if (maxTimeSolved === 0) {
-				maxTimeSolved = elapsed;
-				maxTimePuzzle.fromData(cells.toData());
-			} else {
-				if (elapsed > maxTimeSolved) {
-					maxTimeSolved = elapsed;
-					maxTimePuzzle.fromData(cells.toData());
-				}
-			}
-		}
-
 		if (result.bruteForceFill) {
 			bruteForceFill++;
 		} else {
+			if (result.jellyfishReduced > 0) {
+				console.log("Jellyfish -----");
+				console.log(test);
+				console.log("Jellyfish -----");
+			}
+
 			let simple = true;
 			simple &&= result.nakedHiddenSetsReduced.length === 0;
 			simple &&= result.uniqueRectangleReduced === 0;
 			simple &&= result.xWingReduced === 0;
-			simple &&= result.xyWingReduced === 0;
+			simple &&= result.yWingReduced === 0;
 			simple &&= result.swordfishReduced === 0;
+			simple &&= result.jellyfishReduced === 0;
 
 			if (simple) simples++;
 			else {
@@ -122,23 +108,25 @@ const step = (search) => {
 				}
 				if (result.uniqueRectangleReduced > 0) uniqueRectangleReduced++;
 				if (result.xWingReduced > 0) xWingReduced++;
-				if (result.xyWingReduced > 0) xyWingReduced++;
+				if (result.yWingReduced > 0) yWingReduced++;
 				if (result.swordfishReduced > 0) swordfishReduced++;
+				if (result.jellyfishReduced > 0) jellyfishReduced++;
 
 				markers++;
 			}
 		}
 
-		const res = 100;
+		const res = 1000;
 		const percent = (val, total = totalPuzzles) => {
 			return Math.round(100 * res * val / total) / res + "%";
 		}
 
-		if (totalPuzzles % 10000 === 0) {
+		if (totalPuzzles % 10 === 0) {
 			let markerTotal = 0;
 			markerTotal += swordfishReduced;
-			markerTotal += xyWingReduced;
+			markerTotal += jellyfishReduced;
 			markerTotal += xWingReduced;
+			markerTotal += yWingReduced;
 			markerTotal += uniqueRectangleReduced;
 			markerTotal += hiddenSets3;
 			markerTotal += hiddenSets2;
@@ -147,23 +135,34 @@ const step = (search) => {
 			markerTotal += nakedSets3;
 			markerTotal += nakedSets2;
 
+			let setsTotal = 0;
+			setsTotal += nakedSets2;
+			setsTotal += nakedSets3;
+			setsTotal += nakedSets4;
+			setsTotal += nakedSets5;
+			setsTotal += hiddenSets2;
+			setsTotal += hiddenSets3;
+
 			const lines = [];
 			lines.push("-----");
-			lines.push("nakedSets2: " + percent(nakedSets2, markerTotal) + " " + percent((nakedSets2 / markerTotal) * (markers / totalPuzzles), 1));
-			lines.push("nakedSets3: " + percent(nakedSets3, markerTotal) + " " + percent((nakedSets3 / markerTotal) * (markers / totalPuzzles), 1));
-			lines.push("nakedSets4: " + percent(nakedSets4, markerTotal) + " " + percent((nakedSets4 / markerTotal) * (markers / totalPuzzles), 1));
-			lines.push("nakedSets5: " + percent(nakedSets5, markerTotal) + " " + percent((nakedSets5 / markerTotal) * (markers / totalPuzzles), 1));
-			lines.push("hiddenSets2: " + percent(hiddenSets2, markerTotal) + " " + percent((hiddenSets2 / markerTotal) * (markers / totalPuzzles), 1));
-			lines.push("hiddenSets3: " + percent(hiddenSets3, markerTotal) + " " + percent((hiddenSets3 / markerTotal) * (markers / totalPuzzles), 1));
-			lines.push("uniqueRectangleReduced: " + percent(uniqueRectangleReduced, markerTotal) + " " + percent((uniqueRectangleReduced / markerTotal) * (markers / totalPuzzles), 1));
-			lines.push("xWingReduced: " + percent(xWingReduced, markerTotal) + " " + percent((xWingReduced / markerTotal) * (markers / totalPuzzles), 1));
-			lines.push("xyWingReduced: " + percent(xyWingReduced, markerTotal) + " " + percent((xyWingReduced / markerTotal) * (markers / totalPuzzles), 1));
-			lines.push("swordfishReduced: " + percent(swordfishReduced, markerTotal) + " " + percent((swordfishReduced / markerTotal) * (markers / totalPuzzles), 1));
+			if (markerTotal > 0) {
+				lines.push("nakedSets2: " + percent(nakedSets2, markerTotal) + " " + percent((nakedSets2 / markerTotal) * (markers / totalPuzzles), 1));
+				lines.push("nakedSets3: " + percent(nakedSets3, markerTotal) + " " + percent((nakedSets3 / markerTotal) * (markers / totalPuzzles), 1));
+				lines.push("nakedSets4: " + percent(nakedSets4, markerTotal) + " " + percent((nakedSets4 / markerTotal) * (markers / totalPuzzles), 1));
+				lines.push("nakedSets5: " + percent(nakedSets5, markerTotal) + " " + percent((nakedSets5 / markerTotal) * (markers / totalPuzzles), 1));
+				lines.push("hiddenSets2: " + percent(hiddenSets2, markerTotal) + " " + percent((hiddenSets2 / markerTotal) * (markers / totalPuzzles), 1));
+				lines.push("hiddenSets3: " + percent(hiddenSets3, markerTotal) + " " + percent((hiddenSets3 / markerTotal) * (markers / totalPuzzles), 1));
+				lines.push("nakedHiddenSets: " + percent(setsTotal, markerTotal) + " " + percent((setsTotal / markerTotal) * (markers / totalPuzzles), 1));
+				lines.push("uniqueRectangleReduced: " + percent(uniqueRectangleReduced, markerTotal) + " " + percent((uniqueRectangleReduced / markerTotal) * (markers / totalPuzzles), 1));
+				lines.push("xWingReduced: " + percent(xWingReduced, markerTotal) + " " + percent((xWingReduced / markerTotal) * (markers / totalPuzzles), 1));
+				lines.push("yWingReduced: " + percent(yWingReduced, markerTotal) + " " + percent((yWingReduced / markerTotal) * (markers / totalPuzzles), 1));
+				lines.push("swordfishReduced: " + percent(swordfishReduced, markerTotal) + " " + percent((swordfishReduced / markerTotal) * (markers / totalPuzzles), 1));
+				lines.push("jellyfishReduced: " + percent(jellyfishReduced, markerTotal) + " " + percent((jellyfishReduced / markerTotal) * (markers / totalPuzzles), 1));
+			}
 			lines.push("simples: " + percent(simples));
 			lines.push("markers: " + percent(markers));
 			lines.push("bruteForceFill: " + percent(bruteForceFill));
 			lines.push("time avg < " + cap + ": " + (1000 * percentOps) / percentTime + "fps Avg: " + totalTime / 1000 / totalPuzzles + " Max: " + maxTime / 1000);
-			lines.push("Max time: " + maxTimeSolved / 1000 + " " + maxTimePuzzle.string());
 			lines.push("operations: " + percent(percentOps) + " < " + cap + " avg: " + Math.round(totalOps / totalPuzzles));
 			lines.push("totalPuzzles: " + totalPuzzles);
 			// lines.push(...consoleOut(result));
@@ -186,76 +185,3 @@ onmessage = (e) => {
 
 	step(search);
 };
-
-/*
-nakedSets2: 10.6%
-nakedSets3: 3.957%
-nakedSets4: 1.143%
-nakedSets5: 0%
-hiddenSets2: 0.257%
-hiddenSets3: 0.029%
-uniqueRectangleReduced: 1.4%
-xWingReduced: 0.857%
-xyWingReduced: 3.657%
-swordfishReduced: 0.157%
-simples: 55.214%
-markers: 10.757%
-bruteForceFill: 34.029%
-time avg < 100,000: 0.01536222445319793 Avg: 0.2287471571507454 Max: 11.68660000038147
-operations: 14.257% < 100,000 avg: 977918
-totalPuzzles: 7000
-
-nakedSets2: 10.157%
-nakedSets3: 4.014%
-nakedSets4: 1.114%
-nakedSets5: 0%
-hiddenSets2: 0.143%
-hiddenSets3: 0.043%
-uniqueRectangleReduced: 1.657%
-xWingReduced: 0.843%
-xyWingReduced: 3.386%
-swordfishReduced: 0.114%
-simples: 56%
-markers: 10.371%
-bruteForceFill: 33.629%
-time avg < 100,000: 0.015255862074415084 Avg: 0.22473355714525498 Max: 15.417400000095368
-operations: 14.5% < 100,000 avg: 961979
-totalPuzzles: 7000
-
-100,000
-60fps
-14% 14%
-
-200,000
-40fps
-30%
-
-300,000
-30fps
-45%
-
-500,000
-18fps
-60%
-
-1,000,000
-12.5fps
-75%
-
-nakedSets2: 10.12%
-nakedSets3: 3.86%
-nakedSets4: 1.12%
-nakedSets5: 0.01%
-hiddenSets2: 0.16%
-hiddenSets3: 0.02%
-uniqueRectangleReduced: 1.64%
-xWingReduced: 0.84%
-xyWingReduced: 3.61%
-swordfishReduced: 0.11%
-simples: 55.04%
-markers: 10.33%
-bruteForceFill: 34.63%
-time avg < 100000: 0.015296445409269586 Avg: 0.2259400967631914 Max: 50.444
-operations: 14.34% < 100000 avg: 975938
-totalPuzzles: 216000
-*/
