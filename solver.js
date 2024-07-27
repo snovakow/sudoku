@@ -1245,9 +1245,7 @@ const phistomefel = (cells) => {
 				for (const aIndex of aCells) {
 					const aCell = cells[aIndex];
 					if (aCell.symbol !== 0) continue;
-					if (aCell.delete(x)) {
-						reduced = true;
-					}
+					if (aCell.delete(x)) reduced = true;
 				}
 			}
 			if (bCount === aCount + aMarkers) {
