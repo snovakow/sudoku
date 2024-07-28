@@ -133,6 +133,11 @@ const step = (search) => {
 			else {
 				if (result.nakedHiddenSetsReduced.length > 0) {
 					for (const set of result.nakedHiddenSetsReduced) {
+						if (!set.hidden && set.size === 5) {
+							console.log("NakedSet5 -----");
+							console.log(test);
+							console.log("NakedSet5 -----");
+						}
 						if (!set.hidden && set.size === 2) nakedSets2++;
 						if (!set.hidden && set.size === 3) nakedSets3++;
 						if (!set.hidden && set.size === 4) nakedSets4++;
