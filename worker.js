@@ -157,7 +157,7 @@ const step = (search) => {
 			}
 		}
 
-		const res = 1000;
+		const res = 10000;
 		const percent = (val, total = totalPuzzles) => {
 			return Math.round(100 * res * val / total) / res + "%";
 		}
@@ -200,7 +200,7 @@ const step = (search) => {
 				lines.push("yWing: " + percent(yWingReduced, markerTotal) + " " + percent((yWingReduced / markerTotal) * (markers / totalPuzzles), 1));
 				lines.push("Swordfish: " + percent(swordfishReduced, markerTotal) + " " + percent((swordfishReduced / markerTotal) * (markers / totalPuzzles), 1));
 				lines.push("Jellyfish: " + percent(jellyfishReduced, markerTotal) + " " + percent((jellyfishReduced / markerTotal) * (markers / totalPuzzles), 1));
-				lines.push("Phistomefel: " + percent(jellyfishReduced, markerTotal) + " " + percent((jellyfishReduced / markerTotal) * (markers / totalPuzzles), 1));
+				lines.push("Phistomefel: " + percent(phistomefelCount, markerTotal) + " " + percent((phistomefelCount / markerTotal) * (markers / totalPuzzles), 1));
 			}
 			lines.push("Simples: " + percent(simples));
 			lines.push("Markers: " + percent(markers));
