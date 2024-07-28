@@ -90,13 +90,11 @@ const fillSolve = (cells, search, reduce = null) => {
 					if (progress) jellyfishReduced++;
 					break;
 				case REDUCE.Phistomefel:
-					if (search === "?phist") {
-						const { reduced, filled } = phistomefel(cells);
-						progress = reduced > 0 || filled > 0;
-						if (progress) {
-							if (reduced > 0) phistomefelReduced++;
-							if (filled > 0) phistomefelFilled++;
-						}
+					const { reduced, filled } = phistomefel(cells);
+					progress = reduced > 0 || filled > 0;
+					if (progress) {
+						if (reduced > 0) phistomefelReduced++;
+						if (filled > 0) phistomefelFilled++;
 					}
 					break;
 				default:
@@ -136,14 +134,12 @@ const fillSolve = (cells, search, reduce = null) => {
 				if (progress) jellyfishReduced++;
 				break;
 			case REDUCE.Phistomefel:
-				if (search === "?phist") {
-					const { reduced, filled } = phistomefel(cells);
-					progress = reduced > 0 || filled > 0;
-					if (progress) {
-						if (reduced > 0) phistomefelReduced++;
-						if (filled > 0) phistomefelFilled++;
-						continue;
-					}
+				const { reduced, filled } = phistomefel(cells);
+				progress = reduced > 0 || filled > 0;
+				if (progress) {
+					if (reduced > 0) phistomefelReduced++;
+					if (filled > 0) phistomefelFilled++;
+					continue;
 				}
 				break;
 			default:
@@ -286,14 +282,18 @@ const savedGrid = new Uint8Array(81);
 const rndi = makeArray(81);
 
 let once = 0;
-const samePuzzle = false;
-const sudokuGenerator = (cells) => {
+export const samePuzzle = true;
+const sudokuGenerator = (cells, regenerate = false) => {
 
 	if (samePuzzle) {
-		if (once === 0) {
+		if (regenerate) {
+			totalPuzzles = 0;
+			for (let i = 0; i < 81; i++) grid[i] = 0;
+			for (let i = 0; i < 9; i++) grid[i] = i + 1;
+		} else {
 			for (let i = 0; i < 81; i++) grid[i] = cells[i].symbol;
-			sodokoSolver(grid);
 		}
+		sodokoSolver(grid);
 	} else {
 		for (let i = 0; i < 81; i++) grid[i] = 0;
 		for (let i = 0; i < 9; i++) grid[i] = i + 1;
