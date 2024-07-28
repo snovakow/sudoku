@@ -120,7 +120,6 @@ const step = (search) => {
 				console.log("Phistomefel -----");
 			}
 
-
 			let simple = true;
 			simple &&= result.nakedHiddenSetsReduced.length === 0;
 			simple &&= result.uniqueRectangleReduced === 0;
