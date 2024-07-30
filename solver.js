@@ -348,7 +348,7 @@ class NakedHiddenGroups {
 		const union = new SetUnion();
 		for (const sets of this.groupSets) {
 			const len = sets.length;
-			if (len <= 7) continue;
+			if (len <= 8) continue;
 
 			const len_1 = len - 1;
 			const len_2 = len - 2;
@@ -385,7 +385,7 @@ class NakedHiddenGroups {
 		const union = new SetUnion();
 		for (const sets of this.groupSets) {
 			const len = sets.length;
-			if (len <= 8) continue;
+			if (len <= 7) continue;
 
 			const len_1 = len - 1;
 			const len_2 = len - 2;
@@ -425,7 +425,7 @@ class NakedHiddenGroups {
 	}
 	nakedHiddenSets() {
 		// 9  4 4 = 8 53
-		// 8  4 3 = 7
+		// 8  4 3 = 7 52
 		// 7  4 2 = 6
 		// 6  4 0 = 4 41
 		// 5  3 0 = 3 41
@@ -700,6 +700,236 @@ const yWing = (cells) => {
 	}
 
 	const pairs = [];
+	for (const cell of cells) {
+		if (cell.symbol !== 0) continue;
+		let s1 = 0;
+		let s2 = 0;
+		for (let s = 1; s <= 9; s++) {
+			if (!cell.has(s)) continue;
+			if (s1 === 0) {
+				s1 = s;
+			} else if (s2 === 0) {
+				s2 = s;
+			} else {
+				s2 = 0;
+				break;
+			}
+		}
+		if (s2 !== 0) {
+			pairs.push(new Pair(cell.index, s1, s2));
+		}
+	}
+
+	const pairLen = pairs.length;
+	const union = new Set();
+	for (let i1 = 0; i1 < pairLen - 2; i1++) {
+		const pair1 = pairs[i1];
+
+		for (let i2 = i1 + 1; i2 < pairLen - 1; i2++) {
+			const pair2 = pairs[i2];
+
+			if (pair1.s1 === pair2.s1 && pair1.s2 === pair2.s2) continue;
+
+			for (let i3 = i2 + 1; i3 < pairLen; i3++) {
+				const pair3 = pairs[i3];
+
+				if (pair1.s1 === pair3.s1 && pair1.s2 === pair3.s2) continue;
+				if (pair2.s1 === pair3.s1 && pair2.s2 === pair3.s2) continue;
+
+				union.clear();
+				union.add(pair1.s1);
+				union.add(pair1.s2);
+				union.add(pair2.s1);
+				union.add(pair2.s2);
+				if (union.size !== 3) continue
+				union.add(pair3.s1);
+				if (union.size !== 3) continue
+				union.add(pair3.s2);
+				if (union.size !== 3) continue;
+
+				const row1 = rowForIndex(pair1.index);
+				const row2 = rowForIndex(pair2.index);
+				const row3 = rowForIndex(pair3.index);
+				const col1 = colForIndex(pair1.index);
+				const col2 = colForIndex(pair2.index);
+				const col3 = colForIndex(pair3.index);
+				const box1 = boxForIndex(pair1.index);
+				const box2 = boxForIndex(pair2.index);
+				const box3 = boxForIndex(pair3.index);
+
+				if (row1 === row2 && row2 === row3) continue;
+				if (col1 === col2 && col2 === col3) continue;
+				if (box1 === box2 && box2 === box3) continue;
+
+				let reduced = false;
+
+				if (row1 === row2 || col1 === col2 || box1 === box2) {
+					if (row1 === row3 || col1 === col3 || box1 === box3) {
+						const hits = new Set();
+						hits.add(pair2.s1);
+						hits.add(pair2.s2);
+						hits.add(pair3.s1);
+						hits.add(pair3.s2);
+
+						hits.delete(pair1.s1);
+						hits.delete(pair1.s2);
+
+						for (const hit of hits) {
+
+							if (box2 !== box3) {
+								for (let x = 0; x < 9; x++) {
+									const index = indexForCol(col2, x);
+									const b = boxForIndex(index);
+									if (box3 === b) {
+										if (cells[index].delete(hit)) reduced = true;
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForRow(row2, x);
+									const b = boxForIndex(index);
+									if (box3 === b) {
+										if (cells[index].delete(hit)) reduced = true;
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForCol(col3, x);
+									const b = boxForIndex(index);
+									if (box2 === b) {
+										if (cells[index].delete(hit)) reduced = true;
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForRow(row3, x);
+									const b = boxForIndex(index);
+									if (box2 === b) {
+										if (cells[index].delete(hit)) reduced = true;
+									}
+								}
+							}
+
+						}
+
+					}
+				}
+
+				if (row1 === row2 || col1 === col2 || box1 === box2) {
+					if (row2 === row3 || col2 === col3 || box2 === box3) {
+						const hits = new Set();
+						hits.add(pair1.s1);
+						hits.add(pair1.s2);
+						hits.add(pair3.s1);
+						hits.add(pair3.s2);
+
+						hits.delete(pair2.s1);
+						hits.delete(pair2.s2);
+
+						for (const hit of hits) {
+
+							if (box1 !== box3) {
+								for (let x = 0; x < 9; x++) {
+									const index = indexForCol(col1, x);
+									const b = boxForIndex(index);
+									if (box3 === b) {
+										if (cells[index].delete(hit)) reduced = true;
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForRow(row1, x);
+									const b = boxForIndex(index);
+									if (box3 === b) {
+										if (cells[index].delete(hit)) reduced = true;
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForCol(col3, x);
+									const b = boxForIndex(index);
+									if (box1 === b) {
+										if (cells[index].delete(hit)) reduced = true;
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForRow(row3, x);
+									const b = boxForIndex(index);
+									if (box1 === b) {
+										if (cells[index].delete(hit)) reduced = true;
+									}
+								}
+							}
+
+						}
+
+					}
+				}
+
+				if (row1 === row3 || col1 === col3 || box1 === box3) {
+					if (row2 === row3 || col2 === col3 || box2 === box3) {
+						const hits = new Set();
+						hits.add(pair1.s1);
+						hits.add(pair1.s2);
+						hits.add(pair2.s1);
+						hits.add(pair2.s2);
+
+						hits.delete(pair3.s1);
+						hits.delete(pair3.s2);
+
+						for (const hit of hits) {
+
+							if (box1 !== box2) {
+								for (let x = 0; x < 9; x++) {
+									const index = indexForCol(col1, x);
+									const b = boxForIndex(index);
+									if (box2 === b) {
+										if (cells[index].delete(hit)) reduced = true;
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForRow(row1, x);
+									const b = boxForIndex(index);
+									if (box2 === b) {
+										if (cells[index].delete(hit)) reduced = true;
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForCol(col2, x);
+									const b = boxForIndex(index);
+									if (box1 === b) {
+										if (cells[index].delete(hit)) reduced = true;
+									}
+								}
+								for (let x = 0; x < 9; x++) {
+									const index = indexForRow(row2, x);
+									const b = boxForIndex(index);
+									if (box1 === b) {
+										if (cells[index].delete(hit)) reduced = true;
+									}
+								}
+							}
+
+						}
+
+					}
+				}
+				// console.log(reduced);
+				if (reduced) return reduced;
+
+				union.clear();
+			}
+		}
+	}
+	return false;
+}
+
+const xyzWing = (cells) => {
+	class Pair {
+		constructor(index, s1, s2) {
+			this.index = index;
+			this.s1 = s1;
+			this.s2 = s2;
+		}
+	}
+
+	const pairs = [];
+	const triples = [];
 	for (const cell of cells) {
 		if (cell.symbol !== 0) continue;
 		let s1 = 0;
