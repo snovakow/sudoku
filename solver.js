@@ -810,7 +810,9 @@ const yWing = (cells) => {
 						}
 
 					}
+				}
 
+				if (row1 === row2 || col1 === col2 || box1 === box2) {
 					if (row2 === row3 || col2 === col3 || box2 === box3) {
 						const hits = new Set();
 						hits.add(pair1.s1);
@@ -858,6 +860,7 @@ const yWing = (cells) => {
 
 					}
 				}
+
 				if (row1 === row3 || col1 === col3 || box1 === box3) {
 					if (row2 === row3 || col2 === col3 || box2 === box3) {
 						const hits = new Set();
