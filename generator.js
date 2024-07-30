@@ -282,24 +282,10 @@ const savedGrid = new Uint8Array(81);
 const rndi = makeArray(81);
 
 let once = 0;
-export const samePuzzle = true;
-const sudokuGenerator = (cells, regenerate = false) => {
-
-	if (samePuzzle) {
-		if (regenerate) {
-			totalPuzzles = 0;
-			for (let i = 0; i < 81; i++) grid[i] = 0;
-			for (let i = 0; i < 9; i++) grid[i] = i + 1;
-		} else {
-			for (let i = 0; i < 81; i++) grid[i] = cells[i].symbol;
-		}
-		sodokoSolver(grid);
-	} else {
-		for (let i = 0; i < 81; i++) grid[i] = 0;
-		for (let i = 0; i < 9; i++) grid[i] = i + 1;
-		sodokoSolver(grid);
-	}
-	once++;
+const sudokuGenerator = (cells, target = 0) => {
+	for (let i = 0; i < 81; i++) grid[i] = 0;
+	for (let i = 0; i < 9; i++) grid[i] = i + 1;
+	sodokoSolver(grid);
 
 	if (!isValidGrid(grid)) {
 		console.log("INVALID!");
@@ -308,11 +294,45 @@ const sudokuGenerator = (cells, regenerate = false) => {
 
 	randomize(rndi);
 
+	const edge = new Set();
+	if (target === 1) {
+		let number = Math.floor(Math.random() * 27);
+		const type = Math.floor(number / 9);
+		const x = number % 9;
+
+		if (type === 0) {
+			for (const cell of cells) if (cell.row === x) edge.add(cell.index);
+		}
+		if (type === 1) {
+			for (const cell of cells) if (cell.col === x) edge.add(cell.index);
+		}
+		if (type === 2) {
+			for (const cell of cells) if (cell.box === x) edge.add(cell.index);
+		}
+	}
+
 	operations = 0;
+
+	for (const index of edge) {
+		// const index = i;
+		const symbol = grid[index];
+		if (symbol === 0) continue;
+		grid[index] = 0;
+
+		savedGrid.set(grid);
+
+		const result = solutionCount(grid);
+		// console.log(result)
+		grid.set(savedGrid);
+		if (result !== 1) {
+			grid[index] = symbol;
+		}
+	}
+
 	for (let i = 0; i < 81; i++) {
 		const index = rndi[i];
 
-		// if (groupCells.has(index)) continue;
+		if (edge.has(index)) continue;
 
 		// const index = i;
 		const symbol = grid[index];
