@@ -281,7 +281,6 @@ const solutionCount = (grid, solutions = 0) => {
 const savedGrid = new Uint8Array(81);
 const rndi = makeArray(81);
 
-let once = 0;
 const sudokuGenerator = (cells, target = 0) => {
 	for (let i = 0; i < 81; i++) grid[i] = 0;
 	for (let i = 0; i < 9; i++) grid[i] = i + 1;
@@ -294,58 +293,123 @@ const sudokuGenerator = (cells, target = 0) => {
 
 	randomize(rndi);
 
-	const edge = new Set();
-	if (target === 1) {
-		let number = Math.floor(Math.random() * 27);
-		const type = Math.floor(number / 9);
-		const x = number % 9;
-
-		if (type === 0) {
-			for (const cell of cells) if (cell.row === x) edge.add(cell.index);
-		}
-		if (type === 1) {
-			for (const cell of cells) if (cell.col === x) edge.add(cell.index);
-		}
-		if (type === 2) {
-			for (const cell of cells) if (cell.box === x) edge.add(cell.index);
-		}
-	}
-
 	operations = 0;
 
-	for (const index of edge) {
-		// const index = i;
-		const symbol = grid[index];
-		if (symbol === 0) continue;
-		grid[index] = 0;
+	if (target === 0) {
+		for (let i = 0; i < 81; i++) {
+			const index = rndi[i];
 
-		savedGrid.set(grid);
+			const symbol = grid[index];
+			if (symbol === 0) continue;
+			grid[index] = 0;
 
-		const result = solutionCount(grid);
-		// console.log(result)
-		grid.set(savedGrid);
-		if (result !== 1) {
-			grid[index] = symbol;
+			savedGrid.set(grid);
+
+			const result = solutionCount(grid);
+			grid.set(savedGrid);
+			if (result !== 1) {
+				grid[index] = symbol;
+			}
 		}
-	}
+	} else {
+		if (target === 1) {
+			const edge = new Set();
 
-	for (let i = 0; i < 81; i++) {
-		const index = rndi[i];
+			let number = Math.floor(Math.random() * 27);
+			const type = Math.floor(number / 9);
+			const x = number % 9;
 
-		if (edge.has(index)) continue;
+			if (type === 0) {
+				for (const cell of cells) if (cell.row === x && Math.random() > 0.1) edge.add(cell.index);
+			}
+			if (type === 1) {
+				for (const cell of cells) if (cell.col === x && Math.random() > 0.1) edge.add(cell.index);
+			}
+			if (type === 2) {
+				for (const cell of cells) if (cell.box === x && Math.random() > 0.1) edge.add(cell.index);
+			}
 
-		// const index = i;
-		const symbol = grid[index];
-		if (symbol === 0) continue;
-		grid[index] = 0;
+			for (const index of edge) {
+				const symbol = grid[index];
+				if (symbol === 0) continue;
+				grid[index] = 0;
 
-		savedGrid.set(grid);
+				savedGrid.set(grid);
 
-		const result = solutionCount(grid);
-		// console.log(result)
-		grid.set(savedGrid);
-		if (result !== 1) {
-			grid[index] = symbol;
+				const result = solutionCount(grid);
+				grid.set(savedGrid);
+				if (result !== 1) {
+					grid[index] = symbol;
+				}
+			}
+
+			for (let i = 0; i < 81; i++) {
+				const index = rndi[i];
+
+				if (edge.has(index)) continue;
+
+				// const index = i;
+				const symbol = grid[index];
+				if (symbol === 0) continue;
+				grid[index] = 0;
+
+				savedGrid.set(grid);
+
+				const result = solutionCount(grid);
+				// console.log(result)
+				grid.set(savedGrid);
+				if (result !== 1) {
+					grid[index] = symbol;
+				}
+			}
+		}
+		if (target === 2) {
+			randomize(rndi);
+
+			const rnd = [];
+			const rndChanceA = Math.random();
+			for (const cell of aCells) {
+				if (Math.random() < rndChanceA) rnd.push(cell);
+			}
+			const rndChanceB = Math.random() + 0.1;
+			for (const cell of bCells) {
+				if (Math.random() < rndChanceB) rnd.push(cell);
+			}
+
+			const rndSet = new Set(rnd);
+			randomize(rnd);
+
+			for (let i = 0; i < 81; i++) {
+				const index = rndi[i];
+				if (rndSet.has(index)) continue;
+
+				const symbol = grid[index];
+				if (symbol === 0) continue;
+				grid[index] = 0;
+
+				savedGrid.set(grid);
+
+				const result = solutionCount(grid);
+				grid.set(savedGrid);
+				if (result !== 1) {
+					grid[index] = symbol;
+				}
+			}
+
+			for (const i of rnd) {
+				const index = rnd[i];
+				const symbol = grid[index];
+				if (symbol === 0) continue;
+				grid[index] = 0;
+
+				savedGrid.set(grid);
+
+				const result = solutionCount(grid);
+				grid.set(savedGrid);
+				if (result !== 1) {
+					grid[index] = symbol;
+				}
+			}
 		}
 	}
 
@@ -365,88 +429,6 @@ const sudokuGenerator = (cells, target = 0) => {
 	return { clueCount: hits, grid, operations };
 }
 
-const sudokuGeneratorPhistomefel = (cells) => {
-
-	if (once % 1 === 0) {
-		for (let i = 0; i < 81; i++) grid[i] = 0;
-		for (let i = 0; i < 9; i++) grid[i] = i + 1;
-	}
-	once++;
-	sodokoSolver(grid);
-
-	if (!isValidGrid(grid)) {
-		console.log("INVALID!");
-		return;
-	}
-
-	randomize(rndi);
-
-	const rnd = [];
-	const rndChanceA = 0;//Math.random() * 2 - 1;
-	for (const cell of aCells) {
-		if (Math.random() < rndChanceA) rnd.push(cell);
-	}
-	const rndChanceB = 0;//Math.random() * 2 - 1;
-	for (const cell of bCells) {
-		if (Math.random() < rndChanceB) rnd.push(cell);
-	}
-
-	const rndSet = new Set(rnd);
-	randomize(rnd);
-
-	for (let i = 0; i < 81; i++) {
-		const index = rndi[i];
-
-		if (rndSet.has(index)) continue;
-
-		// const index = i;
-		const symbol = grid[index];
-		if (symbol === 0) continue;
-		grid[index] = 0;
-
-		savedGrid.set(grid);
-
-		const result = solutionCount(grid);
-		// console.log(result)
-		grid.set(savedGrid);
-		if (result !== 1) {
-			grid[index] = symbol;
-		}
-	}
-
-	for (const i of rnd) {
-		const index = rnd[i];
-		// const index = i;
-		const symbol = grid[index];
-		if (symbol === 0) continue;
-		grid[index] = 0;
-
-		savedGrid.set(grid);
-
-		const result = solutionCount(grid);
-		// console.log(result)
-		grid.set(savedGrid);
-		if (result !== 1) {
-			grid[index] = symbol;
-		}
-	}
-
-	for (let i = 0; i < 81; i++) {
-		const cell = cells[i];
-		cell.setSymbol(grid[i]);
-	}
-
-	let hits = 0;
-	for (let i = 0; i < 81; i++) {
-		if (grid[i] !== 0) {
-			hits++;
-		}
-	}
-	// console.log(hits);
-	totalPuzzles++;
-
-	return { clueCount: hits, grid };
-}
 
 export { totalPuzzles };
-export { sudokuGenerator, sudokuGeneratorPhistomefel, fillSolve, consoleOut };
+export { sudokuGenerator, fillSolve, consoleOut };
