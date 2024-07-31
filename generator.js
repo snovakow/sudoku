@@ -1,5 +1,5 @@
 import { aCells, bCells } from "./solver.js";
-import { generate, candidates, loneSingles, hiddenSingles, omissions, NakedHiddenGroups, uniqueRectangle, yWing, xWing, swordfish, jellyfish, bruteForce, phistomefel, REDUCE } from "./solver.js";
+import { generate, candidates, loneSingles, hiddenSingles, omissions, NakedHiddenGroups, uniqueRectangle, bentWings, xWing, swordfish, jellyfish, bruteForce, phistomefel, REDUCE } from "./solver.js";
 
 const consoleOut = (result) => {
 	const lines = [];
@@ -12,7 +12,7 @@ const consoleOut = (result) => {
 	}
 	lines.push("Deadly Pattern Unique Rectangle: " + result.uniqueRectangleReduced);
 	lines.push("X Wing: " + result.xWingReduced);
-	lines.push("Y Wing: " + result.yWingReduced);
+	lines.push("Y Wing: " + result.bentWingsReduced);
 	lines.push("Swordfish: " + result.swordfishReduced);
 	lines.push("Jellyfish: " + result.jellyfishReduced);
 	lines.push("Phistomefel: " + phistomefelReduced + (phistomefelFilled > 0 ? " + " + phistomefelFilled + " filled" : ""));
@@ -28,14 +28,14 @@ const isFinished = (cells) => {
 	return true;
 }
 
-const fillSolve = (cells, search, reduce = null) => {
+const fillSolve = (cells, search) => {
 	let uniqueRectangleReduced = 0;
 
 	let nakedHiddenSetsReduced = [];
 	let xWingReduced = 0;
 	let swordfishReduced = 0;
 	let jellyfishReduced = 0;
-	let yWingReduced = 0;
+	let bentWingsReduced = 0;
 
 	let phistomefelReduced = 0;
 	let phistomefelFilled = 0;
@@ -59,10 +59,9 @@ const fillSolve = (cells, search, reduce = null) => {
 
 		for (const type in REDUCE) {
 			const strategy = REDUCE[type];
-			if (reduce === strategy) continue;
 
 			switch (strategy) {
-				case REDUCE.Hidden_4:
+				case REDUCE.Naked_5:
 					const result = new NakedHiddenGroups(cells).nakedHiddenSets();
 					if (result) {
 						progress = true;
@@ -78,8 +77,8 @@ const fillSolve = (cells, search, reduce = null) => {
 					if (progress) xWingReduced++;
 					break;
 				case REDUCE.Y_Wing:
-					progress = yWing(cells);
-					if (progress) yWingReduced++;
+					const results = bentWings(cells);
+					if (results.length > 0) bentWingsReduced++;
 					break;
 				case REDUCE.Swordfish:
 					progress = swordfish(cells);
@@ -105,47 +104,6 @@ const fillSolve = (cells, search, reduce = null) => {
 
 		if (progress) continue;
 
-		switch (reduce) {
-			case REDUCE.Hidden_4:
-				const result = new NakedHiddenGroups(cells).nakedHiddenSets();
-				if (result) {
-					progress = true;
-					nakedHiddenSetsReduced.push(result);
-				}
-				break;
-			case REDUCE.UniqueRectangle:
-				progress = uniqueRectangle(cells);
-				if (progress) { uniqueRectangleReduced++; continue; }
-				break;
-			case REDUCE.X_Wing:
-				progress = xWing(cells);
-				if (progress) { xWingReduced++; continue; }
-				break;
-			case REDUCE.Y_Wing:
-				progress = yWing(cells);
-				if (progress) { yWingReduced++; continue; }
-				break;
-			case REDUCE.Swordfish:
-				progress = swordfish(cells);
-				if (progress) { swordfishReduced++; continue; }
-				break;
-			case REDUCE.Jellyfish:
-				progress = jellyfish(cells);
-				if (progress) jellyfishReduced++;
-				break;
-			case REDUCE.Phistomefel:
-				const { reduced, filled } = phistomefel(cells);
-				progress = reduced > 0 || filled > 0;
-				if (progress) {
-					if (reduced > 0) phistomefelReduced++;
-					if (filled > 0) phistomefelFilled++;
-					continue;
-				}
-				break;
-			default:
-				break;
-		}
-
 		bruteForceFill = !isFinished(cells);
 		// bruteForce(board.cells);
 	} while (progress);
@@ -154,7 +112,7 @@ const fillSolve = (cells, search, reduce = null) => {
 		nakedHiddenSetsReduced,
 		uniqueRectangleReduced,
 		xWingReduced,
-		yWingReduced,
+		bentWingsReduced,
 		swordfishReduced,
 		jellyfishReduced,
 		phistomefelReduced,
