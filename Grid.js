@@ -91,6 +91,7 @@ class BaseCell {
 		this.groupBox = [...boxSet];
 		this.groupType = [rowSet, colSet, boxSet];
 		this.group = [...groupSet];
+		this.groupSet = groupSet;
 
 		Object.freeze(this.index);
 		Object.freeze(this.row);
@@ -102,6 +103,7 @@ class BaseCell {
 		Object.freeze(this.boxGroup);
 		Object.freeze(this.groupType);
 		Object.freeze(this.group);
+		Object.freeze(this.groupSet);
 	}
 }
 
@@ -149,6 +151,7 @@ export class CellMarker extends Cell {
 		this.groupBox = baseCell.groupBox;
 		this.groups = baseCell.groups;
 		this.group = baseCell.group;
+		this.groupSet = baseCell.groupSet;
 	}
 
 	toData() {
