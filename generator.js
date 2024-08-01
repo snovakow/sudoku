@@ -12,7 +12,14 @@ const consoleOut = (result) => {
 	}
 	lines.push("Deadly Pattern Unique Rectangle: " + result.uniqueRectangleReduced);
 	lines.push("X Wing: " + result.xWingReduced);
-	lines.push("Y Wing: " + result.bentWingsReduced);
+	let yWings = 0;
+	let xyzWings = 0;
+	for (const reduced of result.bentWingsReduced) {
+		if (reduced.strategy === REDUCE.Y_Wing) yWings++;
+		if (reduced.strategy === REDUCE.XYZ_Wing) xyzWings++;
+	}
+	lines.push("Y Wing: " + yWings);
+	lines.push("XYZ Wing: " + xyzWings);
 	lines.push("Swordfish: " + result.swordfishReduced);
 	lines.push("Jellyfish: " + result.jellyfishReduced);
 	lines.push("Phistomefel: " + phistomefelReduced + (phistomefelFilled > 0 ? " + " + phistomefelFilled + " filled" : ""));
@@ -35,7 +42,7 @@ const fillSolve = (cells, search) => {
 	let xWingReduced = 0;
 	let swordfishReduced = 0;
 	let jellyfishReduced = 0;
-	let bentWingsReduced = 0;
+	let bentWingsReduced = [];
 
 	let phistomefelReduced = 0;
 	let phistomefelFilled = 0;
@@ -78,7 +85,10 @@ const fillSolve = (cells, search) => {
 					break;
 				case REDUCE.Y_Wing:
 					const results = bentWings(cells);
-					if (results.length > 0) bentWingsReduced++;
+					if (results.length > 0) {
+						progress = true;
+						bentWingsReduced.push(...results);
+					}
 					break;
 				case REDUCE.Swordfish:
 					progress = swordfish(cells);
