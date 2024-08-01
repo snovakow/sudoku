@@ -1,19 +1,21 @@
 import { CellMarker, Grid } from "./Grid.js";
 import { sudokuGenerator, fillSolve, totalPuzzles } from "./generator.js";
+import { REDUCE } from "./solver.js";
 
 const cells = new Grid();
 
 for (const index of Grid.indices) cells[index] = new CellMarker(index);
 
-let hiddenSets2 = 0;
-let hiddenSets3 = 0;
 let nakedSets2 = 0;
 let nakedSets3 = 0;
 let nakedSets4 = 0;
-let nakedSets5 = 0;
+let hiddenSets2 = 0;
+let hiddenSets3 = 0;
+let hiddenSets4 = 0;
 let uniqueRectangleReduced = 0;
 let xWingReduced = 0;
-let bentWingsReduced = 0;
+let yWingReduced = 0;
+let xyzWingReduced = 0;
 let swordfishReduced = 0;
 let jellyfishReduced = 0;
 let phistomefelCount = 0;
@@ -77,7 +79,7 @@ const step = (search) => {
 		simple &&= result.nakedHiddenSetsReduced.length === 0;
 		simple &&= result.uniqueRectangleReduced === 0;
 		simple &&= result.xWingReduced === 0;
-		simple &&= result.bentWingsReduced === 0;
+		simple &&= result.bentWingsReduced.length === 0;
 		simple &&= result.swordfishReduced === 0;
 		simple &&= result.jellyfishReduced === 0;
 		simple &&= !phistomefelResult;
@@ -89,14 +91,19 @@ const step = (search) => {
 					if (!set.hidden && set.size === 2) nakedSets2++;
 					if (!set.hidden && set.size === 3) nakedSets3++;
 					if (!set.hidden && set.size === 4) nakedSets4++;
-					if (!set.hidden && set.size === 5) nakedSets5++;
 					if (set.hidden && set.size === 2) hiddenSets2++;
 					if (set.hidden && set.size === 3) hiddenSets3++;
+					if (set.hidden && set.size === 4) hiddenSets4++;
 				}
 			}
 			if (result.uniqueRectangleReduced > 0) uniqueRectangleReduced++;
 			if (result.xWingReduced > 0) xWingReduced++;
-			if (result.bentWingsReduced > 0) bentWingsReduced++;
+			if (result.bentWingsReduced.length > 0) {
+				for (const reduced of result.bentWingsReduced) {
+					if (reduced.strategy === REDUCE.Y_Wing) yWingReduced++;
+					if (reduced.strategy === REDUCE.XYZ_Wing) xyzWingReduced++;
+				}
+			}
 			if (result.swordfishReduced > 0) swordfishReduced++;
 			if (result.jellyfishReduced > 0) jellyfishReduced++;
 			if (phistomefelResult) phistomefelCount++;
@@ -116,11 +123,12 @@ const step = (search) => {
 		markerTotal += swordfishReduced;
 		markerTotal += jellyfishReduced;
 		markerTotal += xWingReduced;
-		markerTotal += bentWingsReduced;
+		markerTotal += yWingReduced;
+		markerTotal += xyzWingReduced;
 		markerTotal += uniqueRectangleReduced;
+		markerTotal += hiddenSets4;
 		markerTotal += hiddenSets3;
 		markerTotal += hiddenSets2;
-		markerTotal += nakedSets5;
 		markerTotal += nakedSets4;
 		markerTotal += nakedSets3;
 		markerTotal += nakedSets2;
@@ -129,9 +137,9 @@ const step = (search) => {
 		setsTotal += nakedSets2;
 		setsTotal += nakedSets3;
 		setsTotal += nakedSets4;
-		setsTotal += nakedSets5;
 		setsTotal += hiddenSets2;
 		setsTotal += hiddenSets3;
+		setsTotal += hiddenSets4;
 
 		const lines = [];
 		lines.push("-----");
@@ -141,11 +149,12 @@ const step = (search) => {
 			lines.push("NakedSet4: " + percent(nakedSets4, markerTotal) + " " + percent((nakedSets4 / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("HiddenSet2: " + percent(hiddenSets2, markerTotal) + " " + percent((hiddenSets2 / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("HiddenSet3: " + percent(hiddenSets3, markerTotal) + " " + percent((hiddenSets3 / markerTotal) * (markers / totalPuzzles), 1));
-			lines.push("NakedSet5: " + percent(nakedSets5, markerTotal) + " " + percent((nakedSets5 / markerTotal) * (markers / totalPuzzles), 1));
+			lines.push("HiddenSet4: " + percent(hiddenSets4, markerTotal) + " " + percent((hiddenSets4 / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("NakedHiddenSet: " + percent(setsTotal, markerTotal) + " " + percent((setsTotal / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("UniqueRectangle: " + percent(uniqueRectangleReduced, markerTotal) + " " + percent((uniqueRectangleReduced / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("xWing: " + percent(xWingReduced, markerTotal) + " " + percent((xWingReduced / markerTotal) * (markers / totalPuzzles), 1));
-			lines.push("yWing: " + percent(bentWingsReduced, markerTotal) + " " + percent((bentWingsReduced / markerTotal) * (markers / totalPuzzles), 1));
+			lines.push("yWing: " + percent(yWingReduced, markerTotal) + " " + percent((yWingReduced / markerTotal) * (markers / totalPuzzles), 1));
+			lines.push("xyzWing: " + percent(xyzWingReduced, markerTotal) + " " + percent((xyzWingReduced / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("Swordfish: " + percent(swordfishReduced, markerTotal) + " " + percent((swordfishReduced / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("Jellyfish: " + percent(jellyfishReduced, markerTotal) + " " + percent((jellyfishReduced / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("Phistomefel: " + percent(phistomefelCount, markerTotal) + " " + percent((phistomefelCount / markerTotal) * (markers / totalPuzzles), 1));
