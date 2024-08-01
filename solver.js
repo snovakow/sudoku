@@ -5,9 +5,9 @@ const REDUCE = {
 	Naked_2: reduce_i++,
 	Naked_3: reduce_i++,
 	Naked_4: reduce_i++,
-	Naked_5: reduce_i++,
 	Hidden_2: reduce_i++,
 	Hidden_3: reduce_i++,
+	Hidden_4: reduce_i++,
 	UniqueRectangle: reduce_i++,
 	X_Wing: reduce_i++,
 	Y_Wing: reduce_i++,
@@ -185,9 +185,22 @@ class SetUnion {
 	}
 }
 
+class NakedHiddenResult {
+	constructor(size, hidden, max) {
+		if (hidden) {
+			this.nakedSize = max - size;
+			this.hiddenSize = size;
+		} else {
+			this.nakedSize = size;
+			this.hiddenSize = max - size;
+		}
+		this.max = max;
+	}
+}
 class NakedHiddenGroups {
 	constructor(cells) {
 		this.groupSets = [];
+		this.cells = cells;
 		for (const groupType of Grid.groupTypes) {
 			const sets = [];
 
@@ -198,17 +211,6 @@ class NakedHiddenGroups {
 			}
 			if (sets.length >= 3) this.groupSets.push(sets);
 		}
-	}
-	nakedSingle() {
-		let reduced = false;
-		for (const sets of this.groupSets) {
-			for (const cell of sets) {
-				if (cell.size !== 1) continue;
-				cell.setSymbol(cell.remainder);
-				reduced = true;
-			}
-		}
-		return reduced;
 	}
 	nakedPair() {
 		const union = new SetUnion();
@@ -236,11 +238,11 @@ class NakedHiddenGroups {
 							if (cell.delete(x)) reduced = true;
 						}
 					}
-					if (reduced) return true;
+					if (reduced) return new NakedHiddenResult(2, false, len);
 				}
 			}
 		}
-		return false;
+		return null;
 	}
 	nakedTriple() {
 		const union = new SetUnion();
@@ -271,12 +273,12 @@ class NakedHiddenGroups {
 								if (cell.delete(x)) reduced = true;
 							}
 						}
-						if (reduced) return true;
+						if (reduced) return new NakedHiddenResult(3, false, len);
 					}
 				}
 			}
 		}
-		return false;
+		return null;
 	}
 	nakedQuad() {
 		const union = new SetUnion();
@@ -310,19 +312,19 @@ class NakedHiddenGroups {
 									if (cell.delete(x)) reduced = true;
 								}
 							}
-							if (reduced) return true;
+							if (reduced) return new NakedHiddenResult(4, false, len);
 						}
 					}
 				}
 			}
 		}
-		return false;
+		return null;
 	}
 	hiddenPair() {
 		const union = new SetUnion();
 		for (const sets of this.groupSets) {
 			const len = sets.length;
-			if (len <= 6) continue;
+			if (len <= 2) continue;
 
 			const len_1 = len - 1;
 
@@ -344,17 +346,17 @@ class NakedHiddenGroups {
 						reduced = cell1.delete(x) || reduced;
 						reduced = cell2.delete(x) || reduced;
 					}
-					if (reduced) return true;
+					if (reduced) return new NakedHiddenResult(2, true, len);
 				}
 			}
 		}
-		return false;
+		return null;
 	}
 	hiddenTriple() {
 		const union = new SetUnion();
 		for (const sets of this.groupSets) {
 			const len = sets.length;
-			if (len <= 8) continue;
+			if (len <= 3) continue;
 
 			const len_1 = len - 1;
 			const len_2 = len - 2;
@@ -380,18 +382,18 @@ class NakedHiddenGroups {
 							reduced = cell2.delete(x) || reduced;
 							reduced = cell3.delete(x) || reduced;
 						}
-						if (reduced) return true;
+						if (reduced) return new NakedHiddenResult(3, true, len);
 					}
 				}
 			}
 		}
-		return false;
+		return null;
 	}
 	hiddenQuad() {
 		const union = new SetUnion();
 		for (const sets of this.groupSets) {
 			const len = sets.length;
-			if (len <= 7) continue;
+			if (len <= 4) continue;
 
 			const len_1 = len - 1;
 			const len_2 = len - 2;
@@ -421,13 +423,13 @@ class NakedHiddenGroups {
 								reduced = cell3.delete(x) || reduced;
 								reduced = cell4.delete(x) || reduced;
 							}
-							if (reduced) return true;
+							if (reduced) return new NakedHiddenResult(4, true, len);
 						}
 					}
 				}
 			}
 		}
-		return false;
+		return null;
 	}
 	nakedHiddenSets() {
 		// 9  4 4 = 8 53
@@ -438,13 +440,20 @@ class NakedHiddenGroups {
 		// 4  2 0 = 2 31
 		// 3  0 0 = 0 21
 
-		if (this.nakedPair()) return { hidden: false, size: 2 };
-		if (this.nakedTriple()) return { hidden: false, size: 3 };
-		if (this.nakedQuad()) return { hidden: false, size: 4 };
-		if (this.hiddenQuad()) return { hidden: false, size: 5 }; // Naked Quint
+		let reduced;
+		reduced = this.nakedPair();
+		if (reduced) return { hidden: false, size: 2, ...reduced };
+		reduced = this.nakedTriple();
+		if (reduced) return { hidden: false, size: 3, ...reduced };
+		reduced = this.nakedQuad();
+		if (reduced) return { hidden: false, size: 4, ...reduced };
 
-		if (this.hiddenPair()) return { hidden: true, size: 2 };
-		if (this.hiddenTriple()) return { hidden: true, size: 3 };
+		reduced = this.hiddenPair();
+		if (reduced) return { hidden: true, size: 2, ...reduced };
+		reduced = this.hiddenTriple();
+		if (reduced) return { hidden: true, size: 3, ...reduced };
+		reduced = this.hiddenQuad();
+		if (reduced) return { hidden: true, size: 4, ...reduced };
 		return null;
 	}
 }
@@ -696,9 +705,9 @@ const jellyfish = (cells) => {
 	return reduced;
 }
 
-class Result {
-	constructor(strategy, symbol, cells) {
-		this.strategy = strategy;
+class BentWingResult {
+	constructor(symbol, cells, xyz) {
+		this.strategy = xyz ? REDUCE.XYZ_Wing : REDUCE.Y_Wing;
 		this.symbol = symbol;
 		this.cells = cells;
 	}
@@ -752,7 +761,7 @@ const bentWings = (cells) => {
 
 	const pairLen_0 = pairCells.length;
 	const pairLen_1 = pairLen_0 - 1;
-	const processWing = (pairs, triples) => {
+	const processWing = (pairs, triples = null) => {
 		for (let i1 = 0; i1 < pairLen_1; i1++) {
 			const pair1 = pairs[i1];
 			for (let i2 = i1 + 1; i2 < pairLen_0; i2++) {
@@ -785,6 +794,8 @@ const bentWings = (cells) => {
 
 				const overlaps = new Set();
 				for (const i of pair1.cell.group) {
+					const cell = cells[i];
+					if (cell.symbol !== 0) continue;
 					if (pair2.cell.groupSet.has(i)) overlaps.add(i);
 				}
 				if (overlaps.size > 0) {
@@ -810,8 +821,8 @@ const bentWings = (cells) => {
 						}
 					}
 					if (reduced.length > 0) {
-						if (triples) results.push(new Result(REDUCE.XYZ_Wing, common, reduced));
-						else results.push(new Result(REDUCE.Y_Wing, common, reduced));
+						if (triples) results.push(new BentWingResult(common, reduced, true));
+						else results.push(new BentWingResult(common, reduced, false));
 					}
 				}
 			}
@@ -1202,6 +1213,6 @@ const generate = (cells) => {
 }
 
 export {
-	REDUCE, generate, candidates, loneSingles, hiddenSingles, omissions, uniqueRectangle, NakedHiddenGroups, bentWings, xWing, swordfish, jellyfish,
-	phistomefel, bruteForce
+	REDUCE, generate, candidates, loneSingles, hiddenSingles, omissions, NakedHiddenGroups, bentWings, xWing, swordfish, jellyfish,
+	uniqueRectangle, phistomefel, bruteForce
 };
