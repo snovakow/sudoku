@@ -95,7 +95,7 @@ const step = (search) => {
 					else if (set.hiddenSize === 2) hiddenSets2++;
 					else if (set.hiddenSize === 3) hiddenSets3++;
 
-					if (set.nakedSize > 5) {
+					if (set.nakedSize > 5 && set.max === 9) {
 						console.log("Hidden ----- " + set.hiddenSize + " of " + set.max);
 						console.log(test);
 						console.log("Hidden -----");
