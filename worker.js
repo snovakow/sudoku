@@ -95,10 +95,10 @@ const step = (search) => {
 					else if (set.hiddenSize === 2) hiddenSets2++;
 					else if (set.hiddenSize === 3) hiddenSets3++;
 
-					if (set.nakedSize === 5 && !(set.nakedSize === 5 && set.max < 9)) { // not 5/7 5/8
-						console.log("Naked 5 ----- " + set.nakedSize + " of " + set.max);
+					if (set.nakedSize > 5) {
+						console.log("Hidden ----- " + set.hiddenSize + " of " + set.max);
 						console.log(test);
-						console.log("Naked 5 -----");
+						console.log("Hidden -----");
 					}
 				}
 			}
@@ -187,23 +187,23 @@ onmessage = (e) => {
 	step(search);
 };
 
-// NakedSet2: 37.057% 4.81%
-// NakedSet3: 14.859% 1.928%
-// NakedSet4: 4.507% 0.585%
-// NakedSet5: 0.698% 0.091%
-// HiddenSet2: 0.164% 0.021%
-// HiddenSet3: 0.006% 0.001%
-// NakedHiddenSet: 57.29% 7.436%
-// yWing: 28.95% 3.757%
-// xyzWing: 7.036% 0.913%
-// xWing: 2.062% 0.268%
-// Swordfish: 0.461% 0.06%
-// Jellyfish: 0.021% 0.003%
-// UniqueRectangle: 4.179% 0.542%
+// NakedSet2: 37.108% 4.849%
+// NakedSet3: 15.026% 1.963%
+// NakedSet4: 4.535% 0.593%
+// NakedSet5: 0.603% 0.079%
+// HiddenSet2: 0.186% 0.024%
+// HiddenSet3: 0.005% 0.001%
+// NakedHiddenSet: 57.464% 7.508%
+// yWing: 29.072% 3.799%
+// xyzWing: 6.867% 0.897%
+// xWing: 1.907% 0.249%
+// Swordfish: 0.466% 0.061%
+// Jellyfish: 0.016% 0.002%
+// UniqueRectangle: 4.207% 0.55%
 // Phistomefel: 0% 0%
-// Simples: 54.315%
-// Markers: 12.979%
-// BruteForceFill: 32.706%
-// Time Avg < 100000: 66.04253489751038fps Avg: 0.22907290090659316 Max: 36.29090000009537
-// Operations: 14.293% < 100000 avg: 990943
-// TotalPuzzles: 110000
+// Simples: 53.98%
+// Markers: 13.066%
+// BruteForceFill: 32.954%
+// Time Avg < 100000: 65.75330862555371fps Avg: 0.22744786999756433 Max: 71.31880000019073
+// Operations: 14.406% < 100000 avg: 982177
+// TotalPuzzles: 250000
