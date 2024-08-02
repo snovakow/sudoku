@@ -9,9 +9,10 @@ for (const index of Grid.indices) cells[index] = new CellMarker(index);
 let nakedSets2 = 0;
 let nakedSets3 = 0;
 let nakedSets4 = 0;
-let nakedSets5 = 0;
 let hiddenSets2 = 0;
 let hiddenSets3 = 0;
+let hiddenSets4 = 0;
+let nakedSets5 = 0;
 let yWingReduced = 0;
 let xyzWingReduced = 0;
 let xWingReduced = 0;
@@ -32,7 +33,7 @@ let percentOps = 0;
 let totalOps = 0;
 
 const step = (search) => {
-	const logPeriod = 10000;
+	const logPeriod = 100;
 
 	let time = performance.now();
 
@@ -91,15 +92,11 @@ const step = (search) => {
 					if (set.nakedSize === 2) nakedSets2++;
 					else if (set.nakedSize === 3) nakedSets3++;
 					else if (set.nakedSize === 4) nakedSets4++;
-					else if (set.nakedSize === 5) nakedSets5++;
 					else if (set.hiddenSize === 2) hiddenSets2++;
 					else if (set.hiddenSize === 3) hiddenSets3++;
+					else if (set.hiddenSize === 4) hiddenSets4++;
 
-					if (set.nakedSize > 5 && set.max === 9) {
-						console.log("Hidden ----- " + set.hiddenSize + " of " + set.max);
-						console.log(test);
-						console.log("Hidden -----");
-					}
+					if (set.nakedSize === 5) nakedSets5++;
 				}
 			}
 			if (result.bentWingsReduced.length > 0) {
@@ -128,9 +125,9 @@ const step = (search) => {
 		markerTotal += nakedSets2;
 		markerTotal += nakedSets3;
 		markerTotal += nakedSets4;
-		markerTotal += nakedSets5;
 		markerTotal += hiddenSets2;
 		markerTotal += hiddenSets3;
+		markerTotal += hiddenSets4;
 		markerTotal += yWingReduced;
 		markerTotal += xyzWingReduced;
 		markerTotal += xWingReduced;
@@ -143,9 +140,9 @@ const step = (search) => {
 		setsTotal += nakedSets2;
 		setsTotal += nakedSets3;
 		setsTotal += nakedSets4;
-		setsTotal += nakedSets5;
 		setsTotal += hiddenSets2;
 		setsTotal += hiddenSets3;
+		setsTotal += hiddenSets4;
 
 		const lines = [];
 		lines.push("-----");
@@ -153,9 +150,10 @@ const step = (search) => {
 			lines.push("NakedSet2: " + percent(nakedSets2, markerTotal) + " " + percent((nakedSets2 / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("NakedSet3: " + percent(nakedSets3, markerTotal) + " " + percent((nakedSets3 / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("NakedSet4: " + percent(nakedSets4, markerTotal) + " " + percent((nakedSets4 / markerTotal) * (markers / totalPuzzles), 1));
-			lines.push("NakedSet5: " + percent(nakedSets5, markerTotal) + " " + percent((nakedSets5 / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("HiddenSet2: " + percent(hiddenSets2, markerTotal) + " " + percent((hiddenSets2 / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("HiddenSet3: " + percent(hiddenSets3, markerTotal) + " " + percent((hiddenSets3 / markerTotal) * (markers / totalPuzzles), 1));
+			lines.push("HiddenSet4: " + percent(hiddenSets4, markerTotal) + " " + percent((hiddenSets4 / markerTotal) * (markers / totalPuzzles), 1));
+			lines.push("NakedSet5: " + percent(nakedSets5, markerTotal) + " " + percent((nakedSets5 / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("NakedHiddenSet: " + percent(setsTotal, markerTotal) + " " + percent((setsTotal / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("yWing: " + percent(yWingReduced, markerTotal) + " " + percent((yWingReduced / markerTotal) * (markers / totalPuzzles), 1));
 			lines.push("xyzWing: " + percent(xyzWingReduced, markerTotal) + " " + percent((xyzWingReduced / markerTotal) * (markers / totalPuzzles), 1));
