@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+
+	<script type="module">
+		const body = document.createElement('div');
+
+		body.style.fontFamily = "'Courier New', monospace";
+
+		const generateButton = document.createElement('button');
+		generateButton.appendChild(document.createTextNode("+"));
+		generateButton.style.top = '8px';
+		generateButton.style.right = '8px';
+		generateButton.style.position = 'absolute';
+		generateButton.style.width = '32px';
+		generateButton.style.height = '32px';
+
+		let worker = null;
+		generateButton.addEventListener('click', () => {
+			if (worker) {
+				worker.terminate();
+				worker = null;
+			} else {
+				worker = new Worker("worker.js", { type: "module" });
+				worker.postMessage({ search: window.location.search });
+				worker.onmessage = (e) => {
+					if (e.data.message) {
+						while (body.firstChild) body.removeChild(body.lastChild);
+						for (const line of e.data.message) {
+							const stat = document.createElement('div');
+							stat.appendChild(document.createTextNode(line));
+							body.appendChild(stat);
+						}
+					}
+				};
+			}
+		});
+
+		document.body.appendChild(generateButton);
+		document.body.appendChild(body);
+	</script>
+
+</head>
+
+<body></body>
+
+</html>
