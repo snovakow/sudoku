@@ -163,14 +163,12 @@ const raws = [
 	'120000709800000400050090203007060900000000004060001002080070000040630000500100000'.split(''),
 	"H2/8 N642",
 	'000000080008093600000001003000009000090608104007200000010300070080000200032000548'.split(''),
-	"H2/8 N6 2YWing",
-	'020006000060089350005000000500902407000000000009070008370000800004000900206010004'.split(''),
-	"H3/9 N64222 rare",
-	'003400709007301040000009050000000000900020000000907430004160003300000007250000600'.split(''),
+	// "H3/9 N64222 rare",
+	// '003400709007301040000009050000000000900020000000907430004160003300000007250000600'.split(''),
 	// "H2/9 N7 rare",
 	// '123050700000000406000000000005670200210005000000800004000000000476300100800760002'.split(''),
-	"H2/9 N7 rare",
-	'003050000040100200678000000000000057010000803000900100004070308000000900002040060'.split(''),
+	// "H2/9 N7 Deadly N22 rare",
+	// '003050000040100200678000000000000057010000803000900100004070308000000900002040060'.split(''),
 	// "XY-Chains",
 	// '000050080059008600000703200002000000000604570000070006000045000000007140930000800'.split(''),
 	// "Simple Colouring",
@@ -433,38 +431,8 @@ markerButton.addEventListener('click', () => {
 });
 document.body.appendChild(markerButton);
 
-const generateButton = document.createElement('button');
-generateButton.appendChild(document.createTextNode("+"));
-generateButton.style.position = 'absolute';
-generateButton.style.width = '32px';
-generateButton.style.height = '32px';
-
-let worker = null;
-generateButton.addEventListener('click', () => {
-	if (worker) {
-		worker.terminate();
-		worker = null;
-	} else {
-		try {
-			worker = new Worker("worker.js", { type: "module" });
-			worker.postMessage({ cells: board.cells.toData(), search: window.location.search });
-			worker.onmessage = (e) => {
-				board.cells.fromData(e.data.cells);
-				if (e.data.message) {
-					for (const line of e.data.message) console.log(line);
-				}
-				draw();
-			};
-		} catch (error) {
-			console.error(error);
-		}
-	}
-});
-document.body.appendChild(generateButton);
-
 selector.style.transform = 'translateX(-50%)';
 clearButton.style.transform = 'translateX(-50%)';
-generateButton.style.transform = 'translateX(-50%)';
 markerButton.style.transform = 'translateX(-50%)';
 
 markerButton.style.touchAction = "manipulation";
@@ -491,9 +459,6 @@ const resize = () => {
 		selector.style.bottom = '288px';
 		selector.style.left = '96px';
 
-		generateButton.style.bottom = '240px';
-		generateButton.style.left = '96px';
-
 		clearButton.style.bottom = '200px';
 		clearButton.style.left = '96px';
 	} else {
@@ -514,9 +479,6 @@ const resize = () => {
 
 		selector.style.bottom = '96px';
 		selector.style.left = '50%';
-
-		generateButton.style.bottom = '48px';
-		generateButton.style.left = '50%';
 
 		clearButton.style.bottom = '8px';
 		clearButton.style.left = '50%';
