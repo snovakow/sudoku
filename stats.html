@@ -19,6 +19,17 @@
 		generateButton.style.width = '32px';
 		generateButton.style.height = '32px';
 
+		const dataStore = [];
+		const writeData = (count) => {
+			const link = document.createElement("a");
+			const file = new Blob([dataStore.join('\n')], { type: 'text/plain' });
+			link.href = URL.createObjectURL(file);
+			link.download = `sudokus${count}.txt`;
+			link.click();
+			URL.revokeObjectURL(link.href);
+			dataStore.length = 0;
+		};
+
 		let worker = null;
 		generateButton.addEventListener('click', () => {
 			if (worker) {
@@ -28,9 +39,15 @@
 				worker = new Worker("worker.js", { type: "module" });
 				worker.postMessage({ search: window.location.search });
 				worker.onmessage = (e) => {
-					if (e.data.message) {
+					const data = e.data;
+					dataStore.push(data.puzzle);
+					if (data.totalPuzzles % 100000 === 0) {
+						writeData(data.totalPuzzles);
+					}
+
+					if (data.message) {
 						while (body.firstChild) body.removeChild(body.lastChild);
-						for (const line of e.data.message) {
+						for (const line of data.message) {
 							const stat = document.createElement('div');
 							stat.appendChild(document.createTextNode(line));
 							body.appendChild(stat);
