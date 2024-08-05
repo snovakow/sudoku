@@ -59,8 +59,9 @@ const step = (search) => {
 	if (search === "?phist") mode = 2;
 
 	const { clueCount, grid, operations } = sudokuGenerator(cells, mode);
-	const test = cells.string();
 	const data = {
+		puzzle: cells.string(),
+		totalPuzzles: totalPuzzles,
 		cells: cells.toData(),
 		message: null
 	};
@@ -87,11 +88,11 @@ const step = (search) => {
 		bruteForceFill++;
 	} else {
 		const phistomefelResult = (result.phistomefelReduced > 0 || result.phistomefelFilled > 0);
-		if (phistomefelResult && result.bentWingsReduced.length === 0) {
-			console.log("Phistomefel -----");
-			console.log(test);
-			console.log("Phistomefel -----");
-		}
+		// if (phistomefelResult && result.bentWingsReduced.length === 0) {
+		// 	console.log("Phistomefel -----");
+		// 	console.log(test);
+		// 	console.log("Phistomefel -----");
+		// }
 
 		let simple = true;
 		simple &&= result.nakedHiddenSetsReduced.length === 0;
@@ -212,42 +213,55 @@ const step = (search) => {
 	const lines = [];
 	if (markerTotal > 0) {
 		const printLine = (title, val) => {
-			lines.push(title + ": " + percent(val, markerTotal) + " " + percent((val / markerTotal) * (markers / totalPuzzles), 1));
+			lines.push(title + ": " + percent(val, markerTotal) + " " + percent((val / markerTotal) * (markers / totalPuzzles), 1) + " - " + val);
 		};
-		printLine("set5_2_3", set5_2_3);
-		printLine("set4_2_2", set4_2_2);
-		printLine("set6_2_4", set6_2_4);
-		printLine("set5_3_2", set5_3_2);
-		printLine("set6_3_3", set6_3_3);
-		printLine("set7_2_5", set7_2_5);
-		printLine("set6_4_2", set6_4_2);
-		printLine("set7_3_4", set7_3_4);
-		printLine("set7_4_3", set7_4_3);
-		printLine("set7_5_2", set7_5_2);
-		printLine("set8_2_6", set8_2_6);
-		printLine("set8_3_5", set8_3_5);
-		printLine("set8_4_4", set8_4_4);
-		printLine("set8_5_3", set8_5_3);
-		printLine("set8_6_2", set8_6_2);
-		printLine("set9_2_7", set9_2_7);
-		printLine("set9_3_6", set9_3_6);
-		printLine("set9_4_5", set9_4_5);
-		printLine("set9_5_4", set9_5_4);
-		printLine("set9_6_3", set9_6_3);
-		printLine("set9_7_2", set9_7_2);
+		const SetOrder = class {
+			constructor(key, value) {
+				this.key = key;
+				this.value = value;
+			}
+		}
+		const ordered = [
+			new SetOrder("set5_2_3", set5_2_3),
+			new SetOrder("set4_2_2", set4_2_2),
+			new SetOrder("set6_2_4", set6_2_4),
+			new SetOrder("set5_3_2", set5_3_2),
+			new SetOrder("set6_3_3", set6_3_3),
+			new SetOrder("set6_4_2", set6_4_2),
+			new SetOrder("set7_2_5", set7_2_5),
+			new SetOrder("set7_3_4", set7_3_4),
+			new SetOrder("set7_4_3", set7_4_3),
+			new SetOrder("set7_5_2", set7_5_2),
+			new SetOrder("set8_2_6", set8_2_6),
+			new SetOrder("set8_3_5", set8_3_5),
+			new SetOrder("set8_4_4", set8_4_4),
+			new SetOrder("set8_5_3", set8_5_3),
+			new SetOrder("set8_6_2", set8_6_2),
+			new SetOrder("set9_2_7", set9_2_7),
+			new SetOrder("set9_3_6", set9_3_6),
+			new SetOrder("set9_4_5", set9_4_5),
+			new SetOrder("set9_6_3", set9_6_3),
+			new SetOrder("set9_7_2", set9_7_2),
+			new SetOrder("set9_5_4", set9_5_4),
+		];
+		ordered.sort((a, b) => {
+			return b.value - a.value;
+		});
 
-		lines.push("NakedHiddenSet: " + percent(setsTotal, markerTotal) + " " + percent((setsTotal / markerTotal) * (markers / totalPuzzles), 1));
-		lines.push("yWing: " + percent(yWingReduced, markerTotal) + " " + percent((yWingReduced / markerTotal) * (markers / totalPuzzles), 1));
-		lines.push("xyzWing: " + percent(xyzWingReduced, markerTotal) + " " + percent((xyzWingReduced / markerTotal) * (markers / totalPuzzles), 1));
-		lines.push("xWing: " + percent(xWingReduced, markerTotal) + " " + percent((xWingReduced / markerTotal) * (markers / totalPuzzles), 1));
-		lines.push("Swordfish: " + percent(swordfishReduced, markerTotal) + " " + percent((swordfishReduced / markerTotal) * (markers / totalPuzzles), 1));
-		lines.push("Jellyfish: " + percent(jellyfishReduced, markerTotal) + " " + percent((jellyfishReduced / markerTotal) * (markers / totalPuzzles), 1));
-		lines.push("UniqueRectangle: " + percent(uniqueRectangleReduced, markerTotal) + " " + percent((uniqueRectangleReduced / markerTotal) * (markers / totalPuzzles), 1));
-		lines.push("Phistomefel: " + percent(phistomefelCount, markerTotal) + " " + percent((phistomefelCount / markerTotal) * (markers / totalPuzzles), 1));
+		for (const order of ordered) printLine(order.key, order.value);
+
+		printLine("NakedHiddenSet", setsTotal);
+		printLine("yWing", yWingReduced);
+		printLine("xyzWing", xyzWingReduced);
+		printLine("xWing", xWingReduced);
+		printLine("Swordfish", swordfishReduced);
+		printLine("Jellyfish", jellyfishReduced);
+		printLine("UniqueRectangle", uniqueRectangleReduced);
+		// printLine("Phistomefel", phistomefelCount);
 	}
-	lines.push("Simples: " + percent(simples));
-	lines.push("Markers: " + percent(markers));
-	lines.push("BruteForceFill: " + percent(bruteForceFill));
+	lines.push("Simples: " + percent(simples) + " - " + simples);
+	lines.push("Markers: " + percent(markers) + " - " + markers);
+	lines.push("BruteForceFill: " + percent(bruteForceFill) + " - " + bruteForceFill);
 	const opTime = percentTime > 0 ? (1000 * percentOps) / percentTime : 0;
 	lines.push("Time Avg < " + cap + ": " + opTime + "fps Avg: " + totalTime / 1000 / totalPuzzles + " Max: " + maxTime / 1000);
 	lines.push("Operations: " + percent(percentOps) + " < " + cap + " avg: " + Math.round(totalOps / totalPuzzles));
@@ -286,38 +300,74 @@ onmessage = (e) => {
 // Operations: 14.406% < 100000 avg: 982177
 // TotalPuzzles: 250000
 
-// set5_2_3: 12.783% 1.688%
-// set4_2_2: 11.244% 1.485%
-// set6_2_4: 8.846% 1.168%
-// set5_3_2: 6.838% 0.903%
-// set6_3_3: 5.801% 0.766%
-// set7_2_5: 3.201% 0.423%
-// set6_4_2: 2.712% 0.358%
-// set7_3_4: 2.145% 0.283%
-// set7_4_3: 1.317% 0.174%
-// set7_5_2: 0.587% 0.077%
-// set8_2_6: 0.535% 0.071%
-// set8_3_5: 0.3% 0.04%
-// set8_4_4: 0.313% 0.041%
-// set8_5_3: 0.111% 0.015%
-// set8_6_2: 0.117% 0.015%
-// set9_2_7: 0.059% 0.008%
-// set9_3_6: 0.013% 0.002%
-// set9_4_5: 0.033% 0.004%
-// set9_5_4: 0% 0%
-// set9_6_3: 0.007% 0.001%
-// set9_7_2: 0.013% 0.002%
-// NakedHiddenSet: 56.972% 7.523%
-// yWing: 29.783% 3.933%
-// xyzWing: 6.805% 0.899%
-// xWing: 1.916% 0.253%
-// Swordfish: 0.476% 0.063%
-// Jellyfish: 0.02% 0.003%
-// UniqueRectangle: 4.028% 0.532%
+// set5_2_3: 13.5067% 1.7535%
+// set4_2_2: 11.3721% 1.4764%
+// set6_2_4: 9.1872% 1.1927%
+// set5_3_2: 6.9146% 0.8977%
+// set6_3_3: 5.4437% 0.7067%
+// set7_2_5: 2.9866% 0.3877%
+// set6_4_2: 2.4459% 0.3175%
+// set7_3_4: 2.116% 0.2747%
+// set7_5_2: 1.5772% 0.2048%
+// set8_2_6: 0.5779% 0.075%
+// set7_4_3: 0.5649% 0.0733%
+// set8_6_2: 0.4176% 0.0542%
+// set8_3_5: 0.3691% 0.0479%
+// set8_5_3: 0.1603% 0.0208%
+// set8_4_4: 0.0802% 0.0104%
+// set9_2_7: 0.0447% 0.0058%
+// set9_7_2: 0.0391% 0.0051%
+// set9_3_6: 0.0261% 0.0034%
+// set9_6_3: 0.0112% 0.0015%
+// set9_4_5: 0.0093% 0.0012%
+// set9_5_4: 0.0019% 0.0002%
+// NakedHiddenSet: 57.8523% 7.5105%
+// yWing: 28.5328% 3.7042%
+// xyzWing: 6.7319% 0.874%
+// xWing: 1.9911% 0.2585%
+// Swordfish: 0.5127% 0.0666%
+// Jellyfish: 0.028% 0.0036%
+// UniqueRectangle: 4.3512% 0.5649%
 // Phistomefel: 0% 0%
-// Simples: 54.126%
-// Markers: 13.204%
-// BruteForceFill: 32.67%
-// Time Avg < 100000: 64.17024489208116fps Avg: 0.23347794000398636 Max: 128.85990000009537
-// Operations: 14.538% < 100000 avg: 985723
-// TotalPuzzles: 50000
+// Simples: 53.9316%
+// Markers: 12.9822%
+// BruteForceFill: 33.0862%
+// Time Avg < 100000: 65.31760657980833fps Avg: 0.22953987749064084 Max: 149.3282999997139
+// Operations: 14.2648% < 100000 avg: 986643
+// TotalPuzzles: 179407
+
+// set5_2_3: 13.334% 1.7548%
+// set4_2_2: 10.996% 1.4471%
+// set6_2_4: 8.8413% 1.1635%
+// set5_3_2: 6.6639% 0.877%
+// set6_3_3: 5.6751% 0.7469%
+// set6_4_2: 2.7397% 0.3606%
+// set7_2_5: 2.9581% 0.3893%
+// set7_3_4: 2.1856% 0.2876%
+// set7_4_3: 1.339% 0.1762%
+// set7_5_2: 0.5418% 0.0713%
+// set8_2_6: 0.5582% 0.0735%
+// set8_3_5: 0.3584% 0.0472%
+// set8_4_4: 0.3193% 0.042%
+// set8_5_3: 0.0886% 0.0117%
+// set8_6_2: 0.1215% 0.016%
+// set9_2_7: 0.0494% 0.0065%
+// set9_3_6: 0.0288% 0.0038%
+// set9_4_5: 0.0268% 0.0035%
+// set9_6_3: 0.0021% 0.0003%
+// set9_7_2: 0.0041% 0.0005%
+// set9_5_4: 0.0041% 0.0005%
+// NakedHiddenSet: 56.8359% 7.4798%
+// yWing: 29.2718% 3.8523%
+// xyzWing: 6.9894% 0.9198%
+// xWing: 2.0579% 0.2708%
+// Swordfish: 0.4202% 0.0553%
+// Jellyfish: 0.0268% 0.0035%
+// UniqueRectangle: 4.398% 0.5788%
+// Phistomefel: 0% 0%
+// Simples: 53.7245%
+// Markers: 13.1603%
+// BruteForceFill: 33.1152%
+// Time Avg < 100000: 66.12393454344502fps Avg: 0.22498061798707428 Max: 38.295900000095365
+// Operations: 14.4% < 100000 avg: 972856
+// TotalPuzzles: 159875
