@@ -321,20 +321,6 @@ onmessage = (e) => {
 // set9_6_3: 0.0112% 0.0015%
 // set9_4_5: 0.0093% 0.0012%
 // set9_5_4: 0.0019% 0.0002%
-// NakedHiddenSet: 57.8523% 7.5105%
-// yWing: 28.5328% 3.7042%
-// xyzWing: 6.7319% 0.874%
-// xWing: 1.9911% 0.2585%
-// Swordfish: 0.5127% 0.0666%
-// Jellyfish: 0.028% 0.0036%
-// UniqueRectangle: 4.3512% 0.5649%
-// Phistomefel: 0% 0%
-// Simples: 53.9316%
-// Markers: 12.9822%
-// BruteForceFill: 33.0862%
-// Time Avg < 100000: 65.31760657980833fps Avg: 0.22953987749064084 Max: 149.3282999997139
-// Operations: 14.2648% < 100000 avg: 986643
-// TotalPuzzles: 179407
 
 // set5_2_3: 13.334% 1.7548%
 // set4_2_2: 10.996% 1.4471%
@@ -357,17 +343,3 @@ onmessage = (e) => {
 // set9_6_3: 0.0021% 0.0003%
 // set9_7_2: 0.0041% 0.0005%
 // set9_5_4: 0.0041% 0.0005%
-// NakedHiddenSet: 56.8359% 7.4798%
-// yWing: 29.2718% 3.8523%
-// xyzWing: 6.9894% 0.9198%
-// xWing: 2.0579% 0.2708%
-// Swordfish: 0.4202% 0.0553%
-// Jellyfish: 0.0268% 0.0035%
-// UniqueRectangle: 4.398% 0.5788%
-// Phistomefel: 0% 0%
-// Simples: 53.7245%
-// Markers: 13.1603%
-// BruteForceFill: 33.1152%
-// Time Avg < 100000: 66.12393454344502fps Avg: 0.22498061798707428 Max: 38.295900000095365
-// Operations: 14.4% < 100000 avg: 972856
-// TotalPuzzles: 159875
