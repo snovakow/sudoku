@@ -1,8 +1,141 @@
 import { FONT, board } from "./board.js";
 import { consoleOut, fillSolve } from "./generator.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
+import { bentWings, candidates, hiddenSingles, jellyfish, loneSingles, NakedHiddenGroups, omissions, swordfish, uniqueRectangle, xWing } from "./solver.js";
 
 const raws = [
+	"Unsolvable 605",
+	[
+		0, 0, 0, 0, 0, 6, 0, 4, 0,
+		0, 0, 0, 0, 7, 0, 2, 0, 0,
+		0, 0, 0, 8, 0, 0, 0, 0, 5,
+		5, 0, 0, 0, 2, 0, 8, 0, 0,
+		0, 0, 7, 1, 0, 0, 0, 0, 6,
+		0, 3, 0, 0, 0, 9, 0, 0, 0,
+		0, 0, 2, 0, 5, 0, 0, 0, 7,
+		0, 6, 0, 3, 0, 0, 1, 0, 0,
+		9, 0, 0, 0, 0, 4, 0, 0, 0,
+	],
+	"Unsolvable 604",
+	[
+		0, 0, 0, 0, 0, 6, 0, 0, 4,
+		5, 0, 0, 2, 0, 0, 0, 3, 0,
+		0, 0, 1, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 9, 0, 0, 2, 0, 0,
+		0, 3, 0, 0, 0, 4, 0, 8, 0,
+		0, 0, 7, 0, 1, 0, 0, 0, 6,
+		0, 8, 0, 1, 5, 0, 0, 0, 0,
+		4, 0, 0, 0, 0, 3, 0, 0, 9,
+		0, 0, 2, 0, 0, 0, 7, 0, 0,
+	],
+	"Unsolvable 603",
+	[
+		1, 4, 0, 0, 9, 0, 0, 5, 0,
+		0, 0, 2, 7, 0, 0, 0, 0, 1,
+		8, 0, 0, 0, 0, 6, 0, 0, 0,
+		0, 0, 0, 0, 0, 2, 3, 0, 0,
+		0, 0, 0, 0, 5, 0, 0, 9, 0,
+		0, 0, 0, 4, 0, 0, 0, 0, 7,
+		0, 6, 0, 8, 0, 0, 0, 7, 0,
+		0, 0, 3, 0, 0, 1, 0, 0, 2,
+		9, 0, 0, 0, 0, 0, 4, 0, 0,
+	],
+	"Unsolvable 602",
+	[
+		7, 0, 0, 4, 0, 0, 8, 0, 0,
+		0, 0, 5, 0, 6, 0, 0, 0, 0,
+		0, 2, 0, 0, 0, 1, 0, 0, 0,
+		0, 0, 0, 0, 0, 8, 0, 0, 1,
+		4, 0, 0, 7, 0, 0, 0, 3, 0,
+		0, 0, 9, 0, 0, 0, 5, 0, 0,
+		0, 0, 1, 0, 2, 0, 0, 0, 9,
+		0, 8, 0, 0, 0, 0, 7, 0, 0,
+		6, 0, 0, 0, 0, 0, 0, 4, 0,
+	],
+	"Unsolvable 601",
+	[
+		0, 2, 4, 0, 0, 1, 0, 3, 0,
+		8, 0, 0, 0, 0, 0, 7, 0, 0,
+		0, 0, 0, 0, 5, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 8,
+		0, 9, 0, 4, 0, 0, 0, 2, 0,
+		0, 1, 8, 0, 0, 3, 4, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 8, 0,
+		0, 0, 3, 0, 0, 5, 1, 0, 0,
+		7, 0, 0, 0, 6, 0, 0, 0, 9,
+	],
+	"Unsolvable 600",
+	[
+		0, 0, 7, 0, 6, 0, 5, 0, 0,
+		0, 0, 0, 0, 0, 1, 0, 0, 7,
+		0, 4, 0, 0, 0, 0, 0, 9, 0,
+		0, 0, 5, 0, 7, 0, 9, 0, 0,
+		0, 6, 0, 0, 0, 0, 4, 0, 0,
+		9, 0, 0, 8, 0, 0, 0, 0, 3,
+		1, 0, 0, 0, 0, 0, 0, 0, 2,
+		0, 0, 0, 9, 0, 0, 0, 6, 0,
+		2, 3, 0, 0, 4, 0, 0, 0, 0,
+	],
+	"v=bnPmmAeb-SI",
+	[
+		0, 9, 0, 0, 0, 4, 0, 8, 5,
+		0, 1, 0, 0, 8, 0, 9, 0, 0,
+		0, 0, 2, 3, 9, 0, 0, 4, 0,
+		0, 0, 0, 0, 0, 9, 0, 0, 8,
+		5, 0, 0, 0, 3, 0, 0, 9, 6,
+		9, 0, 0, 8, 0, 0, 0, 0, 0,
+		0, 4, 0, 0, 0, 8, 2, 0, 0,
+		0, 0, 3, 0, 4, 0, 0, 1, 0,
+		6, 0, 0, 7, 0, 3, 0, 5, 0,
+	],
+	"v=ynkkMxQPUpk",
+	[
+		0, 0, 5, 0, 2, 0, 6, 0, 0,
+		0, 9, 0, 0, 0, 4, 0, 1, 0,
+		2, 0, 0, 5, 0, 0, 0, 0, 3,
+		0, 0, 6, 0, 3, 0, 0, 0, 0,
+		0, 0, 0, 8, 0, 1, 0, 0, 0,
+		0, 0, 0, 0, 9, 0, 4, 0, 0,
+		3, 0, 0, 0, 0, 2, 0, 0, 7,
+		0, 1, 0, 9, 0, 0, 0, 5, 0,
+		0, 0, 4, 0, 6, 0, 8, 0, 0,
+	],
+	"v=Ui1hrp7rovw",
+	[
+		0, 0, 0, 1, 0, 2, 0, 0, 0,
+		0, 6, 0, 0, 0, 0, 0, 7, 0,
+		0, 0, 8, 0, 0, 0, 9, 0, 0,
+		4, 0, 0, 0, 0, 0, 0, 0, 3,
+		0, 5, 0, 0, 0, 7, 0, 0, 0,
+		2, 0, 0, 0, 8, 0, 0, 0, 1,
+		0, 0, 9, 0, 0, 0, 8, 0, 5,
+		0, 7, 0, 0, 0, 0, 0, 6, 0,
+		0, 0, 0, 3, 0, 4, 0, 0, 0,
+	],
+	"v=fjWOgJqRWZI",
+	[
+		0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 2, 0, 9, 0, 0, 3, 8, 0,
+		0, 3, 0, 1, 0, 0, 7, 5, 0,
+		0, 4, 8, 0, 2, 0, 0, 0, 0,
+		0, 5, 0, 0, 0, 6, 0, 0, 0,
+		7, 6, 0, 5, 0, 0, 4, 1, 0,
+		4, 0, 0, 0, 0, 3, 0, 0, 0,
+		2, 0, 0, 8, 4, 5, 6, 7, 0,
+		0, 7, 5, 2, 0, 0, 0, 0, 0,
+	],
+	"v=BjOtNij7C84",
+	[
+		0, 0, 5, 0, 0, 0, 2, 0, 0,
+		0, 9, 0, 0, 6, 0, 0, 8, 0,
+		8, 0, 3, 0, 0, 0, 1, 0, 9,
+		0, 0, 0, 3, 0, 9, 0, 0, 0,
+		0, 4, 0, 0, 0, 0, 0, 3, 0,
+		0, 0, 0, 7, 0, 4, 0, 0, 0,
+		2, 0, 7, 0, 0, 0, 6, 0, 5,
+		0, 5, 0, 0, 1, 0, 0, 2, 0,
+		0, 0, 9, 0, 0, 0, 8, 0, 0,
+	],
 	"Snake",
 	[6, 0, 7, 9, 0, 1, 3, 0, 0, 9, 0, 3, 0, 7, 0, 0, 0, 0, 0, 5, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 6, 8, 0, 0, 0, 2, 5, 8, 9, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 7, 9, 0, 6, 0, 0, 0, 0, 6, 0, 4, 0, 0, 7, 0, 0, 3, 0, 0, 8, 0, 0],
 	// "20 XYZ Wing",
@@ -157,18 +290,10 @@ const raws = [
 	// '020006000500700340800090100001005270050000000004100000402070030000000017090000005'.split(''),
 	// "Phist 2YWing Deadly Naked4322",
 	// '100056080500000000064109300200000890000000000038001200402000010000070908050000060'.split(''),
-	"N5/8 XYZWing Deadly",
-	'020400080058090001907000450000500000000700006791080000030000010000210000005800070'.split(''),
-	"N5/7 YWing",
-	'000000789000000000904800600060923015002060000030000000000700830010680090040002000'.split(''),
-	"N5/9",
-	'003056700400380005000000000040000000809710000000020590500090012000000008601000040'.split(''),
-	"N5/9 XYZ N2",
-	'003000000609030010408007020000875000000000073000002801500000400000504068000001200'.split(''),
-	"N5/9 Y N333322",
-	'000000000005007104000000025090002000030080006000603540300200000072005093950800000'.split(''),
-	"N5/9 XYZ Y N322",
-	'103050089006700025500000300950024000000000000700890000000208600081039000000000000'.split(''),
+	// "N5/9",
+	// '003056700400380005000000000040000000809710000000020590500090012000000008601000040'.split(''),
+	// "N5/9 XYZ N2",
+	// '003000000609030010408007020000875000000000073000002801500000400000504068000001200'.split(''),
 	// "H3/9 N64222 rare",
 	// '003400709007301040000009050000000000900020000000907430004160003300000007250000600'.split(''),
 	// "H2/9 N7 rare",
@@ -434,14 +559,141 @@ markerButton.addEventListener('click', () => {
 		cell.show = true;
 	}
 
+	const now = performance.now();
+
 	const result = fillSolve(board.cells, window.location.search);
-	console.log("-----");
+	console.log("----- " + (performance.now() - now) / 1000);
 	for (const line of consoleOut(result)) console.log(line);
 
 	draw();
 	saveGrid();
 });
 document.body.appendChild(markerButton);
+
+const superpositionButton = document.createElement('button');
+superpositionButton.appendChild(document.createTextNode("-"));
+superpositionButton.style.position = 'absolute';
+superpositionButton.style.width = '32px';
+superpositionButton.style.height = '32px';
+superpositionButton.style.top = '0px';
+superpositionButton.style.right = '0px';
+
+let timer = 0;
+let startBoard = null;
+superpositionButton.addEventListener('click', () => {
+	if (timer) {
+		window.clearInterval(timer);
+		board.cells.fromData(startBoard);
+		draw();
+		timer = 0;
+		return;
+	}
+
+	for (const cell of board.cells) {
+		cell.show = true;
+	}
+
+	const solve = (cells) => {
+		let progress = false;
+		do {
+			candidates(cells);
+
+			progress = loneSingles(cells);
+			if (progress) continue;
+
+			progress = hiddenSingles(cells);
+			if (progress) continue;
+
+			progress = omissions(cells);
+			if (progress) continue;
+
+			const nakedHiddenResult = new NakedHiddenGroups(cells).nakedHiddenSets();
+			if (nakedHiddenResult) {
+				progress = true;
+				continue;
+			}
+
+			const bentWingResults = bentWings(cells);
+			if (bentWingResults.length > 0) {
+				progress = true;
+				continue;
+			}
+
+			progress = xWing(cells);
+			if (progress) { continue; }
+
+			progress = swordfish(cells);
+			if (progress) { continue; }
+
+			progress = jellyfish(cells);
+			if (progress) { continue; }
+
+			progress = uniqueRectangle(cells);
+			if (progress) { continue; }
+		} while (progress);
+	};
+	startBoard = board.cells.toData();
+	let super1 = null;
+	let super2 = null;
+	let superCell = null;
+	if (selected) {
+		superCell = board.cells[selectedRow * 9 + selectedCol];
+	}
+	if (!superCell) {
+		for (const cell of board.cells) {
+			if (cell.symbol !== 0) continue;
+			if (cell.size === 2) {
+				superCell = cell;
+
+				break;
+			}
+		}
+	}
+	if (superCell) {
+		for (let x = 1; x <= 9; x++) {
+			if (superCell.has(x)) {
+				// cell.delete(x);
+				superCell.setSymbol(x);
+				if (super1) {
+					solve(board.cells);
+					super2 = board.cells.toData();
+				} else {
+					solve(board.cells);
+					super1 = board.cells.toData();
+					board.cells.fromData(startBoard);
+				}
+			}
+		}
+	}
+
+	if (!super2) {
+		return;
+	}
+
+	let iteration = 0;
+	timer = window.setInterval(() => {
+		switch (iteration % 2) {
+			case 0:
+				board.cells.fromData(super1);
+
+				break;
+			case 1:
+				board.cells.fromData(super2);
+
+				break;
+			case 2:
+				board.cells.fromData(start);
+
+				break;
+
+			default:
+				break;
+		}
+		draw();
+		iteration++;
+	}, 1000 * 1 / 30);
+});
+document.body.appendChild(superpositionButton);
 
 selector.style.transform = 'translateX(-50%)';
 clearButton.style.transform = 'translateX(-50%)';

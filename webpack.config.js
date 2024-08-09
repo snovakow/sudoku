@@ -15,7 +15,9 @@ module.exports = {
 	plugins: [
 		new CopyPlugin({
 			patterns: [
-				{ from: 'about.html', to: 'about.html' }
+				{ from: 'about.html', to: 'about.html' },
+				{ from: 'stats.html', to: 'stats.html' },
+				{ from: 'worker.js', to: 'worker.js' }
 			]
 		}),
 		new HtmlWebpackPlugin({

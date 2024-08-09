@@ -1,4 +1,4 @@
-import { aCells, bCells } from "./solver.js";
+import { aCells, bCells, superposition } from "./solver.js";
 import { generate, candidates, loneSingles, hiddenSingles, omissions, NakedHiddenGroups, uniqueRectangle, bentWings, xWing, swordfish, jellyfish, bruteForce, phistomefel, REDUCE } from "./solver.js";
 
 const consoleOut = (result) => {
@@ -23,6 +23,17 @@ const consoleOut = (result) => {
 	lines.push("Jellyfish: " + result.jellyfishReduced);
 	lines.push("Deadly Pattern Unique Rectangle: " + result.uniqueRectangleReduced);
 	lines.push("Phistomefel: " + phistomefelReduced + (phistomefelFilled > 0 ? " + " + phistomefelFilled + " filled" : ""));
+	if (result.superpositionReduced.length > 0) {
+		const once = new Set();
+		for (const superpositionResult of result.superpositionReduced) {
+			const key = superpositionResult.type + " " + superpositionResult.size;
+			if (once.has(key)) continue;
+
+			once.add(key);
+
+			lines.push("Superposition: " + key);
+		}
+	}
 	lines.push("Brute Force: " + result.bruteForceFill);
 	return lines;
 }
@@ -46,6 +57,7 @@ const fillSolve = (cells, search) => {
 	let uniqueRectangleReduced = 0;
 	let phistomefelReduced = 0;
 	let phistomefelFilled = 0;
+	let superpositionReduced = [];
 
 	let bruteForceFill = false;
 
@@ -98,8 +110,15 @@ const fillSolve = (cells, search) => {
 			continue;
 		}
 
+		const superpositionResults = superposition(cells);
+		if (superpositionResults.length > 0) {
+			progress = true;
+			superpositionReduced.push(...superpositionResults);
+			continue;
+		}
+
 		bruteForceFill = !isFinished(cells);
-		// bruteForce(board.cells);
+		if (search === "?brute" && bruteForceFill) bruteForce(cells);
 	} while (progress);
 
 	return {
@@ -111,6 +130,7 @@ const fillSolve = (cells, search) => {
 		uniqueRectangleReduced,
 		phistomefelReduced,
 		phistomefelFilled,
+		superpositionReduced,
 		bruteForceFill
 	};
 }
@@ -234,6 +254,17 @@ const savedGrid = new Uint8Array(81);
 const rndi = makeArray(81);
 
 const sudokuGenerator = (cells, target = 0) => {
+	if (target === -1) {
+		let hits = 0;
+		for (const cell of cells) {
+			if (cell.symbol !== 0) {
+				hits++;
+			}
+		}
+		totalPuzzles++;
+		return { clueCount: hits, operations: 0 };
+	}
+
 	for (let i = 0; i < 81; i++) grid[i] = 0;
 	for (let i = 0; i < 9; i++) grid[i] = i + 1;
 	sodokoSolver(grid);
@@ -378,7 +409,7 @@ const sudokuGenerator = (cells, target = 0) => {
 		cell.setSymbol(grid[i]);
 	}
 
-	return { clueCount: hits, grid, operations };
+	return { clueCount: hits, operations };
 }
 
 

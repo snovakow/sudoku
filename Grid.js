@@ -149,7 +149,6 @@ export class CellMarker extends Cell {
 		this.groupRow = baseCell.groupRow;
 		this.groupCol = baseCell.groupCol;
 		this.groupBox = baseCell.groupBox;
-		this.groups = baseCell.groups;
 		this.group = baseCell.group;
 		this.groupSet = baseCell.groupSet;
 	}
@@ -344,6 +343,14 @@ class Grid extends Array {
 	}
 	fromData(data) {
 		for (const cell of this) cell.fromData(data[cell.index]);
+	}
+	fromString(string) {
+		for (let index = 0; index < 81; index++) {
+			const char = string[index];
+			const symbol = parseInt(char);
+			const cell = this[index];
+			cell.setSymbol(symbol);
+		}
 	}
 }
 

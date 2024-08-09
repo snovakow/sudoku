@@ -1,4 +1,4 @@
-import { Grid, Marker } from "./Grid.js";
+import { Grid, GridCell, Marker } from "./Grid.js";
 
 let reduce_i = 0;
 const REDUCE = {
@@ -17,31 +17,6 @@ const REDUCE = {
 	Phistomefel: reduce_i++,
 	Brute_Force: reduce_i++,
 };
-
-const floor3 = x => Math.floor(x / 3);
-const mod3 = x => x % 3;
-
-const rowForIndex = (i) => {
-	return Math.floor(i / 9);
-}
-const colForIndex = (i) => {
-	return i % 9;
-}
-const boxForIndex = (i) => {
-	return Math.floor(i / 27) * 3 + floor3(i % 9);
-}
-
-const indexForRow = (x, i) => {
-	return x * 9 + i;
-}
-const indexForCol = (x, i) => {
-	return i * 9 + x;
-}
-const indexForBox = (x, i) => {
-	const row = floor3(x) * 3 + floor3(i);
-	const col = mod3(x) * 3 + mod3(i);
-	return row * 9 + col;
-}
 
 const openSingles = (grid) => {
 	let marker = new Marker();
@@ -445,11 +420,12 @@ class NakedHiddenGroups {
 		if (reduced) return { hidden: false, size: 2, ...reduced };
 		reduced = this.nakedTriple();
 		if (reduced) return { hidden: false, size: 3, ...reduced };
-		reduced = this.nakedQuad();
-		if (reduced) return { hidden: false, size: 4, ...reduced };
 
 		reduced = this.hiddenPair();
 		if (reduced) return { hidden: true, size: 2, ...reduced };
+		reduced = this.nakedQuad();
+		if (reduced) return { hidden: false, size: 4, ...reduced };
+
 		reduced = this.hiddenTriple();
 		if (reduced) return { hidden: true, size: 3, ...reduced };
 		reduced = this.hiddenQuad();
@@ -901,6 +877,277 @@ const uniqueRectangle = (cells) => {
 	}
 }
 
+const solve = (cells, pairs) => {
+	let progress = false;
+	do {
+		candidates(cells);
+
+		progress = loneSingles(cells);
+		if (progress) continue;
+
+		progress = hiddenSingles(cells);
+		if (progress) continue;
+
+		progress = omissions(cells);
+		if (progress) continue;
+
+		if (pairs) {
+			const nakedHidden = new NakedHiddenGroups(cells);
+			progress = nakedHidden.nakedPair();
+			if (progress) continue;
+		}
+
+		// progress = nakedHidden.nakedTriple();
+		// if (progress) continue;
+
+		// progress = nakedHidden.nakedQuad();
+		// if (progress) continue;
+
+		// progress = nakedHidden.hiddenPair();
+		// if (progress) continue;
+		// progress = nakedHidden.hiddenTriple();
+		// if (progress) continue;
+		// progress = nakedHidden.hiddenQuad();
+		// if (progress) continue;
+
+		// const nakedHiddenResult = new NakedHiddenGroups(cells).nakedHiddenSets();
+		// if (nakedHiddenResult) {
+		// 	progress = true;
+		// 	continue;
+		// }
+
+		// const bentWingResults = bentWings(cells);
+		// if (bentWingResults.length > 0) {
+		// 	progress = true;
+		// 	continue;
+		// }
+
+		// progress = xWing(cells);
+		// if (progress) { continue; }
+
+		// progress = swordfish(cells);
+		// if (progress) { continue; }
+
+		// progress = jellyfish(cells);
+		// if (progress) { continue; }
+
+		// progress = uniqueRectangle(cells);
+		// if (progress) { continue; }
+	} while (progress);
+};
+const superposition = (cells) => {
+	const startBoard = cells.toData();
+
+	class Result {
+		constructor(type, symbol, cell, size) {
+			this.type = type;
+			this.symbol = symbol;
+			this.cell = cell;
+			this.size = size;
+		}
+	}
+
+	const checkCells = (type, cells, supers, size) => {
+		const reduced = [];
+		for (const checkCell of cells) {
+			if (checkCell.symbol !== 0) continue;
+
+			let symbolSet = new Set();
+			for (const result of supers) {
+				const resultCell = result[checkCell.index];
+				if (resultCell.symbol === 0) {
+					for (let x = 1; x <= 9; x++) {
+						if ((resultCell.mask >> x) & 0x0001 === 0x001) {
+							symbolSet.add(x);
+						}
+					}
+				} else {
+					symbolSet.add(resultCell.symbol);
+				}
+			}
+			for (let x = 1; x <= 9; x++) {
+				if (!checkCell.has(x)) continue;
+				if (symbolSet.has(x)) continue;
+
+				reduced.push(new Result(type, x, checkCell, size));
+			}
+		}
+		return reduced;
+	};
+
+	const results = [];
+	const superMarkers = (targetSize, pairs) => {
+		for (let index = 0; index < 81; index++) {
+			const cell = cells[index];
+			if (cell.symbol !== 0) continue;
+			if (cell.size !== targetSize) continue;
+
+			const supers = [];
+			for (let x = 1; x <= 9; x++) {
+				if (!cell.has(x)) continue;
+
+				cell.setSymbol(x);
+				solve(cells, pairs);
+				const result = cells.toData();
+				supers.push(result);
+
+				cells.fromData(startBoard);
+			}
+
+			// if (supers.length > 3) continue;
+			const title = pairs ? "Cell Markers Pair" : "Cell Markers";
+			const reduced = checkCells(title, cells, supers, supers.length);
+			if (reduced.length > 0) results.push(...reduced);
+		}
+	};
+
+	const superSymbols = (targetSize, pairs) => {
+		for (let x = 1; x <= 9; x++) {
+			for (const group of GridCell.groupTypes) {
+				const symbolCells = [];
+				for (const i of group) {
+					const cell = cells[i];
+					if (cell.symbol === x) {
+						symbolCells.length = 0;
+						break;
+					}
+					if (cell.symbol !== 0) continue;
+					if (cell.has(x)) symbolCells.push(cell);
+				}
+
+				if (symbolCells.length !== targetSize) continue;
+
+				const supers = [];
+				for (const cell of symbolCells) {
+					cell.setSymbol(x);
+					solve(cells, pairs);
+					const result = cells.toData();
+					supers.push(result);
+
+					cells.fromData(startBoard);
+				}
+
+				// if (symbolCells.length > 3) continue;
+				const title = pairs ? "Group Symbol Pair" : "Group Symbol";
+				const reduced = checkCells(title, cells, supers, symbolCells.length);
+				if (reduced.length > 0) results.push(...reduced);
+			}
+		}
+	}
+
+	const tri = () => {
+		for (const group of GridCell.groupTypes) {
+			const cellSet = [];
+			for (const index of group) {
+				const cell = cells[index];
+				if (cell.symbol === 0) cellSet.push(cell);
+			}
+
+			const union = new SetUnion();
+			const len = cellSet.length;
+			if (len <= 3) continue;
+
+			const len_1 = len - 1;
+			const len_2 = len - 2;
+
+			for (let i1 = 0; i1 < len_2; i1++) {
+				const cell1 = cellSet[i1];
+				for (let i2 = i1 + 1; i2 < len_1; i2++) {
+					const cell2 = cellSet[i2];
+					for (let i3 = i2 + 1; i3 < len; i3++) {
+						const cell3 = cellSet[i3];
+
+						union.clear();
+						union.mask |= cell1.mask;
+						union.mask |= cell2.mask;
+						union.mask |= cell3.mask;
+						if (union.size !== 3) continue;
+
+						let symbol1 = -1;
+						let symbol2 = -1;
+						let symbol3 = -1;
+						for (let x = 1; x <= 9; x++) {
+							if (!union.has(x)) continue;
+							if (symbol1 === -1) symbol1 = x;
+							else if (symbol2 === -1) symbol2 = x;
+							else if (symbol3 === -1) symbol3 = x;
+						}
+
+						const supers = [];
+
+						cell1.setSymbol(symbol1);
+						cell2.setSymbol(symbol2);
+						cell3.setSymbol(symbol3);
+						solve(cells);
+						supers.push(cells.toData());
+						cells.fromData(startBoard);
+
+						cell1.setSymbol(symbol1);
+						cell2.setSymbol(symbol3);
+						cell3.setSymbol(symbol2);
+						solve(cells);
+						supers.push(cells.toData());
+						cells.fromData(startBoard);
+
+						cell1.setSymbol(symbol2);
+						cell2.setSymbol(symbol1);
+						cell3.setSymbol(symbol3);
+						solve(cells);
+						supers.push(cells.toData());
+						cells.fromData(startBoard);
+
+						cell1.setSymbol(symbol2);
+						cell2.setSymbol(symbol3);
+						cell3.setSymbol(symbol1);
+						solve(cells);
+						supers.push(cells.toData());
+						cells.fromData(startBoard);
+
+						cell1.setSymbol(symbol3);
+						cell2.setSymbol(symbol1);
+						cell3.setSymbol(symbol2);
+						solve(cells);
+						supers.push(cells.toData());
+						cells.fromData(startBoard);
+
+						cell1.setSymbol(symbol3);
+						cell2.setSymbol(symbol2);
+						cell3.setSymbol(symbol1);
+						solve(cells);
+						supers.push(cells.toData());
+						cells.fromData(startBoard);
+
+						const reduced = checkCells("Triple", cells, supers, len);
+						if (reduced.length > 0) {
+							results.push(...reduced);
+						}
+					}
+				}
+			}
+		}
+		return results;
+	};
+
+	for (let target = 2; target <= 9; target++) {
+		superMarkers(target, false);
+		if (results.length > 0) break;
+		superSymbols(target, false);
+		if (results.length > 0) break;
+		superMarkers(target, true);
+		if (results.length > 0) break;
+		superSymbols(target, true);
+		if (results.length > 0) break;
+	}
+	// if (results.length === 0) tri();
+
+
+	for (const result of results) {
+		result.cell.delete(result.symbol);
+	}
+
+	return results;
+}
+
 export const aCells = new Set();
 export const bCells = new Set();
 const phistomefel = (cells) => {
@@ -1214,5 +1461,5 @@ const generate = (cells) => {
 
 export {
 	REDUCE, generate, candidates, loneSingles, hiddenSingles, omissions, NakedHiddenGroups, bentWings, xWing, swordfish, jellyfish,
-	uniqueRectangle, phistomefel, bruteForce
+	uniqueRectangle, superposition, phistomefel, bruteForce
 };
