@@ -956,6 +956,39 @@ const superposition = (cells) => {
 			for (const result of supers) {
 				const resultCell = result[checkCell.index];
 				if (resultCell.symbol === 0) {
+					if (resultCell.size === 0) {
+						if (size === 2) {
+							let super1 = supers[0];
+							let super2 = supers[1];
+							const valid = result === super1 ? super2 : super1;
+
+							for (let i = 0; i < 81; i++) {
+								const cell = cells[i];
+								if (cell.symbol !== 0) continue;
+								const validCell = valid[i];
+
+								let reduction = false;
+								if (validCell.symbol === 0) {
+									for (let x = 1; x <= 9; x++) {
+										if (cell.has(x) && ((validCell.mask >> x) & 0x0001 === 0x0000)) {
+											console.log("!!!1");
+											reduced.push(new Result(type, x, cell, size));
+											reduction = true;
+										}
+									}
+								} else {
+									for (let x = 1; x <= 9; x++) {
+										if (x !== validCell.symbol && cell.has(x)) {
+											reduced.push(new Result(type, x, cell, size));
+											reduction = true;
+										}
+									}
+								}
+
+								if (reduction) return reduced;
+							}
+						}
+					}
 					for (let x = 1; x <= 9; x++) {
 						if ((resultCell.mask >> x) & 0x0001 === 0x001) {
 							symbolSet.add(x);
@@ -974,6 +1007,9 @@ const superposition = (cells) => {
 		}
 		return reduced;
 	};
+
+	const masterMarkers2 = [];
+	const masterSymbols2 = [];
 
 	const results = [];
 	const superMarkers = (targetSize, pairs) => {
@@ -996,15 +1032,13 @@ const superposition = (cells) => {
 			}
 			masterMarkers.push(supers);
 		}
-		return masterMarkers;
-	};
-	const superMarkersReduce = (masterMarkers, targetSize, pairs) => {
 		for (const supers of masterMarkers) {
 			const title = pairs ? "Cell Markers Pair" : "Cell Markers";
-			const reduced = checkCells(title, cells, supers, targetSize);
+			const reduced = checkCells(title, cells, supers, supers.length);
 			if (reduced.length > 0) results.push(...reduced);
 		}
 	};
+
 	const superSymbols = (targetSize, pairs) => {
 		const masterSymbols = [];
 		for (let x = 1; x <= 9; x++) {
@@ -1035,261 +1069,29 @@ const superposition = (cells) => {
 				masterSymbols.push(supers);
 			}
 		}
-		return masterSymbols;
-	};
-	const superSymbolsReduce = (masterSymbols, targetSize, pairs) => {
 		for (const supers of masterSymbols) {
 			const title = pairs ? "Group Symbol Pair" : "Group Symbol";
 			const reduced = checkCells(title, cells, supers, targetSize);
 			if (reduced.length > 0) results.push(...reduced);
 		}
-	};
-
-	const superMarkerValid = (masterMarkers, targetSize, pairs) => {
-		for (const supers of masterMarkers) {
-			for (let i = supers.length - 1; i >= 0; i--) {
-				const result = supers[i];
-				let finished = true;
-				for (let index = 0; index < 81; index++) {
-					const resultCell = result[index];
-					if (resultCell.symbol !== 0) continue;
-					finished = false;
-					if (resultCell.size === 0) {
-						supers.splice(i, 1);
-						break;
-					}
-				}
-				if (finished) {
-					function isValid(index, result, x) {
-						const row = Math.floor(index / 9);
-						const col = index % 9;
-						for (let i = 0; i < 9; i++) {
-							const m = 3 * Math.floor(row / 3) + Math.floor(i / 3);
-							const n = 3 * Math.floor(col / 3) + i % 3;
-							const rowi = row * 9 + i;
-							const coli = i * 9 + col;
-							const boxi = m * 9 + n;
-							if (rowi === index) continue;
-							if (coli === index) continue;
-							if (boxi === index) continue;
-							const rowCell = result[rowi];
-							const colCell = result[coli];
-							const boxCell = result[boxi];
-							if (rowCell.symbol === x || colCell.symbol === x || boxCell.symbol === x) {
-								return false;
-							}
-						}
-						return true;
-					}
-					let validCompletion = true;
-					for (let index = 0; index < 81; index++) {
-						const resultCell = result[index];
-						let valid = isValid(index, result, resultCell.symbol);
-						if (!valid) {
-							validCompletion = false;
-							break;
-						}
-					}
-
-					if (validCompletion) {
-						for (let index = 0; index < 81; index++) {
-							const resultCell = result[index];
-							const cell = cells[index];
-							cell.setSymbol(resultCell.symbol);
-						}
-						const title = `Group Marker${pairs ? " Pair -" : " -"}`;
-						const symbol = 0;
-						const cell = null;
-						results.push(new Result(title, symbol, cell, targetSize));
-						return;
-					}
-				}
-			}
-			if (supers.length === 1) {
-				const result = supers[0];
-				for (let index = 0; index < 81; index++) {
-					const resultCell = result[index];
-					const cell = cells[index];
-					cell.setSymbol(resultCell.symbol);
-				}
-				const title = `Group Marker${pairs ? " Pair X" : " X"}`;
-				const symbol = 0;
-				const cell = null;
-				results.push(new Result(title, symbol, cell, targetSize));
-				return;
-			}
-			// const reduced = checkCells(title, cells, supers, targetSize);
-			// if (reduced.length > 0) results.push(...reduced);
-		}
-	};
-	const superSymbolsValid = (masterSymbols, targetSize, pairs) => {
-		for (const supers of masterSymbols) {
-			for (let i = supers.length - 1; i >= 0; i--) {
-				const result = supers[i];
-				let finished = true;
-				for (let index = 0; index < 81; index++) {
-					const resultCell = result[index];
-					if (resultCell.symbol !== 0) continue;
-					finished = false;
-					if (resultCell.size === 0) {
-						supers.splice(i, 1);
-						break;
-					}
-				}
-				if (finished) {
-					function isValid(index, result, x) {
-						const row = Math.floor(index / 9);
-						const col = index % 9;
-						for (let i = 0; i < 9; i++) {
-							const m = 3 * Math.floor(row / 3) + Math.floor(i / 3);
-							const n = 3 * Math.floor(col / 3) + i % 3;
-							const rowi = row * 9 + i;
-							const coli = i * 9 + col;
-							const boxi = m * 9 + n;
-							if (rowi === index) continue;
-							if (coli === index) continue;
-							if (boxi === index) continue;
-							const rowCell = result[rowi];
-							const colCell = result[coli];
-							const boxCell = result[boxi];
-							if (rowCell.symbol === x || colCell.symbol === x || boxCell.symbol === x) {
-								return false;
-							}
-						}
-						return true;
-					}
-					let validCompletion = true;
-					for (let index = 0; index < 81; index++) {
-						const resultCell = result[index];
-						let valid = isValid(index, result, resultCell.symbol);
-						if (!valid) {
-							validCompletion = false;
-							console.log("!!!ERROR!!!");
-							break;
-						}
-					}
-
-					if (validCompletion) {
-						for (let index = 0; index < 81; index++) {
-							const resultCell = result[index];
-							const cell = cells[index];
-							cell.setSymbol(resultCell.symbol);
-						}
-						const title = `Group Symbol${pairs ? " Pair -" : " -"}`;
-						const symbol = 0;
-						const cell = null;
-						results.push(new Result(title, symbol, cell, targetSize));
-						return;
-					}
-				}
-			}
-			if (supers.length === 1) {
-				const result = supers[0];
-				for (let index = 0; index < 81; index++) {
-					const resultCell = result[index];
-					const cell = cells[index];
-					cell.setSymbol(resultCell.symbol);
-				}
-				const title = `Group Symbol${pairs ? " Pair X" : " X"}`;
-				const symbol = 0;
-				const cell = null;
-				results.push(new Result(title, symbol, cell, targetSize));
-				return;
-			}
-			// const reduced = checkCells(title, cells, supers, targetSize);
-			// if (reduced.length > 0) results.push(...reduced);
-		}
-
-		// for (const supers of masterSymbols) {
-		// 	const title = pairs ? "Group Symbol Pair" : "Group Symbol";
-		// 	const reduced = checkCells(title, cells, supers, targetSize);
-		// 	if (reduced.length > 0) results.push(...reduced);
-		// }
-	};
-
-	const masterMarkers2 = superMarkers(2, false);
-	superMarkerValid(masterMarkers2, 2, false);
-	if (results.length > 0) return results;
-
-	const masterSymbols2 = superSymbols(2, false);
-	superSymbolsValid(masterSymbols2, 2, false);
-	if (results.length > 0) return results;
-
-	superMarkersReduce(masterMarkers2, 2, false);
-	if (results.length > 0) {
-		for (const result of results) {
-			result.cell.delete(result.symbol);
-		}
-		return results;
 	}
 
-	superSymbolsReduce(masterSymbols2, 2, false);
-	if (results.length > 0) {
-		for (const result of results) {
-			result.cell.delete(result.symbol);
-		}
-		return results;
+	for (let target = 2; target <= 9; target++) {
+		superMarkers(target, false);
+		if (results.length > 0) break;
+		superSymbols(target, false);
+		if (results.length > 0) break;
+		superMarkers(target, true);
+		if (results.length > 0) break;
+		superSymbols(target, true);
+		if (results.length > 0) break;
 	}
+	// if (results.length === 0) tri();
 
-	// const masterMarkers2pair = superMarkers(2, true);
-	// superMarkersReduce(masterMarkers2pair, 2, true);
-	// if (results.length > 0) {
-	// 	for (const result of results) {
-	// 		result.cell.delete(result.symbol);
-	// 	}
-	// 	return results;
-	// }
 
-	// const masterSymbols2pair = superSymbols(2, true);
-	// superSymbolsReduce(masterSymbols2pair, 2, true);
-	// if (results.length > 0) {
-	// 	for (const result of results) {
-	// 		result.cell.delete(result.symbol);
-	// 	}
-	// 	return results;
-	// }
-
-	const masterMarkers3 = superMarkers(3, false);
-	superMarkerValid(masterMarkers3, 3, false);
-	if (results.length > 0) return results;
-
-	const masterSymbols3 = superSymbols(3, false);
-	superMarkerValid(masterSymbols3, 3, false);
-	if (results.length > 0) return results;
-
-	superMarkersReduce(masterMarkers3, 3, false);
-	if (results.length > 0) {
-		for (const result of results) {
-			result.cell.delete(result.symbol);
-		}
-		return results;
+	for (const result of results) {
+		result.cell.delete(result.symbol);
 	}
-
-	superSymbolsReduce(masterSymbols3, 3, false);
-	if (results.length > 0) {
-		for (const result of results) {
-			result.cell.delete(result.symbol);
-		}
-		return results;
-	}
-
-	// const masterMarkers3pair = superMarkers(3, true);
-	// superMarkersReduce(masterMarkers3pair, 3, true);
-	// if (results.length > 0) {
-	// 	for (const result of results) {
-	// 		result.cell.delete(result.symbol);
-	// 	}
-	// 	return results;
-	// }
-
-	// const masterSymbols3pair = superSymbols(3, true);
-	// superSymbolsReduce(masterSymbols3pair, 3, true);
-	// if (results.length > 0) {
-	// 	for (const result of results) {
-	// 		result.cell.delete(result.symbol);
-	// 	}
-	// 	return results;
-	// }
 
 	return results;
 }
