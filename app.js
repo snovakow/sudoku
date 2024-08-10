@@ -600,6 +600,9 @@ superpositionButton.addEventListener('click', () => {
 		timer = 0;
 		return;
 	}
+	if (!selected) return;
+	const superCell = board.cells[selectedRow * 9 + selectedCol];
+	if (superCell.symbol !== 0) return;
 
 	for (const cell of board.cells) {
 		cell.show = true;
@@ -619,88 +622,47 @@ superpositionButton.addEventListener('click', () => {
 			progress = omissions(cells);
 			if (progress) continue;
 
-			const nakedHiddenResult = new NakedHiddenGroups(cells).nakedHiddenSets();
-			if (nakedHiddenResult) {
-				progress = true;
-				continue;
-			}
+			// const nakedHiddenResult = new NakedHiddenGroups(cells).nakedHiddenSets();
+			// if (nakedHiddenResult) {
+			// 	progress = true;
+			// 	continue;
+			// }
 
-			const bentWingResults = bentWings(cells);
-			if (bentWingResults.length > 0) {
-				progress = true;
-				continue;
-			}
+			// const bentWingResults = bentWings(cells);
+			// if (bentWingResults.length > 0) {
+			// 	progress = true;
+			// 	continue;
+			// }
 
-			progress = xWing(cells);
-			if (progress) { continue; }
+			// progress = xWing(cells);
+			// if (progress) { continue; }
 
-			progress = swordfish(cells);
-			if (progress) { continue; }
+			// progress = swordfish(cells);
+			// if (progress) { continue; }
 
-			progress = jellyfish(cells);
-			if (progress) { continue; }
+			// progress = jellyfish(cells);
+			// if (progress) { continue; }
 
-			progress = uniqueRectangle(cells);
-			if (progress) { continue; }
+			// progress = uniqueRectangle(cells);
+			// if (progress) { continue; }
 		} while (progress);
 	};
+
 	startBoard = board.cells.toData();
-	let super1 = null;
-	let super2 = null;
-	let superCell = null;
-	if (selected) {
-		superCell = board.cells[selectedRow * 9 + selectedCol];
-	}
-	if (!superCell) {
-		for (const cell of board.cells) {
-			if (cell.symbol !== 0) continue;
-			if (cell.size === 2) {
-				superCell = cell;
-
-				break;
-			}
+	const supers = [];
+	for (let x = 1; x <= 9; x++) {
+		if (superCell.has(x)) {
+			// cell.delete(x);
+			superCell.setSymbol(x);
+			solve(board.cells);
+			supers.push(board.cells.toData());
+			board.cells.fromData(startBoard);
 		}
-	}
-	if (superCell) {
-		for (let x = 1; x <= 9; x++) {
-			if (superCell.has(x)) {
-				// cell.delete(x);
-				superCell.setSymbol(x);
-				if (super1) {
-					solve(board.cells);
-					super2 = board.cells.toData();
-				} else {
-					solve(board.cells);
-					super1 = board.cells.toData();
-					board.cells.fromData(startBoard);
-				}
-			}
-		}
-	}
-
-	if (!super2) {
-		return;
 	}
 
 	let iteration = 0;
 	timer = window.setInterval(() => {
-		switch (iteration % 2) {
-			case 0:
-				board.cells.fromData(super1);
-
-				break;
-			case 1:
-				board.cells.fromData(super2);
-
-				break;
-			case 2:
-				board.cells.fromData(start);
-
-				break;
-
-			default:
-				break;
-		}
+		board.cells.fromData(supers[iteration % supers.length]);
 		draw();
 		iteration++;
 	}, 1000 * 1 / 30);
