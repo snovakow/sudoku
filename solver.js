@@ -420,9 +420,6 @@ class NakedHiddenGroups {
 		if (reduced) return { hidden: false, size: 2, ...reduced };
 		reduced = this.nakedTriple();
 		if (reduced) return { hidden: false, size: 3, ...reduced };
-
-		reduced = this.hiddenPair();
-		if (reduced) return { hidden: true, size: 2, ...reduced };
 		reduced = this.nakedQuad();
 		if (reduced) return { hidden: false, size: 4, ...reduced };
 
