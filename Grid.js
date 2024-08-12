@@ -213,6 +213,7 @@ export class CellMarker extends Cell {
 		this.remainder = 0;
 	}
 	reset() {
+		this.symbol = 0;
 		this.mask = 0x03fe; // 0000 0011 1111 1110
 		this.size = 9;
 		this.remainder = 45; // 1+2+3+4+5+6+7+8+9	
