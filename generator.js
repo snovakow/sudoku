@@ -76,38 +76,55 @@ const fillSolve = (cells, search) => {
 
 		if (search === "?markers") continue;
 
-		const nakedHiddenResult = new NakedHiddenGroups(cells).nakedHiddenSets();
-		if (nakedHiddenResult) {
-			progress = true;
-			nakedHiddenSetsReduced.push(nakedHiddenResult);
-			continue;
+		if (search === "?naked") {
+			const nakedHidden = new NakedHiddenGroups(cells);
+			progress = nakedHidden.nakedPair();
+			if (progress) {
+				nakedHiddenSetsReduced.push({ hidden: false, size: 2, ...progress });
+				continue;
+			}
+
+			progress = nakedHidden.nakedTriple();
+			if (progress) {
+				nakedHiddenSetsReduced.push({ hidden: false, size: 3, ...progress });
+				continue;
+			}
 		}
 
-		const bentWingResults = bentWings(cells);
-		if (bentWingResults.length > 0) {
-			progress = true;
-			bentWingsReduced.push(...bentWingResults);
-			continue;
-		}
+		if (search === "?all") {
+			const nakedHiddenResult = new NakedHiddenGroups(cells).nakedHiddenSets();
+			if (nakedHiddenResult) {
+				progress = true;
+				nakedHiddenSetsReduced.push(nakedHiddenResult);
+				continue;
+			}
 
-		progress = xWing(cells);
-		if (progress) { xWingReduced++; continue; }
+			const bentWingResults = bentWings(cells);
+			if (bentWingResults.length > 0) {
+				progress = true;
+				bentWingsReduced.push(...bentWingResults);
+				continue;
+			}
 
-		progress = swordfish(cells);
-		if (progress) { swordfishReduced++; continue; }
+			progress = xWing(cells);
+			if (progress) { xWingReduced++; continue; }
 
-		progress = jellyfish(cells);
-		if (progress) { jellyfishReduced++; continue; }
+			progress = swordfish(cells);
+			if (progress) { swordfishReduced++; continue; }
 
-		progress = uniqueRectangle(cells);
-		if (progress) { uniqueRectangleReduced++; continue; }
+			progress = jellyfish(cells);
+			if (progress) { jellyfishReduced++; continue; }
 
-		const { reduced, filled } = phistomefel(cells);
-		progress = reduced > 0 || filled > 0;
-		if (progress) {
-			if (reduced > 0) phistomefelReduced++;
-			if (filled > 0) phistomefelFilled++;
-			continue;
+			progress = uniqueRectangle(cells);
+			if (progress) { uniqueRectangleReduced++; continue; }
+
+			const { reduced, filled } = phistomefel(cells);
+			progress = reduced > 0 || filled > 0;
+			if (progress) {
+				if (reduced > 0) phistomefelReduced++;
+				if (filled > 0) phistomefelFilled++;
+				continue;
+			}
 		}
 
 		const superpositionResults = superposition(cells);
