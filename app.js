@@ -1,5 +1,6 @@
 import { FONT, board } from "./board.js";
 import { consoleOut, fillSolve } from "./generator.js";
+import { CellMarker, Grid } from "./Grid.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
 import { bentWings, candidates, hiddenSingles, jellyfish, loneSingles, NakedHiddenGroups, omissions, swordfish, uniqueRectangle, xWing } from "./solver.js";
 
@@ -87,6 +88,42 @@ const raws = [
 		1, 0, 0, 0, 0, 0, 0, 0, 2,
 		0, 0, 0, 9, 0, 0, 0, 6, 0,
 		2, 3, 0, 0, 4, 0, 0, 0, 0,
+	],
+	"Unsolvable 511",
+	[
+		0, 0, 0, 0, 6, 0, 0, 1, 0,
+		4, 5, 0, 0, 0, 0, 3, 0, 8,
+		0, 0, 7, 4, 0, 0, 9, 0, 0,
+		0, 0, 2, 0, 3, 0, 0, 0, 0,
+		3, 0, 0, 7, 0, 5, 0, 0, 0,
+		0, 0, 0, 0, 4, 0, 6, 0, 0,
+		0, 0, 4, 0, 0, 9, 7, 0, 0,
+		7, 0, 9, 0, 0, 0, 0, 8, 2,
+		0, 1, 0, 0, 0, 0, 0, 0, 0,
+	],
+	"Unsolvable 510",
+	[
+		3, 0, 9, 0, 0, 0, 4, 0, 1,
+		0, 1, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 8, 0, 1, 0, 0, 0,
+		0, 0, 0, 0, 0, 5, 3, 0, 0,
+		8, 0, 0, 1, 0, 2, 0, 0, 9,
+		0, 0, 6, 7, 0, 0, 8, 0, 0,
+		0, 0, 0, 9, 0, 4, 0, 0, 0,
+		0, 5, 0, 0, 0, 0, 0, 7, 0,
+		7, 0, 2, 0, 0, 0, 9, 0, 3,
+	],
+	"Unsolvable 509",
+	[
+		2, 7, 0, 9, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 7, 0, 0, 0, 3,
+		8, 0, 0, 0, 6, 3, 0, 4, 0,
+		0, 0, 1, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 3, 0, 0, 5, 0,
+		0, 2, 0, 0, 0, 9, 4, 6, 0,
+		1, 0, 2, 0, 0, 0, 9, 0, 0,
+		6, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 4, 0, 5, 0, 0, 0, 2, 0,
 	],
 	"Unsolvable 508",
 	[
@@ -489,6 +526,7 @@ const click = (event) => {
 		selectedCol = col;
 
 		selected = true;
+		if (timer) superimposeMarkers(true);
 	}
 	draw();
 };
@@ -606,23 +644,15 @@ markerButton.addEventListener('click', () => {
 });
 document.body.appendChild(markerButton);
 
-const superpositionButton = document.createElement('button');
-superpositionButton.appendChild(document.createTextNode("-"));
-superpositionButton.style.position = 'absolute';
-superpositionButton.style.width = '32px';
-superpositionButton.style.height = '32px';
-superpositionButton.style.top = '0px';
-superpositionButton.style.right = '0px';
-
-let timer = 0;
-let startBoard = null;
-superpositionButton.addEventListener('click', () => {
+let superpositionSymbol = 0;
+let superpositionGroup = 0;
+const superimposeMarkers = (reset = false) => {
 	if (timer) {
 		window.clearInterval(timer);
 		board.cells.fromData(startBoard);
 		draw();
 		timer = 0;
-		return;
+		if (!reset) return;
 	}
 	if (!selected) return;
 	const superCell = board.cells[selectedRow * 9 + selectedCol];
@@ -673,25 +703,110 @@ superpositionButton.addEventListener('click', () => {
 	};
 
 	startBoard = board.cells.toData();
+
+	const union = new Grid();
+	for (const index of Grid.indices) union[index] = new CellMarker(index);
+	for (let index = 0; index < 81; index++) {
+		const startCell = startBoard[index];
+		const unionCell = union[index];
+		if (startCell.symbol === 0) {
+			unionCell.clear();
+		} else {
+			unionCell.setSymbol(startCell.symbol);
+		}
+	}
+
 	const supers = [];
-	for (let x = 1; x <= 9; x++) {
-		if (superCell.has(x)) {
-			// cell.delete(x);
-			superCell.setSymbol(x);
+	if (superpositionSymbol === 0) {
+		for (let x = 1; x <= 9; x++) {
+			if (superCell.has(x)) {
+				// cell.delete(x);
+				superCell.setSymbol(x);
+				solve(board.cells);
+				supers.push(board.cells.toData());
+				board.cells.fromData(startBoard);
+			}
+		}
+	} else {
+		let group;
+		if (superpositionGroup === 0) group = Grid.groupRows[superCell.row];
+		if (superpositionGroup === 1) group = Grid.groupCols[superCell.col];
+		if (superpositionGroup === 2) group = Grid.groupBoxs[superCell.box];
+
+		for (const index of group) {
+			const cell = board.cells[index];
+			if (cell.symbol !== 0) continue;
+			if (!cell.has(superpositionSymbol)) continue;
+
+			cell.setSymbol(superpositionSymbol);
 			solve(board.cells);
 			supers.push(board.cells.toData());
 			board.cells.fromData(startBoard);
 		}
 	}
 
+	if (supers.length < 2) return;
+
+	for (let index = 0; index < 81; index++) {
+		const unionCell = union[index];
+		if (unionCell.symbol !== 0) continue;
+
+		for (const solution of supers) {
+			const solutionCell = solution[index];
+			if (solutionCell.symbol === 0) {
+				for (let x = 1; x <= 9; x++) {
+					if (((solutionCell.mask >> x) & 0x0001) === 0x0001) {
+						unionCell.add(x)
+					}
+				}
+			} else {
+				unionCell.add(solutionCell.symbol)
+			}
+		}
+	}
+
+	const flips = [startBoard, union.toData()];
 	let iteration = 0;
 	timer = window.setInterval(() => {
-		board.cells.fromData(supers[iteration % supers.length]);
+		board.cells.fromData(flips[iteration % flips.length]);
 		draw();
 		iteration++;
 	}, 1000 * 1 / 30);
+}
+
+let timer = 0;
+let startBoard = null;
+const superpositionButton = document.createElement('button');
+superpositionButton.appendChild(document.createTextNode("-"));
+superpositionButton.style.position = 'absolute';
+superpositionButton.style.width = '32px';
+superpositionButton.style.height = '32px';
+superpositionButton.style.top = '0px';
+superpositionButton.style.right = '80px';
+superpositionButton.addEventListener('click', () => {
+	superimposeMarkers();
 });
 document.body.appendChild(superpositionButton);
+
+const selectorSymbol = createSelect(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"], (select) => {
+	superpositionSymbol = select.selectedIndex;
+	if (timer) superimposeMarkers(true);
+});
+selectorSymbol.style.position = 'absolute';
+selectorSymbol.style.width = '32px';
+selectorSymbol.style.height = '32px';
+selectorSymbol.style.top = '0px';
+selectorSymbol.style.right = '40px';
+
+const selectorGroup = createSelect(["r", "c", "b"], (select) => {
+	superpositionGroup = select.selectedIndex;
+	if (timer) superimposeMarkers(true);
+});
+selectorGroup.style.position = 'absolute';
+selectorGroup.style.width = '32px';
+selectorGroup.style.height = '32px';
+selectorGroup.style.top = '0px';
+selectorGroup.style.right = '0px';
 
 selector.style.transform = 'translateX(-50%)';
 clearButton.style.transform = 'translateX(-50%)';
