@@ -7,19 +7,23 @@
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 
 	<script type="module">
-		const fromFile = true;
-
 		const body = document.createElement('div');
 
 		body.style.fontFamily = "'Courier New', monospace";
 
 		const generateButton = document.createElement('button');
-		generateButton.appendChild(document.createTextNode("+"));
+		generateButton.appendChild(document.createTextNode("Generate"));
 		generateButton.style.top = '8px';
 		generateButton.style.right = '8px';
 		generateButton.style.position = 'absolute';
-		generateButton.style.width = '32px';
 		generateButton.style.height = '32px';
+
+		const loadButton = document.createElement('button');
+		loadButton.appendChild(document.createTextNode("Load"));
+		loadButton.style.top = '48px';
+		loadButton.style.right = '8px';
+		loadButton.style.position = 'absolute';
+		loadButton.style.height = '32px';
 
 		const dataStore = [];
 		const writeData = (count) => {
@@ -33,7 +37,7 @@
 		};
 
 		let worker = null;
-		generateButton.addEventListener('click', () => {
+		const process = (fromFile) => {
 			if (worker) {
 				worker.terminate();
 				worker = null;
@@ -50,33 +54,35 @@
 				if (fromFile) {
 					const lists = [];
 					const datas = [];
-					const dataMax = 1;
+					let dataIndex = 1;
 					let dataCount = 0;
-					const fetchCascade = (list, index) => {
-						fetch(list).then(response => response.text()).then((data) => {
-							datas[index] = data;
-							dataCount++;
+					const fetchCascade = () => {
+						const list = `./puzzles2/sudokus${dataIndex}00000.txt`;
+						fetch(list).then(response => {
+							if (response.status === 404) throw new Error("End of list.", { dataIndex });
 
-							if (dataCount === dataMax) {
-								worker = new Worker("worker.js", { type: "module" });
-								worker.postMessage({
-									search: window.location.search,
-									puzzles: datas.join('\n'),
-								});
-								worker.onmessage = (e) => {
-									const data = e.data;
-									if (data.message) setMessage(data.message);
-								};
-							}
+							if (response.status !== 200) return;
+
+							response.text().then((data) => {
+								datas.push(data);
+								dataIndex++;
+								fetchCascade();
+							});
+						}).catch(() => {
+							if (datas.length === 0) return;
+
+							worker = new Worker("worker.js", { type: "module" });
+							worker.postMessage({
+								search: window.location.search,
+								puzzles: datas.join('\n'),
+							});
+							worker.onmessage = (e) => {
+								const data = e.data;
+								if (data.message) setMessage(data.message);
+							};
 						});
 					}
-
-					for (let i = 1; i <= dataMax; i++) {
-						lists.push(`./puzzles/sudokus${i}00000.txt`);
-					}
-					for (let i = 0; i < dataMax; i++) {
-						fetchCascade(lists[i], i);
-					}
+					fetchCascade();
 				} else {
 					worker = new Worker("worker.js", { type: "module" });
 					worker.postMessage({ search: window.location.search });
@@ -91,9 +97,17 @@
 					};
 				}
 			}
-		});
+		};
 
+		generateButton.addEventListener('click', () => {
+			process(false);
+		});
+		loadButton.addEventListener('click', () => {
+			process(true);
+		});
+		document.body.appendChild(loadButton);
 		document.body.appendChild(generateButton);
+
 		document.body.appendChild(body);
 	</script>
 
