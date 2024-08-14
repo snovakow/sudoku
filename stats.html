@@ -57,7 +57,7 @@
 					let dataIndex = 1;
 					let dataCount = 0;
 					const fetchCascade = () => {
-						const list = `./puzzles2/sudokus${dataIndex}00000.txt`;
+						const list = `./puzzles/sudokus${dataIndex}00000.txt`;
 						fetch(list).then(response => {
 							if (response.status === 404) throw new Error("End of list.", { dataIndex });
 
