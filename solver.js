@@ -955,39 +955,39 @@ const superposition = (cells) => {
 			for (const result of supers) {
 				const resultCell = result[checkCell.index];
 				if (resultCell.symbol === 0) {
-					if (resultCell.size === 0) {
-						if (size === 2) {
-							let super1 = supers[0];
-							let super2 = supers[1];
-							const valid = result === super1 ? super2 : super1;
+					// if (resultCell.size === 0) {
+					// 	if (size === 2) {
+					// 		let super1 = supers[0];
+					// 		let super2 = supers[1];
+					// 		const valid = result === super1 ? super2 : super1;
 
-							for (let i = 0; i < 81; i++) {
-								const cell = cells[i];
-								if (cell.symbol !== 0) continue;
-								const validCell = valid[i];
+					// 		for (let i = 0; i < 81; i++) {
+					// 			const cell = cells[i];
+					// 			if (cell.symbol !== 0) continue;
+					// 			const validCell = valid[i];
 
-								let reduction = false;
-								if (validCell.symbol === 0) {
-									for (let x = 1; x <= 9; x++) {
-										if (cell.has(x) && ((validCell.mask >> x) & 0x0001 === 0x0000)) {
-											console.log("!!!1");
-											reduced.push(new Result(type, x, cell, size));
-											reduction = true;
-										}
-									}
-								} else {
-									for (let x = 1; x <= 9; x++) {
-										if (x !== validCell.symbol && cell.has(x)) {
-											reduced.push(new Result(type, x, cell, size));
-											reduction = true;
-										}
-									}
-								}
+					// 			let reduction = false;
+					// 			if (validCell.symbol === 0) {
+					// 				for (let x = 1; x <= 9; x++) {
+					// 					if (cell.has(x) && ((validCell.mask >> x) & 0x0001 === 0x0000)) {
+					// 						console.log("!!!1");
+					// 						reduced.push(new Result(type, x, cell, size));
+					// 						reduction = true;
+					// 					}
+					// 				}
+					// 			} else {
+					// 				for (let x = 1; x <= 9; x++) {
+					// 					if (x !== validCell.symbol && cell.has(x)) {
+					// 						reduced.push(new Result(type, x, cell, size));
+					// 						reduction = true;
+					// 					}
+					// 				}
+					// 			}
 
-								if (reduction) return reduced;
-							}
-						}
-					}
+					// 			if (reduction) return reduced;
+					// 		}
+					// 	}
+					// }
 					for (let x = 1; x <= 9; x++) {
 						if ((resultCell.mask >> x) & 0x0001 === 0x001) {
 							symbolSet.add(x);
