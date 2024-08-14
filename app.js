@@ -361,8 +361,8 @@ const raws = [
 	// '000050709050000030607000020400300000080072000092008060070000900204007000960500000'.split(''),
 	// "Jellyfish8",
 	// '020006000500700340800090100001005270050000000004100000402070030000000017090000005'.split(''),
-	"Phist 2YWing Deadly N322 H2",
-	'100056080500000000064109300200000890000000000038001200402000010000070908050000060'.split(''),
+	// "Phist Rand 2YWing Deadly N322 H2",
+	// '100056080500000000064109300200000890000000000038001200402000010000070908050000060'.split(''),
 	// "N5/9",
 	// '003056700400380005000000000040000000809710000000020590500090012000000008601000040'.split(''),
 	// "N5/9 XYZ N2",
@@ -504,6 +504,7 @@ loadGrid();
 
 document.body.appendChild(board.canvas);
 
+let superpositionMode = 0;
 const click = (event) => {
 	// event.preventDefault();
 
@@ -526,7 +527,7 @@ const click = (event) => {
 		selectedCol = col;
 
 		selected = true;
-		if (timer) superimposeMarkers(true);
+		if (timer && superpositionMode === 0) superimposeMarkers(true);
 	}
 	draw();
 };
@@ -549,6 +550,9 @@ const pickerClick = (event) => {
 
 	if (!selected) return;
 
+	const running = timer ? true : false;
+	if (timer) superimposeMarkers(false);
+
 	const [r, c] = clickLocation(event);
 
 	const index = r * 3 + c + 1;
@@ -565,6 +569,12 @@ const pickerClick = (event) => {
 	draw();
 
 	saveGrid(selector.selectedIndex);
+
+	if (running) {
+		fillSolve(board.cells, window.location.search);
+		saveGrid();
+		superimposeMarkers();
+	}
 };
 picker.addEventListener('click', pickerClick);
 
@@ -572,6 +582,9 @@ const pickerMarkerClick = (event) => {
 	// event.preventDefault();
 
 	if (!selected) return;
+
+	const running = timer ? true : false;
+	if (timer) superimposeMarkers(false);
 
 	const [r, c] = clickLocation(event);
 
@@ -590,6 +603,12 @@ const pickerMarkerClick = (event) => {
 	draw();
 
 	saveGrid(selector.selectedIndex);
+
+	if (running) {
+		fillSolve(board.cells, window.location.search);
+		saveGrid();
+		superimposeMarkers();
+	}
 };
 pickerMarker.addEventListener('click', pickerMarkerClick);
 
@@ -644,8 +663,6 @@ markerButton.addEventListener('click', () => {
 });
 document.body.appendChild(markerButton);
 
-let superpositionSymbol = 0;
-let superpositionGroup = 0;
 const superimposeMarkers = (reset = false) => {
 	if (timer) {
 		window.clearInterval(timer);
@@ -654,9 +671,7 @@ const superimposeMarkers = (reset = false) => {
 		timer = 0;
 		if (!reset) return;
 	}
-	if (!selected) return;
-	const superCell = board.cells[selectedRow * 9 + selectedCol];
-	if (superCell.symbol !== 0) return;
+	if (!selected && superpositionMode === 0) return;
 
 	for (const cell of board.cells) {
 		cell.show = true;
@@ -704,20 +719,25 @@ const superimposeMarkers = (reset = false) => {
 
 	startBoard = board.cells.toData();
 
-	const union = new Grid();
-	for (const index of Grid.indices) union[index] = new CellMarker(index);
-	for (let index = 0; index < 81; index++) {
-		const startCell = startBoard[index];
-		const unionCell = union[index];
-		if (startCell.symbol === 0) {
-			unionCell.clear();
-		} else {
-			unionCell.setSymbol(startCell.symbol);
+	let flips;
+	if (superpositionMode === 0) {
+		const union = new Grid();
+		for (const index of Grid.indices) union[index] = new CellMarker(index);
+		for (let index = 0; index < 81; index++) {
+			const startCell = startBoard[index];
+			const unionCell = union[index];
+			if (startCell.symbol === 0) {
+				unionCell.clear();
+			} else {
+				unionCell.setSymbol(startCell.symbol);
+			}
 		}
-	}
 
-	const supers = [];
-	if (superpositionSymbol === 0) {
+		const superCell = board.cells[selectedRow * 9 + selectedCol];
+		if (superCell.symbol !== 0) return;
+
+		const supers = [];
+
 		for (let x = 1; x <= 9; x++) {
 			if (superCell.has(x)) {
 				// cell.delete(x);
@@ -727,86 +747,217 @@ const superimposeMarkers = (reset = false) => {
 				board.cells.fromData(startBoard);
 			}
 		}
-	} else {
-		let group;
-		if (superpositionGroup === 0) group = Grid.groupRows[superCell.row];
-		if (superpositionGroup === 1) group = Grid.groupCols[superCell.col];
-		if (superpositionGroup === 2) group = Grid.groupBoxs[superCell.box];
 
-		for (const index of group) {
-			const cell = board.cells[index];
-			if (cell.symbol !== 0) continue;
-			if (!cell.has(superpositionSymbol)) continue;
+		if (supers.length < 2) return;
 
-			cell.setSymbol(superpositionSymbol);
-			solve(board.cells);
-			supers.push(board.cells.toData());
-			board.cells.fromData(startBoard);
-		}
-	}
+		for (let index = 0; index < 81; index++) {
+			const unionCell = union[index];
+			if (unionCell.symbol !== 0) continue;
 
-	if (supers.length < 2) return;
-
-	for (let index = 0; index < 81; index++) {
-		const unionCell = union[index];
-		if (unionCell.symbol !== 0) continue;
-
-		for (const solution of supers) {
-			const solutionCell = solution[index];
-			if (solutionCell.symbol === 0) {
-				for (let x = 1; x <= 9; x++) {
-					if (((solutionCell.mask >> x) & 0x0001) === 0x0001) {
-						unionCell.add(x)
+			for (const solution of supers) {
+				const solutionCell = solution[index];
+				if (solutionCell.symbol === 0) {
+					for (let x = 1; x <= 9; x++) {
+						if (((solutionCell.mask >> x) & 0x0001) === 0x0001) {
+							unionCell.add(x)
+						}
 					}
+				} else {
+					unionCell.add(solutionCell.symbol)
 				}
-			} else {
-				unionCell.add(solutionCell.symbol)
 			}
 		}
+
+		flips = [startBoard, union.toData()];
+	} else {
+		const intersection = new Grid();
+		for (const index of Grid.indices) intersection[index] = new CellMarker(index);
+		for (let index = 0; index < 81; index++) {
+			const startCell = startBoard[index];
+			const intersectionCell = intersection[index];
+			if (startCell.symbol === 0) {
+				intersectionCell.setSymbol(0);
+			} else {
+				intersectionCell.setSymbol(startCell.symbol);
+			}
+		}
+
+		for (let index = 0; index < 81; index++) {
+			const cell = board.cells[index];
+			if (cell.symbol !== 0) continue;
+
+			const union = new Grid();
+			for (const index of Grid.indices) union[index] = new CellMarker(index);
+			for (let index = 0; index < 81; index++) {
+				const startCell = startBoard[index];
+				const unionCell = union[index];
+				if (startCell.symbol === 0) {
+					unionCell.clear();
+				} else {
+					unionCell.setSymbol(startCell.symbol);
+				}
+			}
+
+			const supers = [];
+			for (let x = 1; x <= 9; x++) {
+				if (!cell.has(x)) continue;
+
+				cell.setSymbol(x);
+				solve(board.cells);
+				supers.push(board.cells.toData());
+				board.cells.fromData(startBoard);
+			}
+			if (supers.length < 2) continue;
+
+			for (let index = 0; index < 81; index++) {
+				const unionCell = union[index];
+				if (unionCell.symbol !== 0) continue;
+
+				for (const solution of supers) {
+					const solutionCell = solution[index];
+					if (solutionCell.symbol === 0) {
+						for (let symbol = 1; symbol <= 9; symbol++) {
+							if (((solutionCell.mask >> symbol) & 0x0001) === 0x0001) {
+								unionCell.add(symbol)
+							}
+						}
+					} else {
+						unionCell.add(solutionCell.symbol)
+					}
+				}
+			}
+
+			for (let index = 0; index < 81; index++) {
+				const unionCell = union[index];
+				const intersectionCell = intersection[index];
+				if (unionCell.symbol === 0) {
+					for (let symbol = 1; symbol <= 9; symbol++) {
+						if (!unionCell.has(symbol)) {
+							intersectionCell.delete(symbol);
+						}
+					}
+				} else {
+					// intersectionCell.setSymbol(unionCell.symbol);
+				}
+			}
+		}
+
+		if (superpositionMode === 2) {
+			for (const group of Grid.groupTypes) {
+				for (let x = 1; x <= 9; x++) {
+					const union = new Grid();
+					for (const index of Grid.indices) union[index] = new CellMarker(index);
+					for (let index = 0; index < 81; index++) {
+						const startCell = startBoard[index];
+						const unionCell = union[index];
+						if (startCell.symbol === 0) {
+							unionCell.clear();
+						} else {
+							unionCell.setSymbol(startCell.symbol);
+						}
+					}
+
+					const supers = [];
+					for (const index of group) {
+						const cell = board.cells[index];
+						if (cell.symbol !== 0) continue;
+						if (!cell.has(x)) continue;
+
+						cell.setSymbol(x);
+						solve(board.cells);
+						supers.push(board.cells.toData());
+						board.cells.fromData(startBoard);
+					}
+
+					if (supers.length < 2) continue;
+
+					for (let index = 0; index < 81; index++) {
+						const unionCell = union[index];
+						if (unionCell.symbol !== 0) continue;
+
+						for (const solution of supers) {
+							const solutionCell = solution[index];
+							if (solutionCell.symbol === 0) {
+								for (let symbol = 1; symbol <= 9; symbol++) {
+									if (((solutionCell.mask >> symbol) & 0x0001) === 0x0001) {
+										unionCell.add(symbol)
+									}
+								}
+							} else {
+								unionCell.add(solutionCell.symbol)
+							}
+						}
+					}
+
+					for (let index = 0; index < 81; index++) {
+						const unionCell = union[index];
+						const intersectionCell = intersection[index];
+						if (unionCell.symbol === 0) {
+							for (let symbol = 1; symbol <= 9; symbol++) {
+								if (!unionCell.has(symbol)) {
+									intersectionCell.delete(symbol);
+								}
+							}
+						} else {
+							// intersectionCell.setSymbol(unionCell.symbol);
+						}
+					}
+				}
+			}
+		}
+
+		flips = [startBoard, intersection.toData()];
 	}
 
-	const flips = [startBoard, union.toData()];
 	let iteration = 0;
 	timer = window.setInterval(() => {
 		board.cells.fromData(flips[iteration % flips.length]);
 		draw();
+		board.cells.fromData(startBoard);
 		iteration++;
-	}, 1000 * 1 / 30);
+	}, 1000 * 1 / 20);
 }
 
 let timer = 0;
 let startBoard = null;
-const superpositionButton = document.createElement('button');
-superpositionButton.appendChild(document.createTextNode("-"));
-superpositionButton.style.position = 'absolute';
-superpositionButton.style.width = '32px';
-superpositionButton.style.height = '32px';
-superpositionButton.style.top = '0px';
-superpositionButton.style.right = '80px';
-superpositionButton.addEventListener('click', () => {
+const superpositionMarkerButton = document.createElement('button');
+superpositionMarkerButton.appendChild(document.createTextNode("M"));
+superpositionMarkerButton.style.position = 'absolute';
+superpositionMarkerButton.style.width = '32px';
+superpositionMarkerButton.style.height = '32px';
+superpositionMarkerButton.style.top = '0px';
+superpositionMarkerButton.style.right = '80px';
+superpositionMarkerButton.addEventListener('click', () => {
+	superpositionMode = 0;
 	superimposeMarkers();
 });
-document.body.appendChild(superpositionButton);
+document.body.appendChild(superpositionMarkerButton);
 
-const selectorSymbol = createSelect(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"], (select) => {
-	superpositionSymbol = select.selectedIndex;
-	if (timer) superimposeMarkers(true);
+const superpositionMarkerAllButton = document.createElement('button');
+superpositionMarkerAllButton.appendChild(document.createTextNode("A"));
+superpositionMarkerAllButton.style.position = 'absolute';
+superpositionMarkerAllButton.style.width = '32px';
+superpositionMarkerAllButton.style.height = '32px';
+superpositionMarkerAllButton.style.top = '0px';
+superpositionMarkerAllButton.style.right = '40px';
+superpositionMarkerAllButton.addEventListener('click', () => {
+	superpositionMode = 1;
+	superimposeMarkers();
 });
-selectorSymbol.style.position = 'absolute';
-selectorSymbol.style.width = '32px';
-selectorSymbol.style.height = '32px';
-selectorSymbol.style.top = '0px';
-selectorSymbol.style.right = '40px';
+document.body.appendChild(superpositionMarkerAllButton);
 
-const selectorGroup = createSelect(["r", "c", "b"], (select) => {
-	superpositionGroup = select.selectedIndex;
-	if (timer) superimposeMarkers(true);
+const superpositionSymbolButton = document.createElement('button');
+superpositionSymbolButton.appendChild(document.createTextNode("S"));
+superpositionSymbolButton.style.position = 'absolute';
+superpositionSymbolButton.style.width = '32px';
+superpositionSymbolButton.style.height = '32px';
+superpositionSymbolButton.style.top = '0px';
+superpositionSymbolButton.style.right = '0px';
+superpositionSymbolButton.addEventListener('click', () => {
+	superpositionMode = 2;
+	superimposeMarkers();
 });
-selectorGroup.style.position = 'absolute';
-selectorGroup.style.width = '32px';
-selectorGroup.style.height = '32px';
-selectorGroup.style.top = '0px';
-selectorGroup.style.right = '0px';
+document.body.appendChild(superpositionSymbolButton);
 
 selector.style.transform = 'translateX(-50%)';
 clearButton.style.transform = 'translateX(-50%)';
