@@ -89,11 +89,16 @@
 					worker.onmessage = (e) => {
 						const data = e.data;
 						dataStore.push(data.puzzle);
-						if (data.totalPuzzles % 100000 === 0) {
-							writeData(data.totalPuzzles);
-						}
 
 						if (data.message) setMessage(data.message);
+
+						if (toFile) {
+							if (data.totalPuzzles % 100000 === 0) {
+								writeData(data.totalPuzzles);
+							}
+						} else {
+							if (window.location.search === "?db") sendData(data);
+						}
 					};
 				}
 			}
