@@ -68,15 +68,13 @@ const clueCounter = new Map();
 
 let running = true;
 
+const stepMode = 0; // 1=row 2=phist
 const step = (search) => {
 	const fromFile = puzzleStrings.length > 0;
 
 	let time = performance.now();
 
-	let mode = 0;
-	if (search === "?row") mode = 1;
-	if (search === "?phist") mode = 2;
-
+	let mode = stepMode;
 	if (fromFile) {
 		cells.fromString(puzzleStrings[puzzleCount]);
 		mode = -1;
@@ -99,6 +97,27 @@ const step = (search) => {
 
 	const result = fillSolve(cells, search);
 
+	data.puzzleClues = data.puzzle;
+	data.puzzleFilled = cells.string();
+	data.clueCount = clueCount;
+
+	data.simple = 0;
+	data.naked2 = 0;
+	data.naked3 = 0;
+	data.naked4 = 0;
+	data.hidden2 = 0;
+	data.hidden3 = 0;
+	data.hidden4 = 0;
+	data.yWing = 0;
+	data.xyzWing = 0;
+	data.xWing = 0;
+	data.swordfish = 0;
+	data.jellyfish = 0;
+	data.uniqueRectangle = 0;
+	data.phistomefel = 0;
+	data.superpositions = 0;
+	data.bruteForce = 0;
+
 	const elapsed = performance.now() - time;
 	if (maxTime === 0) {
 		maxTime = elapsed;
@@ -114,96 +133,115 @@ const step = (search) => {
 	let setsTotal = 0;
 
 	if (result.bruteForceFill) {
+		data.bruteForce = 1;
 		bruteForceFill++;
-	} else {
-		const phistomefelResult = (result.phistomefelReduced > 0 || result.phistomefelFilled > 0);
-		// if (phistomefelResult && result.bentWingsReduced.length === 0) {
-		// 	console.log("Phistomefel -----");
-		// 	console.log(test);
-		// 	console.log("Phistomefel -----");
-		// }
+	}
 
-		let simple = true;
-		simple &&= result.nakedHiddenSetsReduced.length === 0;
-		simple &&= result.bentWingsReduced.length === 0;
-		simple &&= result.xWingReduced === 0;
-		simple &&= result.swordfishReduced === 0;
-		simple &&= result.jellyfishReduced === 0;
-		simple &&= result.uniqueRectangleReduced === 0;
-		simple &&= result.superpositionReduced.length === 0;
-		simple &&= !phistomefelResult;
+	const phistomefelResult = (result.phistomefelReduced > 0 || result.phistomefelFilled > 0);
 
-		if (simple) simples++;
-		else {
-			if (result.nakedHiddenSetsReduced.length > 0) {
-				for (const set of result.nakedHiddenSetsReduced) {
-					if (set.max === 4 && set.nakedSize === 2) set4_2_2++;
+	let simple = true;
+	simple &&= result.nakedHiddenSetsReduced.length === 0;
+	simple &&= result.bentWingsReduced.length === 0;
+	simple &&= result.xWingReduced === 0;
+	simple &&= result.swordfishReduced === 0;
+	simple &&= result.jellyfishReduced === 0;
+	simple &&= result.uniqueRectangleReduced === 0;
+	simple &&= result.superpositionReduced.length === 0;
+	simple &&= !phistomefelResult;
+	simple &&= !result.bruteForceFill;
 
-					else if (set.max === 5 && set.nakedSize === 2) set5_2_3++;
-					else if (set.max === 5 && set.nakedSize === 3) set5_3_2++;
+	data.simple = simple ? 1 : 0;
 
-					else if (set.max === 6 && set.nakedSize === 2) set6_2_4++;
-					else if (set.max === 6 && set.nakedSize === 3) set6_3_3++;
-					else if (set.max === 6 && set.nakedSize === 4) set6_4_2++;
+	if (simple) simples++;
+	else {
+		if (result.nakedHiddenSetsReduced.length > 0) {
+			for (const set of result.nakedHiddenSetsReduced) {
+				if (set.max === 4 && set.nakedSize === 2) set4_2_2++;
 
-					else if (set.max === 7 && set.nakedSize === 2) set7_2_5++;
-					else if (set.max === 7 && set.nakedSize === 3) set7_3_4++;
-					else if (set.max === 7 && set.nakedSize === 4) set7_4_3++;
-					else if (set.max === 7 && set.nakedSize === 5) set7_5_2++;
+				else if (set.max === 5 && set.nakedSize === 2) set5_2_3++;
+				else if (set.max === 5 && set.nakedSize === 3) set5_3_2++;
 
-					else if (set.max === 8 && set.nakedSize === 2) set8_2_6++;
-					else if (set.max === 8 && set.nakedSize === 3) set8_3_5++;
-					else if (set.max === 8 && set.nakedSize === 4) set8_4_4++;
-					else if (set.max === 8 && set.nakedSize === 5) set8_5_3++;
-					else if (set.max === 8 && set.nakedSize === 6) set8_6_2++;
+				else if (set.max === 6 && set.nakedSize === 2) set6_2_4++;
+				else if (set.max === 6 && set.nakedSize === 3) set6_3_3++;
+				else if (set.max === 6 && set.nakedSize === 4) set6_4_2++;
 
-					else if (set.max === 9 && set.nakedSize === 2) set9_2_7++;
-					else if (set.max === 9 && set.nakedSize === 3) set9_3_6++;
-					else if (set.max === 9 && set.nakedSize === 4) set9_4_5++;
-					else if (set.max === 9 && set.nakedSize === 5) set9_5_4++;
-					else if (set.max === 9 && set.nakedSize === 6) set9_6_3++;
-					else if (set.max === 9 && set.nakedSize === 7) set9_7_2++;
+				else if (set.max === 7 && set.nakedSize === 2) set7_2_5++;
+				else if (set.max === 7 && set.nakedSize === 3) set7_3_4++;
+				else if (set.max === 7 && set.nakedSize === 4) set7_4_3++;
+				else if (set.max === 7 && set.nakedSize === 5) set7_5_2++;
 
-					if (set.nakedSize === 2) setNaked2++;
-					else if (set.nakedSize === 3) setNaked3++;
-					else if (set.nakedSize === 4) setNaked4++;
-					else if (set.hiddenSize === 2) setHidden2++;
-					else if (set.hiddenSize === 3) setHidden3++;
-					else if (set.hiddenSize === 4) setHidden4++;
-				}
-			}
-			if (result.bentWingsReduced.length > 0) {
-				for (const reduced of result.bentWingsReduced) {
-					if (reduced.strategy === REDUCE.Y_Wing) yWingReduced++;
-					if (reduced.strategy === REDUCE.XYZ_Wing) xyzWingReduced++;
-				}
-			}
-			if (result.xWingReduced > 0) xWingReduced++;
-			if (result.swordfishReduced > 0) swordfishReduced++;
-			if (result.jellyfishReduced > 0) jellyfishReduced++;
-			if (result.uniqueRectangleReduced > 0) uniqueRectangleReduced++;
-			if (phistomefelResult) phistomefelCount++;
+				else if (set.max === 8 && set.nakedSize === 2) set8_2_6++;
+				else if (set.max === 8 && set.nakedSize === 3) set8_3_5++;
+				else if (set.max === 8 && set.nakedSize === 4) set8_4_4++;
+				else if (set.max === 8 && set.nakedSize === 5) set8_5_3++;
+				else if (set.max === 8 && set.nakedSize === 6) set8_6_2++;
 
-			if (result.superpositionReduced.length > 0) {
-				const once = new Set();
-				for (const superpositionResult of result.superpositionReduced) {
-					const key = superpositionResult.type + " " + superpositionResult.size;
-					if (once.has(key)) continue;
+				else if (set.max === 9 && set.nakedSize === 2) set9_2_7++;
+				else if (set.max === 9 && set.nakedSize === 3) set9_3_6++;
+				else if (set.max === 9 && set.nakedSize === 4) set9_4_5++;
+				else if (set.max === 9 && set.nakedSize === 5) set9_5_4++;
+				else if (set.max === 9 && set.nakedSize === 6) set9_6_3++;
+				else if (set.max === 9 && set.nakedSize === 7) set9_7_2++;
 
-					once.add(key);
+				if (set.nakedSize === 2) setNaked2++;
+				else if (set.nakedSize === 3) setNaked3++;
+				else if (set.nakedSize === 4) setNaked4++;
+				else if (set.hiddenSize === 2) setHidden2++;
+				else if (set.hiddenSize === 3) setHidden3++;
+				else if (set.hiddenSize === 4) setHidden4++;
 
-					const count = superpositionReduced.get(key);
-					if (count) {
-						superpositionReduced.set(key, count + 1);
-					} else {
-						superpositionReduced.set(key, 1);
-					}
-				}
-				superpositions++;
-			} else {
-				markers++;
+				if (set.nakedSize === 2) data.naked2++;
+				else if (set.nakedSize === 3) data.naked3++;
+				else if (set.nakedSize === 4) data.naked4++;
+				else if (set.hiddenSize === 2) data.hidden2++;
+				else if (set.hiddenSize === 3) data.hidden3++;
+				else if (set.hiddenSize === 4) data.hidden4++;
 			}
 		}
+		if (result.bentWingsReduced.length > 0) {
+			for (const reduced of result.bentWingsReduced) {
+				if (reduced.strategy === REDUCE.Y_Wing) yWingReduced++;
+				if (reduced.strategy === REDUCE.XYZ_Wing) xyzWingReduced++;
+
+				if (reduced.strategy === REDUCE.Y_Wing) data.yWing++;
+				if (reduced.strategy === REDUCE.XYZ_Wing) data.xyzWing++;
+			}
+		}
+
+		xWingReduced += result.xWingReduced;
+		data.xWing += result.xWingReduced;
+
+		swordfishReduced += result.swordfishReduced;
+		data.swordfish += result.swordfishReduced;
+
+		jellyfishReduced += result.jellyfishReduced;
+		data.jellyfish += result.jellyfishReduced;
+
+		uniqueRectangleReduced += result.uniqueRectangleReduced;
+		data.uniqueRectangle += result.uniqueRectangleReduced;
+
+		if (phistomefelResult) phistomefelCount++;
+		if (phistomefelResult) data.phistomefel++;
+
+		if (result.superpositionReduced.length > 0) {
+			const once = new Set();
+			for (const superpositionResult of result.superpositionReduced) {
+				const key = superpositionResult.type + " " + superpositionResult.size;
+				if (once.has(key)) continue;
+
+				once.add(key);
+
+				const count = superpositionReduced.get(key);
+				if (count) {
+					superpositionReduced.set(key, count + 1);
+				} else {
+					superpositionReduced.set(key, 1);
+				}
+			}
+			superpositions++;
+			data.superpositions++;
+		}
+		markers++;
 	}
 
 	setsTotal += setNaked2;
