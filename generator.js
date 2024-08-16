@@ -76,56 +76,45 @@ const fillSolve = (cells, search) => {
 
 		if (search === "?markers") continue;
 
-		if (search === "?naked") {
-			const nakedHidden = new NakedHiddenGroups(cells);
-			progress = nakedHidden.nakedPair();
-			if (progress) {
-				nakedHiddenSetsReduced.push({ hidden: false, size: 2, ...progress });
-				continue;
-			}
-
-			progress = nakedHidden.nakedTriple();
-			if (progress) {
-				nakedHiddenSetsReduced.push({ hidden: false, size: 3, ...progress });
-				continue;
-			}
+		const nakedHiddenResult = new NakedHiddenGroups(cells).nakedHiddenSets();
+		if (nakedHiddenResult) {
+			progress = true;
+			nakedHiddenSetsReduced.push(nakedHiddenResult);
+			continue;
 		}
 
-		if (search === "?all") {
-			const nakedHiddenResult = new NakedHiddenGroups(cells).nakedHiddenSets();
-			if (nakedHiddenResult) {
-				progress = true;
-				nakedHiddenSetsReduced.push(nakedHiddenResult);
-				continue;
-			}
+		if (search === "?sets") continue;
 
-			const bentWingResults = bentWings(cells);
-			if (bentWingResults.length > 0) {
-				progress = true;
-				bentWingsReduced.push(...bentWingResults);
-				continue;
-			}
-
-			progress = xWing(cells);
-			if (progress) { xWingReduced++; continue; }
-
-			progress = swordfish(cells);
-			if (progress) { swordfishReduced++; continue; }
-
-			progress = jellyfish(cells);
-			if (progress) { jellyfishReduced++; continue; }
-
-			progress = uniqueRectangle(cells);
-			if (progress) { uniqueRectangleReduced++; continue; }
-
-			const { reduced, filled } = phistomefel(cells);
-			progress = reduced > 0 || filled > 0;
-			if (progress) {
-				if (reduced > 0) phistomefelReduced++;
-				if (filled > 0) phistomefelFilled++;
-				continue;
-			}
+		const bentWingResults = bentWings(cells);
+		if (bentWingResults.length > 0) {
+			progress = true;
+			bentWingsReduced.push(...bentWingResults);
+			continue;
 		}
+
+		progress = xWing(cells);
+		if (progress) { xWingReduced++; continue; }
+
+		progress = swordfish(cells);
+		if (progress) { swordfishReduced++; continue; }
+
+		progress = jellyfish(cells);
+		if (progress) { jellyfishReduced++; continue; }
+
+		progress = uniqueRectangle(cells);
+		if (progress) { uniqueRectangleReduced++; continue; }
+
+		const { reduced, filled } = phistomefel(cells);
+		progress = reduced > 0 || filled > 0;
+		if (progress) {
+			if (reduced > 0) phistomefelReduced++;
+			if (filled > 0) phistomefelFilled++;
+			continue;
+		}
+
+		if (search === "?all") continue;
+
+		if (!bruteForceFill) bruteForceFill = !isFinished(cells);
 
 		const superpositionResults = superposition(cells);
 		if (superpositionResults.length > 0) {
@@ -134,7 +123,6 @@ const fillSolve = (cells, search) => {
 			continue;
 		}
 
-		bruteForceFill = !isFinished(cells);
 		if (search === "?brute" && bruteForceFill) bruteForce(cells);
 	} while (progress);
 
@@ -244,6 +232,8 @@ const sodokoSolver = (grid) => {
 	return true;
 }
 
+const skew = false;
+
 let operations = 0;
 const solutionCount = (grid, solutions = 0) => {
 	operations++;
@@ -255,10 +245,19 @@ const solutionCount = (grid, solutions = 0) => {
 			if (isValidCell(grid, Math.floor(index / 9), index % 9, symbol)) {
 				grid[index] = symbol;
 				solutions = solutionCount(grid, solutions);
-				if (solutions < 2) {
-					grid[index] = 0;
+
+				if (skew) {
+					if (solutions === 1) {
+						grid[index] = 0;
+					} else {
+						return solutions;
+					}
 				} else {
-					return solutions;
+					if (solutions < 2) {
+						grid[index] = 0;
+					} else {
+						return solutions;
+					}
 				}
 			}
 		}
@@ -283,7 +282,7 @@ const sudokuGenerator = (cells, target = 0) => {
 	}
 
 	for (let i = 0; i < 81; i++) grid[i] = 0;
-	for (let i = 0; i < 9; i++) grid[i] = i + 1;
+	if (!skew) for (let i = 0; i < 9; i++) grid[i] = i + 1;
 	sodokoSolver(grid);
 
 	if (!isValidGrid(grid)) {
@@ -291,7 +290,7 @@ const sudokuGenerator = (cells, target = 0) => {
 		return;
 	}
 
-	randomize(rndi);
+	if (!skew) randomize(rndi);
 
 	operations = 0;
 
