@@ -18,13 +18,6 @@
 		generateButton.style.position = 'absolute';
 		generateButton.style.height = '32px';
 
-		const loadButton = document.createElement('button');
-		loadButton.appendChild(document.createTextNode("Load"));
-		loadButton.style.top = '48px';
-		loadButton.style.right = '8px';
-		loadButton.style.position = 'absolute';
-		loadButton.style.height = '32px';
-
 		const dataStore = [];
 		const writeData = (count) => {
 			const link = document.createElement("a");
@@ -135,12 +128,8 @@
 		};
 
 		generateButton.addEventListener('click', () => {
-			process(false);
+			process();
 		});
-		loadButton.addEventListener('click', () => {
-			process(true);
-		});
-		document.body.appendChild(loadButton);
 		document.body.appendChild(generateButton);
 
 		document.body.appendChild(body);
