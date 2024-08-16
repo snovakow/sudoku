@@ -393,6 +393,10 @@ const raws = [
 	// '100000089000130400090020300840500070000860000500010000000000803000670200060000540'.split(''),
 	// "N52 2yWing",
 	// '023400700600008400000007000037004090500709008000000060090000620810000000000005000'.split(''),
+	"19 clue 1",
+	'003400000700000000000010600060000000000070040050002930000003000000065800914000000'.split(''),
+	"19 clue 2",
+	'000050700000100000590003600300000007000060400800070000006090000000000008009000031'.split(''),
 ];
 const sudokuSamples = [];
 for (let rawIndex = 0; rawIndex < raws.length; rawIndex += 2) {
@@ -769,7 +773,7 @@ const superimposeMarkers = (reset = false) => {
 		}
 
 		flips = [startBoard, union.toData()];
-	} else {
+	} else if (superpositionMode === 1) {
 		const intersection = new Grid();
 		for (const index of Grid.indices) intersection[index] = new CellMarker(index);
 		for (let index = 0; index < 81; index++) {
@@ -842,70 +846,81 @@ const superimposeMarkers = (reset = false) => {
 			}
 		}
 
-		if (superpositionMode === 2) {
-			for (const group of Grid.groupTypes) {
-				for (let x = 1; x <= 9; x++) {
-					const union = new Grid();
-					for (const index of Grid.indices) union[index] = new CellMarker(index);
-					for (let index = 0; index < 81; index++) {
-						const startCell = startBoard[index];
-						const unionCell = union[index];
-						if (startCell.symbol === 0) {
-							unionCell.clear();
-						} else {
-							unionCell.setSymbol(startCell.symbol);
-						}
+		flips = [startBoard, intersection.toData()];
+	} else if (superpositionMode === 2) {
+		const intersection = new Grid();
+		for (const index of Grid.indices) intersection[index] = new CellMarker(index);
+		for (let index = 0; index < 81; index++) {
+			const startCell = startBoard[index];
+			const intersectionCell = intersection[index];
+			if (startCell.symbol === 0) {
+				intersectionCell.setSymbol(0);
+			} else {
+				intersectionCell.setSymbol(startCell.symbol);
+			}
+		}
+
+		for (const group of Grid.groupTypes) {
+			for (let x = 1; x <= 9; x++) {
+				const union = new Grid();
+				for (const index of Grid.indices) union[index] = new CellMarker(index);
+				for (let index = 0; index < 81; index++) {
+					const startCell = startBoard[index];
+					const unionCell = union[index];
+					if (startCell.symbol === 0) {
+						unionCell.clear();
+					} else {
+						unionCell.setSymbol(startCell.symbol);
 					}
+				}
 
-					const supers = [];
-					for (const index of group) {
-						const cell = board.cells[index];
-						if (cell.symbol !== 0) continue;
-						if (!cell.has(x)) continue;
+				const supers = [];
+				for (const index of group) {
+					const cell = board.cells[index];
+					if (cell.symbol !== 0) continue;
+					if (!cell.has(x)) continue;
 
-						cell.setSymbol(x);
-						solve(board.cells);
-						supers.push(board.cells.toData());
-						board.cells.fromData(startBoard);
-					}
+					cell.setSymbol(x);
+					solve(board.cells);
+					supers.push(board.cells.toData());
+					board.cells.fromData(startBoard);
+				}
 
-					if (supers.length < 2) continue;
+				if (supers.length < 2) continue;
 
-					for (let index = 0; index < 81; index++) {
-						const unionCell = union[index];
-						if (unionCell.symbol !== 0) continue;
+				for (let index = 0; index < 81; index++) {
+					const unionCell = union[index];
+					if (unionCell.symbol !== 0) continue;
 
-						for (const solution of supers) {
-							const solutionCell = solution[index];
-							if (solutionCell.symbol === 0) {
-								for (let symbol = 1; symbol <= 9; symbol++) {
-									if (((solutionCell.mask >> symbol) & 0x0001) === 0x0001) {
-										unionCell.add(symbol)
-									}
-								}
-							} else {
-								unionCell.add(solutionCell.symbol)
-							}
-						}
-					}
-
-					for (let index = 0; index < 81; index++) {
-						const unionCell = union[index];
-						const intersectionCell = intersection[index];
-						if (unionCell.symbol === 0) {
+					for (const solution of supers) {
+						const solutionCell = solution[index];
+						if (solutionCell.symbol === 0) {
 							for (let symbol = 1; symbol <= 9; symbol++) {
-								if (!unionCell.has(symbol)) {
-									intersectionCell.delete(symbol);
+								if (((solutionCell.mask >> symbol) & 0x0001) === 0x0001) {
+									unionCell.add(symbol)
 								}
 							}
 						} else {
-							// intersectionCell.setSymbol(unionCell.symbol);
+							unionCell.add(solutionCell.symbol)
 						}
+					}
+				}
+
+				for (let index = 0; index < 81; index++) {
+					const unionCell = union[index];
+					const intersectionCell = intersection[index];
+					if (unionCell.symbol === 0) {
+						for (let symbol = 1; symbol <= 9; symbol++) {
+							if (!unionCell.has(symbol)) {
+								intersectionCell.delete(symbol);
+							}
+						}
+					} else {
+						// intersectionCell.setSymbol(unionCell.symbol);
 					}
 				}
 			}
 		}
-
 		flips = [startBoard, intersection.toData()];
 	}
 
