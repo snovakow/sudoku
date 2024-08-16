@@ -51,6 +51,33 @@
 					}
 				};
 
+				const sendData = (data) => {
+					let url = 'https://snovakow.dev/snovakow/import.php?version=1';
+					url += '&puzzleClues=' + data.puzzleClues;
+					url += '&puzzleFilled=' + data.puzzleFilled;
+					url += '&clueCount=' + data.clueCount;
+					url += '&simple=' + data.simple;
+					url += '&naked2=' + data.naked2;
+					url += '&naked3=' + data.naked3;
+					url += '&naked4=' + data.naked4;
+					url += '&hidden2=' + data.hidden2;
+					url += '&hidden3=' + data.hidden3;
+					url += '&hidden4=' + data.hidden4;
+					url += '&yWing=' + data.yWing;
+					url += '&xyzWing=' + data.xyzWing;
+					url += '&xWing=' + data.xWing;
+					url += '&swordfish=' + data.swordfish;
+					url += '&jellyfish=' + data.jellyfish;
+					url += '&uniqueRectangle=' + data.uniqueRectangle;
+					url += '&phistomefel=' + data.phistomefel;
+					url += '&superpositions=' + data.superpositions;
+					url += '&bruteForce=' + data.bruteForce;
+
+					fetch(url, {
+						method: "GET" // default, so we can ignore
+					});
+				};
+
 				if (fromFile) {
 					const lists = [];
 					const datas = [];
