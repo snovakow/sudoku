@@ -442,8 +442,6 @@ const xWing = (cells) => {
 		}
 	}
 
-	let reduced = false;
-
 	const xWingOrientation = (flip) => {
 		for (let i = 1; i <= 9; i++) {
 			const pairs = [];
@@ -469,6 +467,7 @@ const xWing = (cells) => {
 				for (let p2 = p1 + 1; p2 < len; p2++) {
 					const pair2 = pairs[p2];
 					if (pair1.i1 === pair2.i1 && pair1.i2 === pair2.i2) {
+						let reduced = false;
 						for (let x = 0; x < 9; x++) {
 							if (x === pair1.x || x === pair2.x) continue;
 
@@ -492,15 +491,18 @@ const xWing = (cells) => {
 								}
 							}
 						}
+						if (reduced) return true;
 					}
 				}
 			}
 		}
+		return false;
 	}
-	xWingOrientation(true);
-	xWingOrientation(false);
 
-	return reduced;
+	if (xWingOrientation(true)) return true;
+	if (xWingOrientation(false)) return true;
+
+	return false;
 }
 
 const swordfish = (cells) => {
@@ -513,7 +515,6 @@ const swordfish = (cells) => {
 		}
 	}
 
-	let reduced = false;
 	const set = new Set();
 
 	const swordfishOrientation = (flip) => {
@@ -562,6 +563,8 @@ const swordfish = (cells) => {
 						if (pair3.i3 !== -1) set.add(pair3.i3);
 
 						if (set.size !== 3) continue;
+
+						let reduced = false;
 						for (let x = 0; x < 9; x++) {
 							if (x === pair1.x || x === pair2.x || x === pair3.x) continue;
 
@@ -573,15 +576,17 @@ const swordfish = (cells) => {
 								}
 							}
 						}
+						if (reduced) return true;
 					}
 				}
 			}
 		}
+		return false;
 	}
-	swordfishOrientation(true);
-	swordfishOrientation(false);
+	if (swordfishOrientation(true)) return true;
+	if (swordfishOrientation(false)) return true;
 
-	return reduced;
+	return false;
 }
 
 const jellyfish = (cells) => {
@@ -595,7 +600,6 @@ const jellyfish = (cells) => {
 		}
 	}
 
-	let reduced = false;
 	const set = new Set();
 
 	const jellyfishOrientation = (flip) => {
@@ -657,6 +661,8 @@ const jellyfish = (cells) => {
 							if (pair4.i4 !== -1) set.add(pair4.i4);
 
 							if (set.size !== 4) continue;
+
+							let reduced = false;
 							for (let x = 0; x < 9; x++) {
 								if (x === pair1.x || x === pair2.x || x === pair3.x || x === pair4.x) continue;
 
@@ -668,16 +674,18 @@ const jellyfish = (cells) => {
 									}
 								}
 							}
+							if (reduced) return true;
 						}
 					}
 				}
 			}
 		}
+		return false;
 	}
-	jellyfishOrientation(true);
-	jellyfishOrientation(false);
+	if (jellyfishOrientation(true)) return true;
+	if (jellyfishOrientation(false)) return true;
 
-	return reduced;
+	return false;
 }
 
 class BentWingResult {
