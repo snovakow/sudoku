@@ -37,7 +37,10 @@
 		};
 
 		let worker = null;
-		const process = (fromFile) => {
+		const process = () => {
+			const fromFile = false;
+			const toFile = false;
+
 			if (worker) {
 				worker.terminate();
 				worker = null;
