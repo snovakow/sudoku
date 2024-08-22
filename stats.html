@@ -18,17 +18,6 @@
 		generateButton.style.position = 'absolute';
 		generateButton.style.height = '32px';
 
-		const dataStore = [];
-		const writeData = (count) => {
-			const link = document.createElement("a");
-			const file = new Blob([dataStore.join('\n')], { type: 'text/plain' });
-			link.href = URL.createObjectURL(file);
-			link.download = `sudokus${count}.txt`;
-			link.click();
-			URL.revokeObjectURL(link.href);
-			dataStore.length = 0;
-		};
-
 		let worker = null;
 		const process = () => {
 			if (worker) {
@@ -44,7 +33,7 @@
 					}
 				};
 
-				const sendData = (data) => {
+				const sendData = (data, dbphistomefel = false) => {
 					let url = 'https://snovakow.dev/snovakow/import.php?version=1';
 					url += '&puzzleClues=' + data.puzzleClues;
 					url += '&puzzleFilled=' + data.puzzleFilled;
@@ -65,6 +54,7 @@
 					url += '&phistomefel=' + data.phistomefel;
 					url += '&superpositions=' + data.superpositions;
 					url += '&bruteForce=' + data.bruteForce;
+					if (dbphistomefel) url += '&dbphistomefel';
 
 					fetch(url, {
 						method: "GET" // default, so we can ignore
@@ -81,10 +71,9 @@
 				worker.postMessage(workerData);
 				worker.onmessage = (e) => {
 					const data = e.data;
-					dataStore.push(data.puzzle);
-
 					if (data.message) setMessage(data.message);
 					if (window.location.search === "?db") sendData(data);
+					if (window.location.search === "?dbphistomefel") sendData(data, true);
 				};
 			}
 		};
