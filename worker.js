@@ -61,8 +61,7 @@ let maxTime = 0;
 let totalTime = 0;
 let totalOps = 0;
 
-let puzzleStrings = [];
-let puzzleCount = 0;
+let puzzleString = null;
 
 const clueCounter = new Map();
 
@@ -70,13 +69,11 @@ let running = true;
 
 const stepMode = 0; // 1=row 2=phist
 const step = (search) => {
-	const fromFile = puzzleStrings.length > 0;
-
 	let time = performance.now();
 
 	let mode = stepMode;
-	if (fromFile) {
-		cells.fromString(puzzleStrings[puzzleCount]);
+	if (puzzleString) {
+		cells.fromString(puzzleString);
 		mode = -1;
 	}
 	const { clueCount, operations } = sudokuGenerator(cells, mode);
@@ -241,7 +238,8 @@ const step = (search) => {
 			superpositions++;
 			data.superpositions++;
 		}
-		markers++;
+
+		if (!result.bruteForceFill) markers++;
 	}
 
 	setsTotal += setNaked2;
@@ -371,22 +369,11 @@ const step = (search) => {
 	data.message = lines;
 
 	postMessage(data);
-
-	if (fromFile) {
-		puzzleCount++;
-		if (puzzleCount === puzzleStrings.length) running = false;
-	}
 };
 
 onmessage = (e) => {
 	const search = e.data.search;
-	if (e.data.puzzles) {
-		puzzleStrings = e.data.puzzles.split('\n');
-		puzzleCount = 0;
-	} else {
-		puzzleStrings = [];
-		puzzleCount = 0;
-	}
+	puzzleString = e.data.grid ?? null;
 	while (running) step(search);
 };
 
