@@ -1,8 +1,6 @@
 import { FONT, board } from "./board.js";
 import { consoleOut, fillSolve } from "./generator.js";
-import { CellMarker, Grid } from "./Grid.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { bentWings, candidates, hiddenSingles, jellyfish, loneSingles, NakedHiddenGroups, omissions, swordfish, uniqueRectangle, xWing } from "./solver.js";
 
 const raws = [
 	"19 clue 1 simple",
@@ -210,9 +208,6 @@ const pickerMarkerClick = (event) => {
 
 	if (!selected) return;
 
-	const running = timer ? true : false;
-	if (timer) superimposeMarkers(false);
-
 	const [r, c] = clickLocation(event);
 
 	const symbol = r * 3 + c + 1;
@@ -230,12 +225,6 @@ const pickerMarkerClick = (event) => {
 	draw();
 
 	saveGrid(selector.selectedIndex);
-
-	if (running) {
-		fillSolve(board.cells, window.location.search);
-		saveGrid();
-		superimposeMarkers();
-	}
 };
 pickerMarker.addEventListener('click', pickerMarkerClick);
 
