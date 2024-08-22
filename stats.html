@@ -31,9 +31,6 @@
 
 		let worker = null;
 		const process = () => {
-			const fromFile = false;
-			const toFile = false;
-
 			if (worker) {
 				worker.terminate();
 				worker = null;
@@ -74,56 +71,21 @@
 					});
 				};
 
-				if (fromFile) {
-					const lists = [];
-					const datas = [];
-					let dataIndex = 1;
-					let dataCount = 0;
-					const fetchCascade = () => {
-						const list = `./puzzles/sudokus${dataIndex}00000.txt`;
-						fetch(list).then(response => {
-							if (response.status === 404) throw new Error("End of list.", { dataIndex });
-
-							if (response.status !== 200) return;
-
-							response.text().then((data) => {
-								datas.push(data);
-								dataIndex++;
-								fetchCascade();
-							});
-						}).catch(() => {
-							if (datas.length === 0) return;
-
-							worker = new Worker("worker.js", { type: "module" });
-							worker.postMessage({
-								search: window.location.search,
-								puzzles: datas.join('\n'),
-							});
-							worker.onmessage = (e) => {
-								const data = e.data;
-								if (data.message) setMessage(data.message);
-							};
-						});
-					}
-					fetchCascade();
-				} else {
-					worker = new Worker("worker.js", { type: "module" });
-					worker.postMessage({ search: window.location.search });
-					worker.onmessage = (e) => {
-						const data = e.data;
-						dataStore.push(data.puzzle);
-
-						if (data.message) setMessage(data.message);
-
-						if (toFile) {
-							if (data.totalPuzzles % 100000 === 0) {
-								writeData(data.totalPuzzles);
-							}
-						} else {
-							if (window.location.search === "?db") sendData(data);
-						}
-					};
+				const workerData = { search: window.location.search };
+				const prop = "?grid=";
+				if (window.location.search.startsWith(prop) && window.location.search.length === prop.length + 81) {
+					workerData.grid = window.location.search.substring(prop.length);
 				}
+
+				worker = new Worker("worker.js", { type: "module" });
+				worker.postMessage(workerData);
+				worker.onmessage = (e) => {
+					const data = e.data;
+					dataStore.push(data.puzzle);
+
+					if (data.message) setMessage(data.message);
+					if (window.location.search === "?db") sendData(data);
+				};
 			}
 		};
 
