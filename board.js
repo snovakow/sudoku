@@ -1,4 +1,4 @@
-import { Cell, CellMarker, Grid } from "./Grid.js";
+import { Cell, CellMarker, Grid } from "../sudokulib/Grid.js";
 const pixAlign = (val) => {
 	return Math.round(val) + 0.5;
 };

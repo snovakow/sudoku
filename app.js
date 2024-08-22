@@ -1,6 +1,6 @@
 import { FONT, board } from "./board.js";
-import { consoleOut, fillSolve } from "./generator.js";
-import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
+import { consoleOut, fillSolve } from "../sudokulib/generator.js";
+import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
 
 const raws = [
 	"19 clue 1 simple",
