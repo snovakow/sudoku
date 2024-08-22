@@ -67,7 +67,7 @@ const clueCounter = new Map();
 
 let running = true;
 
-const stepMode = 0; // 1=row 2=phist
+let stepMode = 0; // 1=row 2=phist
 const step = (search) => {
 	let time = performance.now();
 
@@ -374,6 +374,7 @@ const step = (search) => {
 onmessage = (e) => {
 	const search = e.data.search;
 	puzzleString = e.data.grid ?? null;
+	stepMode = (search === "?dbphistomefel") ? 2 : 0;
 	while (running) step(search);
 };
 
