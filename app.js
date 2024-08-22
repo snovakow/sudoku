@@ -142,7 +142,6 @@ loadGrid();
 
 document.body.appendChild(board.canvas);
 
-let superpositionMode = 0;
 const click = (event) => {
 	// event.preventDefault();
 
@@ -165,7 +164,6 @@ const click = (event) => {
 		selectedCol = col;
 
 		selected = true;
-		if (timer && superpositionMode === 0) superimposeMarkers(true);
 	}
 	draw();
 };
@@ -188,9 +186,6 @@ const pickerClick = (event) => {
 
 	if (!selected) return;
 
-	const running = timer ? true : false;
-	if (timer) superimposeMarkers(false);
-
 	const [r, c] = clickLocation(event);
 
 	const index = r * 3 + c + 1;
@@ -207,12 +202,6 @@ const pickerClick = (event) => {
 	draw();
 
 	saveGrid(selector.selectedIndex);
-
-	if (running) {
-		fillSolve(board.cells, window.location.search);
-		saveGrid();
-		superimposeMarkers();
-	}
 };
 picker.addEventListener('click', pickerClick);
 
