@@ -271,19 +271,12 @@ const rndi = makeArray(81);
 
 const sudokuGenerator = (cells, target = 0) => {
 	if (target === -1) {
-		let hits = 0;
-		for (const cell of cells) {
-			if (cell.symbol !== 0) {
-				hits++;
-			}
-		}
-		totalPuzzles++;
-		return { clueCount: hits, operations: 0 };
+		for (let i = 0; i < 81; i++) grid[i] = cells[i].symbol;
+	} else {
+		for (let i = 0; i < 81; i++) grid[i] = 0;
+		if (!skew) for (let i = 0; i < 9; i++) grid[i] = i + 1;
+		sodokoSolver(grid);
 	}
-
-	for (let i = 0; i < 81; i++) grid[i] = 0;
-	if (!skew) for (let i = 0; i < 9; i++) grid[i] = i + 1;
-	sodokoSolver(grid);
 
 	if (!isValidGrid(grid)) {
 		console.log("INVALID!");
