@@ -1,4 +1,4 @@
-import { FONT, board } from "./board.js";
+import { FONT, board } from "../sudokulib/board.js";
 import { consoleOut, fillSolve } from "../sudokulib/generator.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
 
@@ -339,6 +339,20 @@ const resize = () => {
 	board.canvas.height = Math.floor(size * window.devicePixelRatio / 1) * 2;
 
 	draw();
+
+	const xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = () => {
+		if (xhttp.readyState == 4 && xhttp.status == 200) {
+			board.cells.fromString(xhttp.responseText);
+			for (let i = 0; i < 81; i++) {
+				const cell = board.startCells[i];
+				cell.symbol = board.cells[i].symbol;
+			}
+			draw();
+		}
+	};
+	xhttp.open("GET", "../sudokulib/sudoku.php" + window.location.search, true);
+	xhttp.send();
 };
 resize();
 
