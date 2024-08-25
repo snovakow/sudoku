@@ -258,8 +258,9 @@ if (window.location.hash.length === 82) {
 				startCell.symbol = cell.symbol;
 			}
 
-			window.location.hash = "#" + xhttp.responseText;
+			// window.location.hash = "#" + xhttp.responseText;
 			// window.history.pushState({}, '', '/new-url');
+			saveGrid();
 
 			draw();
 		}
