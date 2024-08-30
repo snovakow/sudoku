@@ -1,20 +1,7 @@
-const appInitialize = (title, version, css) => {
-	document.title = title;
-
-	if (css) {
-		const link = document.createElement('link');
-		link.rel = "stylesheet";
-		link.href = css + "?" + version;
-		document.head.appendChild(link);
+const src = document.currentScript.src;
+import("../snovakow/main.js").then(
+	main => {
+		const gtag = (window.location.host === "snovakow.com") ? 'G-DV1KLMY93N' : false;
+		main.initialize(src, gtag).then(() => import("./app.js"));
 	}
-
-	import("./app.js").then(module => {
-		// console.log(module);
-	});
-
-	console.log(title + " Version: " + version);
-}
-appInitialize("Sudoku", "0.10.0");
-
-document.body.style.color = 'black';
-document.body.style.backgroundColor = 'white';
+);
