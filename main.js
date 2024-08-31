@@ -1,7 +1,8 @@
 const src = document.currentScript.src;
-import("../snovakow/main.js").then(
+import("../snovakow/lib/main.js").then(
 	main => {
 		const gtag = (window.location.host === "snovakow.com") ? 'G-DV1KLMY93N' : false;
-		main.initialize(src, gtag).then(() => import("./app.js"));
+		const options = { main: src, gtag };
+		main.initialize(options).then(() => import("./app.js"));
 	}
 );

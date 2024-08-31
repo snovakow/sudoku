@@ -1,4 +1,4 @@
-import { FONT, board } from "../sudokulib/board.js";
+import { FONT, board, loadGrid, saveGrid } from "../sudokulib/board.js";
 import { consoleOut, fillSolve } from "../sudokulib/generator.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
 
@@ -6,43 +6,12 @@ let selectedRow = 0;
 let selectedCol = 0;
 let selected = false;
 
-document.body.appendChild(picker);
-document.body.appendChild(pickerMarker);
-
-document.body.style.userSelect = 'none';
-
 const draw = () => {
 	board.draw(selected, selectedRow, selectedCol);
 
 	const font = "100 " + pixAlign(64 * window.devicePixelRatio) + "px " + FONT;
 	pickerDraw(font);
 }
-
-const DataVersion = "0.2";
-
-const saveGrid = (selectedIndex = null) => {
-	if (selectedIndex !== null) localStorage.setItem("gridName", selectedIndex);
-	localStorage.setItem("DataVersion", DataVersion);
-	localStorage.setItem("startGrid", board.startCells.toStorage());
-	localStorage.setItem("grid", board.cells.toStorage());
-};
-const loadGrid = () => {
-	if (localStorage.getItem("DataVersion") !== DataVersion) return false;
-
-	const startGrid = localStorage.getItem("startGrid");
-	if (!startGrid) return false;
-
-	board.startCells.fromStorage(startGrid);
-
-	const grid = localStorage.getItem("grid");
-	if (grid) {
-		board.cells.fromStorage(grid);
-	}
-};
-
-loadGrid();
-
-document.body.appendChild(board.canvas);
 
 const click = (event) => {
 	// event.preventDefault();
@@ -101,6 +70,7 @@ const pickerClick = (event) => {
 		board.cells[selectedIndex].setSymbol(index);
 	}
 
+	saveGrid();
 	draw();
 };
 picker.addEventListener('click', pickerClick);
@@ -124,6 +94,7 @@ const pickerMarkerClick = (event) => {
 		cell.show = true;
 	}
 
+	saveGrid();
 	draw();
 };
 pickerMarker.addEventListener('click', pickerMarkerClick);
@@ -155,15 +126,14 @@ clearButton.addEventListener('click', () => {
 	saveGrid();
 	draw();
 });
-document.body.appendChild(clearButton);
 
-const markerButton = document.createElement('button');
-markerButton.appendChild(document.createTextNode("x"));
-markerButton.style.position = 'absolute';
-markerButton.style.width = '32px';
-markerButton.style.height = '32px';
+const candidateButton = document.createElement('button');
+candidateButton.appendChild(document.createTextNode("x"));
+candidateButton.style.position = 'absolute';
+candidateButton.style.width = '32px';
+candidateButton.style.height = '32px';
 
-markerButton.addEventListener('click', () => {
+candidateButton.addEventListener('click', () => {
 	for (const cell of board.cells) {
 		cell.show = true;
 	}
@@ -174,15 +144,14 @@ markerButton.addEventListener('click', () => {
 	console.log("----- " + (performance.now() - now) / 1000);
 	for (const line of consoleOut(result)) console.log(line);
 
-	draw();
 	saveGrid();
+	draw();
 });
-document.body.appendChild(markerButton);
 
 clearButton.style.transform = 'translateX(-50%)';
-markerButton.style.transform = 'translateX(-50%)';
+candidateButton.style.transform = 'translateX(-50%)';
 
-markerButton.style.touchAction = "manipulation";
+candidateButton.style.touchAction = "manipulation";
 
 board.canvas.style.position = 'absolute';
 board.canvas.style.left = '50%';
@@ -200,8 +169,8 @@ const resize = () => {
 		board.canvas.style.top = '0%';
 		board.canvas.style.transform = 'translate(-50%, 0%)';
 
-		markerButton.style.bottom = '324px';
-		markerButton.style.left = '96px';
+		candidateButton.style.bottom = '324px';
+		candidateButton.style.left = '96px';
 
 		clearButton.style.bottom = '200px';
 		clearButton.style.left = '96px';
@@ -218,8 +187,8 @@ const resize = () => {
 
 		board.canvas.style.transform = 'translate(-50%, 0%)';
 
-		markerButton.style.bottom = '128px';
-		markerButton.style.left = '50%';
+		candidateButton.style.bottom = '128px';
+		candidateButton.style.left = '50%';
 
 		clearButton.style.bottom = '8px';
 		clearButton.style.left = '50%';
@@ -236,21 +205,20 @@ const resize = () => {
 resize();
 
 window.addEventListener('resize', resize);
+window.name = "";
 
-if (window.location.hash.length === 82) {
-	console.log(window.location.hash.substring(1));
-	const hash = window.location.hash.substring(1);
-	board.cells.fromString(hash);
+if (window.name) {
+	loadGrid();
 	for (const cell of board.cells) {
 		cell.show = false;
-		const startCell = board.startCells[cell.index];
-		startCell.symbol = cell.symbol;
 	}
 	draw();
 } else {
 	const xhttp = new XMLHttpRequest();
 	xhttp.onreadystatechange = () => {
 		if (xhttp.readyState == 4 && xhttp.status == 200) {
+			if (xhttp.responseText.length !== 81) return;
+
 			board.cells.fromString(xhttp.responseText);
 			for (const cell of board.cells) {
 				cell.show = false;
@@ -258,13 +226,17 @@ if (window.location.hash.length === 82) {
 				startCell.symbol = cell.symbol;
 			}
 
-			// window.location.hash = "#" + xhttp.responseText;
-			// window.history.pushState({}, '', '/new-url');
 			saveGrid();
-
 			draw();
 		}
 	};
 	xhttp.open("GET", "../sudokulib/sudoku.php" + window.location.search, true);
 	xhttp.send();
 }
+
+	document.body.style.userSelect = 'none';
+	document.body.appendChild(picker);
+	document.body.appendChild(pickerMarker);
+	document.body.appendChild(board.canvas);
+	document.body.appendChild(clearButton);
+	document.body.appendChild(candidateButton);
