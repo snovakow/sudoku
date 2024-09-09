@@ -1,4 +1,4 @@
-import { FONT, board, loadGrid, saveGrid } from "../sudokulib/board.js";
+import { FONT, board, loadGrid, saveGrid, setMarkerFont } from "../sudokulib/board.js";
 import { consoleOut, fillSolve } from "../sudokulib/generator.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
 
@@ -6,10 +6,21 @@ let selectedRow = 0;
 let selectedCol = 0;
 let selected = false;
 
+let markerFont = false;
+
+const saveData = () => {
+	saveGrid({
+		selected,
+		selectedRow,
+		selectedCol,
+		markerFont,
+	});
+};
+
 const draw = () => {
 	board.draw(selected, selectedRow, selectedCol);
 
-	const font = "100 " + pixAlign(64 * window.devicePixelRatio) + "px " + FONT;
+	const font = "100 " + pixAlign(64 * window.devicePixelRatio) + "px " + FONT.marker;
 	pickerDraw(font);
 }
 
@@ -37,6 +48,7 @@ const click = (event) => {
 		selected = true;
 	}
 	draw();
+	saveData();
 };
 board.canvas.addEventListener('click', click);
 
@@ -70,7 +82,7 @@ const pickerClick = (event) => {
 		board.cells[selectedIndex].setSymbol(index);
 	}
 
-	saveGrid();
+	saveData();
 	draw();
 };
 picker.addEventListener('click', pickerClick);
@@ -94,7 +106,7 @@ const pickerMarkerClick = (event) => {
 		cell.show = true;
 	}
 
-	saveGrid();
+	saveData();
 	draw();
 };
 pickerMarker.addEventListener('click', pickerMarkerClick);
@@ -123,7 +135,7 @@ clearButton.style.height = '32px';
 clearButton.addEventListener('click', () => {
 	selected = false;
 	board.resetGrid();
-	saveGrid();
+	saveData();
 	draw();
 });
 
@@ -144,7 +156,7 @@ candidateButton.addEventListener('click', () => {
 	console.log("----- " + (performance.now() - now) / 1000);
 	for (const line of consoleOut(result)) console.log(line);
 
-	saveGrid();
+	saveData();
 	draw();
 });
 
@@ -205,15 +217,24 @@ const resize = () => {
 resize();
 
 window.addEventListener('resize', resize);
-window.name = "";
 
+let loaded = false;
 if (window.name) {
-	loadGrid();
-	for (const cell of board.cells) {
-		cell.show = false;
+	const metadata = loadGrid();
+	if (metadata) {
+		if (metadata.selected !== undefined) selected = metadata.selected;
+		if (metadata.selectedRow !== undefined) selectedRow = metadata.selectedRow;
+		if (metadata.selectedCol !== undefined) selectedCol = metadata.selectedCol;
+		if (metadata.markerFont !== undefined) {
+			markerFont = metadata.markerFont;
+			setMarkerFont(markerFont);
+		}
+		loaded = true;
+		draw();
 	}
-	draw();
-} else {
+}
+
+const loadSudoku = () => {
 	const xhttp = new XMLHttpRequest();
 	xhttp.onreadystatechange = () => {
 		if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -226,17 +247,101 @@ if (window.name) {
 				startCell.symbol = cell.symbol;
 			}
 
-			saveGrid();
+			saveData();
 			draw();
 		}
 	};
-	xhttp.open("GET", "../sudokulib/sudoku.php" + window.location.search, true);
+	const search = window.location.search ? window.location.search : "?strategy=simple";
+	xhttp.open("GET", "../sudokulib/sudoku.php" + search, true);
 	xhttp.send();
+};
+if (!loaded) {
+	loadSudoku();
 }
 
-	document.body.style.userSelect = 'none';
-	document.body.appendChild(picker);
-	document.body.appendChild(pickerMarker);
-	document.body.appendChild(board.canvas);
-	document.body.appendChild(clearButton);
-	document.body.appendChild(candidateButton);
+const header = document.createElement('DIV');
+const body = document.createElement('DIV');
+const footer = document.createElement('DIV');
+
+const title = document.createElement('SPAN');
+title.style.fontSize = '48px';
+title.style.textAlign = 'center';
+title.style.position = 'absolute';
+title.style.top = '0%';
+title.style.left = '50%';
+title.style.pointerEvents = 'none';
+title.style.transform = 'translateX(-50%)';
+title.appendChild(document.createTextNode("Sudoku"));
+
+const newPuzzleButton = document.createElement('button');
+newPuzzleButton.appendChild(document.createTextNode("New"));
+newPuzzleButton.style.position = 'absolute';
+newPuzzleButton.style.top = '4px';
+newPuzzleButton.style.right = '56px';
+newPuzzleButton.style.height = '32px';
+newPuzzleButton.addEventListener('click', () => {
+	selected = false;
+	loadSudoku();
+});
+
+const clearPuzzleButton = document.createElement('button');
+clearPuzzleButton.appendChild(document.createTextNode("Clear"));
+clearPuzzleButton.style.position = 'absolute';
+clearPuzzleButton.style.top = '4px';
+clearPuzzleButton.style.right = '4px';
+clearPuzzleButton.style.height = '32px';
+clearPuzzleButton.addEventListener('click', () => {
+	selected = false;
+	board.resetGrid();
+	saveData();
+	draw();
+});
+
+const font = document.createElement('button');
+font.appendChild(document.createTextNode("Font"));
+font.style.position = 'absolute';
+font.style.top = '4px';
+font.style.left = '4px';
+font.style.height = '32px';
+font.addEventListener('click', () => {
+	markerFont = !markerFont;
+	setMarkerFont(markerFont);
+	saveData();
+	draw();
+});
+
+header.appendChild(title);
+header.appendChild(font);
+header.appendChild(newPuzzleButton);
+header.appendChild(clearPuzzleButton);
+
+header.style.position = 'static';
+header.style.top = '0%';
+header.style.width = '100%';
+header.style.left = '0%';
+header.style.height = '48px';
+header.style.borderBottom = '1px solid black'
+
+body.style.position = 'static';
+body.style.top = '48px';
+body.style.width = '100%';
+body.style.left = '0%';
+body.style.bottom = '192px';
+
+footer.style.position = 'static';
+footer.style.width = '100%';
+footer.style.height = '192px';
+footer.style.left = '0%';
+footer.style.bottom = '0%';
+footer.style.borderBottom = '1px solid black'
+
+document.body.style.userSelect = 'none';
+document.body.style.margin = '0px';
+
+document.body.appendChild(picker);
+// document.body.appendChild(pickerMarker);
+document.body.appendChild(board.canvas);
+// document.body.appendChild(clearButton);
+// document.body.appendChild(candidateButton);
+
+document.body.appendChild(header);
