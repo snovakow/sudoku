@@ -1,7 +1,7 @@
 const src = document.currentScript.src;
 import("../snovakow/lib/main.js").then(
 	main => {
-		const urlComicSans = 'url(../snovakow/assets/fonts/comic-sans-ms/design.graffiti.comicsansms.ttf)';
+		const urlComicSans = 'url(../snovakow/assets/fonts/comic-sans-ms/COMIC.TTF)';
 		const urlOpenSansRegular = 'url(../snovakow/assets/fonts/Open_Sans/static/OpenSans-Regular.ttf)';
 		const urlOpenSansLight = 'url(../snovakow/assets/fonts/Open_Sans/static/OpenSans-Light.ttf)';
 
