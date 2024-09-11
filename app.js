@@ -6,21 +6,22 @@ let selectedRow = 0;
 let selectedCol = 0;
 let selected = false;
 
-let markerFont = false;
+let markerFont = 0;
 
 const saveData = () => {
 	saveGrid({
 		selected,
 		selectedRow,
-		selectedCol,
-		markerFont,
+		selectedCol
 	});
+	const data = JSON.stringify({ markerFont });
+	localStorage.setItem("data", data);
 };
 
 const draw = () => {
 	board.draw(selected, selectedRow, selectedCol);
 
-	const font = "100 " + pixAlign(64 * window.devicePixelRatio) + "px " + FONT.marker;
+	const font = pixAlign(64 * window.devicePixelRatio) + "px " + FONT.marker;
 	pickerDraw(font);
 }
 
@@ -218,6 +219,49 @@ resize();
 
 window.addEventListener('resize', resize);
 
+const createSelect = (options, onChange) => {
+	const select = document.createElement('select');
+
+	for (const title of options) {
+		const option = document.createElement('option');
+		option.text = title;
+		select.appendChild(option);
+	}
+
+	select.addEventListener('change', () => {
+		onChange(select);
+	});
+	document.body.appendChild(select);
+
+	document.body.appendChild(document.createElement('br'));
+
+	return select;
+};
+const selectFonts = ["Regular", "Light", "Comic"];
+const selectFont = createSelect(selectFonts, () => {
+	markerFont = selectFont.selectedIndex;
+	setMarkerFont(markerFont);
+	saveData();
+	draw();
+});
+selectFont.style.position = 'absolute';
+selectFont.style.top = '4px';
+selectFont.style.left = '4px';
+
+const loadStorage = () => {
+	const dataJSON = localStorage.getItem("data");
+	if (dataJSON === null) return false;
+	try {
+		const data = JSON.parse(dataJSON);
+		if (data.markerFont === undefined) return false;
+		markerFont = data.markerFont;
+		setMarkerFont(markerFont);
+		selectFont.selectedIndex = markerFont;
+	} catch (error) {
+		console.error(error);
+	}
+};
+
 let loaded = false;
 if (window.name) {
 	const metadata = loadGrid();
@@ -225,14 +269,17 @@ if (window.name) {
 		if (metadata.selected !== undefined) selected = metadata.selected;
 		if (metadata.selectedRow !== undefined) selectedRow = metadata.selectedRow;
 		if (metadata.selectedCol !== undefined) selectedCol = metadata.selectedCol;
-		if (metadata.markerFont !== undefined) {
-			markerFont = metadata.markerFont;
-			setMarkerFont(markerFont);
-		}
+
 		loaded = true;
-		draw();
 	}
+	loadStorage();
+	draw();
 }
+
+addEventListener("storage", (event) => {
+	loadStorage();
+	draw();
+});
 
 const loadSudoku = () => {
 	const xhttp = new XMLHttpRequest();
@@ -269,7 +316,7 @@ title.style.textAlign = 'center';
 title.style.position = 'absolute';
 title.style.top = '0%';
 title.style.left = '50%';
-title.style.pointerEvents = 'none';
+// title.style.pointerEvents = 'none';
 title.style.transform = 'translateX(-50%)';
 title.appendChild(document.createTextNode("Sudoku"));
 
@@ -277,7 +324,7 @@ const newPuzzleButton = document.createElement('button');
 newPuzzleButton.appendChild(document.createTextNode("New"));
 newPuzzleButton.style.position = 'absolute';
 newPuzzleButton.style.top = '4px';
-newPuzzleButton.style.right = '56px';
+newPuzzleButton.style.right = '64px';
 newPuzzleButton.style.height = '32px';
 newPuzzleButton.addEventListener('click', () => {
 	selected = false;
@@ -285,7 +332,7 @@ newPuzzleButton.addEventListener('click', () => {
 });
 
 const clearPuzzleButton = document.createElement('button');
-clearPuzzleButton.appendChild(document.createTextNode("Clear"));
+clearPuzzleButton.appendChild(document.createTextNode("Reset"));
 clearPuzzleButton.style.position = 'absolute';
 clearPuzzleButton.style.top = '4px';
 clearPuzzleButton.style.right = '4px';
@@ -297,21 +344,8 @@ clearPuzzleButton.addEventListener('click', () => {
 	draw();
 });
 
-const font = document.createElement('button');
-font.appendChild(document.createTextNode("Font"));
-font.style.position = 'absolute';
-font.style.top = '4px';
-font.style.left = '4px';
-font.style.height = '32px';
-font.addEventListener('click', () => {
-	markerFont = !markerFont;
-	setMarkerFont(markerFont);
-	saveData();
-	draw();
-});
-
 header.appendChild(title);
-header.appendChild(font);
+header.appendChild(selectFont);
 header.appendChild(newPuzzleButton);
 header.appendChild(clearPuzzleButton);
 
@@ -321,6 +355,7 @@ header.style.width = '100%';
 header.style.left = '0%';
 header.style.height = '48px';
 header.style.borderBottom = '1px solid black'
+header.style.background = 'White'
 
 body.style.position = 'static';
 body.style.top = '48px';
