@@ -14,7 +14,7 @@ const puzzleData = {
 
 let markerFont = false;
 
-const titleHeight = 32;
+const titleHeight = 28;
 
 const saveData = () => {
 	saveGrid({
@@ -176,8 +176,12 @@ fontCheckbox.name = "name";
 fontCheckbox.value = "value";
 fontCheckbox.id = "id";
 fontCheckbox.style.position = 'absolute';
-fontCheckbox.style.top = 6 + 'px';
-fontCheckbox.style.left = '4px';
+fontCheckbox.style.top = titleHeight / 2 + 'px';
+fontCheckbox.style.left = titleHeight / 2 + 'px';
+fontCheckbox.style.transform = 'translate(-50%, -50%)';
+fontCheckbox.style.margin = '0px';
+fontCheckbox.style.padding = '8px';
+
 fontCheckbox.addEventListener('change', () => {
 	markerFont = fontCheckbox.checked;
 	setMarkerFont(markerFont);
@@ -185,12 +189,17 @@ fontCheckbox.addEventListener('change', () => {
 	draw();
 });
 const fontLabel = document.createElement('label')
-fontLabel.htmlFor = "id";
 fontLabel.appendChild(document.createTextNode('Marker Font'));
 fontLabel.style.position = 'absolute';
 fontLabel.style.top = '0%';
-fontLabel.style.left = '28px';
+fontLabel.style.left = '0%';
+fontLabel.style.paddingLeft = titleHeight + 'px';
 fontLabel.style.lineHeight = titleHeight + 'px';
+fontLabel.style.whiteSpace = 'nowrap';
+
+fontLabel.for = "id";
+
+fontLabel.appendChild(fontCheckbox);
 
 const loadStorage = () => {
 	const dataJSON = localStorage.getItem("data");
@@ -310,7 +319,6 @@ const header = document.createElement('DIV');
 const mainBody = document.createElement('DIV');
 
 header.appendChild(title);
-header.appendChild(fontCheckbox);
 header.appendChild(fontLabel);
 
 header.appendChild(newPuzzleButton);
