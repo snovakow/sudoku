@@ -11,6 +11,7 @@ const puzzleData = {
 	transform: {},
 	grid: new Uint8Array(81),
 }
+Object.seal(puzzleData);
 
 let markerFont = false;
 
