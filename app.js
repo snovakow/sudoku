@@ -53,8 +53,6 @@ const draw = () => {
 	fontOpenSansRegular.load();
 	fontComicSans.load();
 
-	const data = localStorage.getItem("data");
-	if (data !== null) FONT.initialized = true;
 	document.fonts.ready.then(() => {
 		FONT.initialized = true;
 		draw();
