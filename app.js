@@ -8,7 +8,7 @@ let selected = false;
 
 const puzzleData = {
 	id: 0,
-	transform: {},
+	transform: null,
 	grid: new Uint8Array(81),
 }
 Object.seal(puzzleData);
@@ -63,9 +63,7 @@ const draw = () => {
 const click = (event) => {
 	// event.preventDefault();
 
-	// Get the bounding rectangle of target
 	const rect = event.target.getBoundingClientRect();
-	// Mouse position
 	const x = event.clientX - rect.left;
 	const y = event.clientY - rect.top;
 
@@ -195,7 +193,6 @@ fontLabel.style.left = '0%';
 fontLabel.style.paddingLeft = titleHeight + 'px';
 fontLabel.style.lineHeight = titleHeight + 'px';
 fontLabel.style.whiteSpace = 'nowrap';
-
 fontLabel.for = "id";
 
 fontLabel.appendChild(fontCheckbox);
