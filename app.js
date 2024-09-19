@@ -178,13 +178,13 @@ fontCheckbox.style.left = titleHeight / 2 + 'px';
 fontCheckbox.style.transform = 'translate(-50%, -50%)';
 fontCheckbox.style.margin = '0px';
 fontCheckbox.style.padding = '8px';
-
 fontCheckbox.addEventListener('change', () => {
 	markerFont = fontCheckbox.checked;
 	setMarkerFont(markerFont);
 	saveData();
 	draw();
 });
+
 const fontLabel = document.createElement('label')
 fontLabel.appendChild(document.createTextNode('Marker Font'));
 fontLabel.style.position = 'absolute';
@@ -194,7 +194,6 @@ fontLabel.style.paddingLeft = titleHeight + 'px';
 fontLabel.style.lineHeight = titleHeight + 'px';
 fontLabel.style.whiteSpace = 'nowrap';
 fontLabel.for = "id";
-
 fontLabel.appendChild(fontCheckbox);
 
 const loadStorage = () => {
