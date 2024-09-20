@@ -267,7 +267,7 @@ const loadSudoku = () => {
 		}
 	};
 	const uid = performance.now().toString() + Math.random().toString();
-	const search = window.location.search ? window.location.search : "?strategy=simple&uid=" + uid;
+	const search = window.location.search ? window.location.search : "?table=puzzles1&strategy=simple&uid=" + uid;
 	xhttp.open("GET", "../sudokulib/sudoku.php" + search, true);
 	xhttp.send();
 };
