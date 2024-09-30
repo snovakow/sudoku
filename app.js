@@ -1,5 +1,5 @@
 import { FONT, board, loadGrid, saveGrid, setMarkerFont } from "../sudokulib/board.js";
-import { consoleOut, fillSolve, generateFromSeed, generateTransform } from "../sudokulib/generator.js";
+import { generateFromSeed, generateTransform } from "../sudokulib/generator.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
 
 let selectedRow = 0;
