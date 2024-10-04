@@ -2,6 +2,47 @@ import { FONT, board, loadGrid, saveGrid, setMarkerFont } from "../sudokulib/boa
 import { generateFromSeed, generateTransform } from "../sudokulib/generator.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
 
+const searchParams = new URLSearchParams(window.location.search);
+const strategy = searchParams.get("strategy");
+if (strategy === null || (
+	strategy !== 'simple' &&
+	strategy !== 'bruteForce' &&
+	strategy !== 'naked2' &&
+	strategy !== 'naked3' &&
+	strategy !== 'naked4' &&
+	strategy !== 'hidden2' &&
+	strategy !== 'hidden3' &&
+	strategy !== 'hidden4' &&
+	strategy !== 'omissions' &&
+	strategy !== 'uniqueRectangle' &&
+	strategy !== 'yWing' &&
+	strategy !== 'xyzWing' &&
+	strategy !== 'xWing' &&
+	strategy !== 'swordfish' &&
+	strategy !== 'jellyfish' &&
+	strategy !== 'custom')
+) window.location.href = "/";
+
+if (strategy === 'custom') {
+	const search = "?strategy=" + strategy;
+	fetch("../sudokulib/sudoku.php" + search).then(response => {
+		response.text().then((string) => {
+			const results = string.split(":");
+			for(const result of results){
+				const fields = result.split(",");
+				if (fields.length !== 3) continue;
+			
+				const id = parseInt(fields[0]);
+				const title = fields[1];
+				const puzzle = fields[2];
+				if (puzzle.length !== 81) return;
+			
+				console.log(title);
+			}
+		});
+	});
+}
+
 let selectedRow = 0;
 let selectedCol = 0;
 let selected = false;
