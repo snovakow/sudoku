@@ -2,7 +2,7 @@ import { FONT, board, loadGrid, saveGrid, setMarkerFont } from "../sudokulib/boa
 import { generateFromSeed, generateTransform, fillSolve, consoleOut, STRATEGY } from "../sudokulib/generator.js";
 import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
-import { candidates, hiddenSingles, nakedSingles, omissions, yWing } from "../sudokulib/solver.js";
+import { candidates } from "../sudokulib/solver.js";
 
 const searchParams = new URLSearchParams(window.location.search);
 const strategy = searchParams.get("strategy") || 'simple';
@@ -49,12 +49,11 @@ const saveData = () => {
 		transform: puzzleData.transform,
 		grid: puzzleData.grid.join(""),
 		markers: puzzleData.markers.join(""),
+		markerFont,
 		selected,
 		selectedRow,
 		selectedCol
 	});
-	const data = JSON.stringify({ markerFont });
-	localStorage.setItem("data", data);
 };
 
 const draw = () => {
@@ -245,20 +244,6 @@ fontLabel.style.whiteSpace = 'nowrap';
 fontLabel.for = "id";
 fontLabel.appendChild(fontCheckbox);
 
-const loadStorage = () => {
-	const dataJSON = localStorage.getItem("data");
-	if (dataJSON === null) return false;
-	try {
-		const data = JSON.parse(dataJSON);
-		if (data.markerFont === undefined) return false;
-		markerFont = data.markerFont;
-		setMarkerFont(markerFont);
-		fontCheckbox.checked = markerFont;
-	} catch (error) {
-		console.error(error);
-	}
-};
-
 let loaded = false;
 if (window.name) {
 	const metadata = loadGrid();
@@ -268,11 +253,13 @@ if (window.name) {
 			if (metadata.selectedRow !== undefined) selectedRow = metadata.selectedRow;
 			if (metadata.selectedCol !== undefined) selectedCol = metadata.selectedCol;
 
+			if (metadata.markerFont !== undefined) markerFont = metadata.markerFont;
+			setMarkerFont(markerFont);
+			fontCheckbox.checked = markerFont;
+
 			if (metadata.id !== undefined) puzzleData.id = metadata.id;
 			if (metadata.transform !== undefined) puzzleData.transform = metadata.transform;
 			if (metadata.grid !== undefined) puzzleData.grid.set(metadata.grid);
-			// console.log(puzzleData.grid, metadata.grid);
-			// if (metadata.markers !== undefined) puzzleData.markers.set(metadata.markers);	
 
 			loaded = true;
 		}
@@ -281,15 +268,8 @@ if (window.name) {
 			saveData();
 		}
 	}
-	loadStorage();
 	draw();
 }
-
-addEventListener("storage", (event) => {
-	if (event.key !== "data") return;
-	loadStorage();
-	draw();
-});
 
 const title = document.createElement('SPAN');
 
