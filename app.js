@@ -479,9 +479,7 @@ candidateButton.appendChild(document.createTextNode("Mark"));
 candidateButton.style.margin = '8px';
 candidateButton.style.width = '64px';
 candidateButton.addEventListener('click', () => {
-	for (const cell of board.cells) {
-		if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
-	}
+	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
 	candidates(board.cells);
 
 	draw();
@@ -494,9 +492,7 @@ fillButton.style.width = '64px';
 fillButton.style.display = 'block';
 fillButton.addEventListener('click', () => {
 	const now = performance.now();
-	for (const cell of board.cells) {
-		if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
-	}
+	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
 	const result = fillSolve(board.cells);
 	console.log("----- " + (performance.now() - now) / 1000);
 	for (const line of consoleOut(result)) console.log(line);
@@ -800,6 +796,8 @@ if (strategy === 'custom') {
 	superpositionCellButton.style.right = '120px';
 	superpositionCellButton.addEventListener('click', () => {
 		superpositionMode = 0;
+		for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
+		candidates(board.cells);
 		superimposeCandidates();
 	});
 	header.appendChild(superpositionCellButton);
@@ -812,6 +810,8 @@ if (strategy === 'custom') {
 	superpositionAllCellSymbolButton.style.right = '92px';
 	superpositionAllCellSymbolButton.addEventListener('click', () => {
 		superpositionMode = 1;
+		for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
+		candidates(board.cells);
 		superimposeCandidates();
 	});
 	header.appendChild(superpositionAllCellSymbolButton);
@@ -824,6 +824,8 @@ if (strategy === 'custom') {
 	superpositionAllFullSolveButton.style.transform = 'translateY(-50%)';
 	superpositionAllFullSolveButton.addEventListener('click', () => {
 		superpositionMode = 2;
+		for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
+		candidates(board.cells);
 		superimposeCandidates();
 	});
 	header.appendChild(superpositionAllFullSolveButton);
