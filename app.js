@@ -1,8 +1,8 @@
 import { FONT, board, loadGrid, saveGrid, setMarkerFont } from "../sudokulib/board.js";
-import { generateFromSeed, generateTransform, fillSolve, consoleOut } from "../sudokulib/generator.js";
+import { generateFromSeed, generateTransform, fillSolve, consoleOut, STRATEGY } from "../sudokulib/generator.js";
 import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
-import { candidates, hiddenSingles, nakedSingles } from "../sudokulib/solver.js";
+import { candidates, hiddenSingles, nakedSingles, omissions, yWing } from "../sudokulib/solver.js";
 
 const searchParams = new URLSearchParams(window.location.search);
 const strategy = searchParams.get("strategy") || 'simple';
@@ -167,6 +167,9 @@ const pickerMarkerClick = (event) => {
 
 	if (!selected) return;
 
+	const running = timer ? true : false;
+	if (timer) superimposeCandidates(false);
+
 	const [r, c] = clickLocation(event);
 
 	const symbol = r * 3 + c + 1;
@@ -182,6 +185,12 @@ const pickerMarkerClick = (event) => {
 
 	saveData();
 	draw();
+
+	if (running) {
+		fillSolve(board.cells);
+		saveData();
+		if (superimposeCandidates) superimposeCandidates();
+	}
 };
 pickerMarker.addEventListener('click', pickerMarkerClick);
 
@@ -457,14 +466,18 @@ clearPuzzleButton.addEventListener('click', () => {
 	draw();
 });
 
+const buttonContainer = document.createElement('span');
+buttonContainer.style.position = 'absolute';
+buttonContainer.style.bottom = 192 + 8 + 'px';
+buttonContainer.style.left = 192 / 2 + 'px';
+buttonContainer.style.transform = 'translateX(-50%)';
+buttonContainer.style.zIndex = 1;
+document.body.appendChild(buttonContainer);
+
 const candidateButton = document.createElement('button');
-candidateButton.appendChild(document.createTextNode("X"));
-candidateButton.style.position = 'absolute';
-candidateButton.style.width = '32px';
-candidateButton.style.height = '32px';
-candidateButton.style.top = '48px';
-candidateButton.style.left = '8px';
-candidateButton.style.zIndex = 1;
+candidateButton.appendChild(document.createTextNode("Mark"));
+candidateButton.style.margin = '8px';
+candidateButton.style.width = '64px';
 candidateButton.addEventListener('click', () => {
 	for (const cell of board.cells) {
 		if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
@@ -474,18 +487,16 @@ candidateButton.addEventListener('click', () => {
 	draw();
 	saveData();
 });
-document.body.appendChild(candidateButton);
-
 const fillButton = document.createElement('button');
-fillButton.appendChild(document.createTextNode("0"));
-fillButton.style.position = 'absolute';
-fillButton.style.width = '32px';
-fillButton.style.height = '32px';
-fillButton.style.top = '96px';
-fillButton.style.left = '8px';
-fillButton.style.zIndex = 1;
+fillButton.appendChild(document.createTextNode("Fill"));
+fillButton.style.margin = '8px';
+fillButton.style.width = '64px';
+fillButton.style.display = 'block';
 fillButton.addEventListener('click', () => {
 	const now = performance.now();
+	for (const cell of board.cells) {
+		if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
+	}
 	const result = fillSolve(board.cells);
 	console.log("----- " + (performance.now() - now) / 1000);
 	for (const line of consoleOut(result)) console.log(line);
@@ -493,7 +504,8 @@ fillButton.addEventListener('click', () => {
 	draw();
 	saveData();
 });
-document.body.appendChild(fillButton);
+buttonContainer.appendChild(candidateButton);
+buttonContainer.appendChild(fillButton);
 
 const header = document.createElement('DIV');
 const mainBody = document.createElement('DIV');
@@ -564,6 +576,18 @@ const resize = () => {
 		board.canvas.style.transform = 'translate(-50%, 0%)';
 	}
 
+	if (boundingClientRect.width - 192 > boundingClientRect.height) {
+		buttonContainer.style.bottom = 192 + 8 + 'px';
+		buttonContainer.style.left = 192 / 2 + 'px';
+		buttonContainer.style.transform = 'translateX(-50%)';
+		fillButton.style.display = 'inline';
+	} else {
+		buttonContainer.style.bottom = 192 / 2 + 'px';
+		buttonContainer.style.left = 192 + 8 + 'px';
+		buttonContainer.style.transform = 'translateY(50%)';
+		fillButton.style.display = 'block';
+	}
+
 	const size = Math.min(width, height);
 	board.canvas.style.width = size + 'px';
 	board.canvas.style.height = size + 'px';
@@ -587,18 +611,6 @@ if (strategy === 'custom') {
 		}
 		if (!selected && superpositionMode === 0) return;
 
-		const solve = (cells) => {
-			let progress = false;
-			do {
-				candidates(cells);
-
-				progress = nakedSingles(cells);
-				if (progress) continue;
-
-				progress = hiddenSingles(cells);
-			} while (progress);
-		};
-
 		startBoard = board.cells.toData();
 
 		let flips;
@@ -620,7 +632,7 @@ if (strategy === 'custom') {
 				if (superCell.has(x)) {
 					// cell.delete(x);
 					superCell.setSymbol(x);
-					solve(board.cells);
+					fillSolve(board.cells, STRATEGY.NONE);
 					supers.push(board.cells.toData());
 					board.cells.fromData(startBoard);
 				}
@@ -647,7 +659,23 @@ if (strategy === 'custom') {
 			}
 
 			flips = [startBoard, union.toData()];
-		} else if (superpositionMode === 1) {
+		} else {
+			const intersectionFromUnion = (intersection, union) => {
+				for (let index = 0; index < 81; index++) {
+					const unionCell = union[index];
+					const intersectionCell = intersection[index];
+					if (unionCell.symbol === 0) {
+						for (let x = 1; x <= 9; x++) {
+							if (!unionCell.has(x)) {
+								intersectionCell.delete(x);
+							}
+						}
+					} else {
+						// intersectionCell.setSymbol(unionCell.symbol);
+					}
+				}
+			};
+
 			const intersection = new Grid();
 			for (let i = 0; i < 81; i++) intersection[i] = new CellCandidate(i);
 			for (let index = 0; index < 81; index++) {
@@ -657,6 +685,12 @@ if (strategy === 'custom') {
 				if (startCell.symbol === 0) intersectionCell.fill();
 			}
 
+			const solve = () => {
+				if (superpositionMode === 1) fillSolve(board.cells, STRATEGY.NONE);
+				else fillSolve(board.cells, STRATEGY.ALL);
+			}
+
+			// Candidates
 			for (let index = 0; index < 81; index++) {
 				const cell = board.cells[index];
 				if (cell.symbol !== 0) continue;
@@ -674,7 +708,7 @@ if (strategy === 'custom') {
 					if (!cell.has(x)) continue;
 
 					cell.setSymbol(x);
-					solve(board.cells);
+					solve();
 					supers.push(board.cells.toData());
 					board.cells.fromData(startBoard);
 				}
@@ -697,33 +731,10 @@ if (strategy === 'custom') {
 						}
 					}
 				}
-
-				for (let index = 0; index < 81; index++) {
-					const unionCell = union[index];
-					const intersectionCell = intersection[index];
-					if (unionCell.symbol === 0) {
-						for (let x = 1; x <= 9; x++) {
-							if (!unionCell.has(x)) {
-								intersectionCell.delete(x);
-							}
-						}
-					} else {
-						// intersectionCell.setSymbol(unionCell.symbol);
-					}
-				}
+				intersectionFromUnion(intersection, union);
 			}
 
-			flips = [startBoard, intersection.toData()];
-		} else if (superpositionMode === 2) {
-			const intersection = new Grid();
-			for (let i = 0; i < 81; i++) intersection[i] = new CellCandidate(i);
-			for (let index = 0; index < 81; index++) {
-				const startCell = startBoard[index];
-				const intersectionCell = intersection[index];
-				intersectionCell.setSymbol(startCell.symbol);
-				if (startCell.symbol === 0) intersectionCell.fill();
-			}
-
+			// Symbols
 			for (const group of Grid.groupTypes) {
 				for (let x = 1; x <= 9; x++) {
 					const union = new Grid();
@@ -741,7 +752,7 @@ if (strategy === 'custom') {
 						if (!cell.has(x)) continue;
 
 						cell.setSymbol(x);
-						solve(board.cells);
+						solve();
 						supers.push(board.cells.toData());
 						board.cells.fromData(startBoard);
 					}
@@ -765,20 +776,7 @@ if (strategy === 'custom') {
 							}
 						}
 					}
-
-					for (let index = 0; index < 81; index++) {
-						const unionCell = union[index];
-						const intersectionCell = intersection[index];
-						if (unionCell.symbol === 0) {
-							for (let x = 1; x <= 9; x++) {
-								if (!unionCell.has(x)) {
-									intersectionCell.delete(x);
-								}
-							}
-						} else {
-							// intersectionCell.setSymbol(unionCell.symbol);
-						}
-					}
+					intersectionFromUnion(intersection, union);
 				}
 			}
 			flips = [startBoard, intersection.toData()];
@@ -790,43 +788,43 @@ if (strategy === 'custom') {
 			draw();
 			board.cells.fromData(startBoard);
 			iteration++;
-		}, 1000 * 1 / 20);
+		}, 1000 * 0.1);
 	}
 
 	let startBoard = null;
-	const superpositionCandidateButton = document.createElement('button');
-	superpositionCandidateButton.appendChild(document.createTextNode("M"));
-	superpositionCandidateButton.style.position = 'absolute';
-	superpositionCandidateButton.style.top = titleHeight / 2 + 'px';
-	superpositionCandidateButton.style.transform = 'translateY(-50%)';
-	superpositionCandidateButton.style.right = '120px';
-	superpositionCandidateButton.addEventListener('click', () => {
+	const superpositionCellButton = document.createElement('button');
+	superpositionCellButton.appendChild(document.createTextNode("C"));
+	superpositionCellButton.style.position = 'absolute';
+	superpositionCellButton.style.top = titleHeight / 2 + 'px';
+	superpositionCellButton.style.transform = 'translateY(-50%)';
+	superpositionCellButton.style.right = '120px';
+	superpositionCellButton.addEventListener('click', () => {
 		superpositionMode = 0;
 		superimposeCandidates();
 	});
-	header.appendChild(superpositionCandidateButton);
+	header.appendChild(superpositionCellButton);
 
-	const superpositionCandidateAllButton = document.createElement('button');
-	superpositionCandidateAllButton.appendChild(document.createTextNode("A"));
-	superpositionCandidateAllButton.style.position = 'absolute';
-	superpositionCandidateAllButton.style.top = titleHeight / 2 + 'px';
-	superpositionCandidateAllButton.style.right = '92px';
-	superpositionCandidateAllButton.style.transform = 'translateY(-50%)';
-	superpositionCandidateAllButton.addEventListener('click', () => {
+	const superpositionAllCellSymbolButton = document.createElement('button');
+	superpositionAllCellSymbolButton.appendChild(document.createTextNode("S"));
+	superpositionAllCellSymbolButton.style.position = 'absolute';
+	superpositionAllCellSymbolButton.style.top = titleHeight / 2 + 'px';
+	superpositionAllCellSymbolButton.style.transform = 'translateY(-50%)';
+	superpositionAllCellSymbolButton.style.right = '92px';
+	superpositionAllCellSymbolButton.addEventListener('click', () => {
 		superpositionMode = 1;
 		superimposeCandidates();
 	});
-	header.appendChild(superpositionCandidateAllButton);
+	header.appendChild(superpositionAllCellSymbolButton);
 
-	const superpositionSymbolButton = document.createElement('button');
-	superpositionSymbolButton.appendChild(document.createTextNode("S"));
-	superpositionSymbolButton.style.position = 'absolute';
-	superpositionSymbolButton.style.top = titleHeight / 2 + 'px';
-	superpositionSymbolButton.style.right = '64px';
-	superpositionSymbolButton.style.transform = 'translateY(-50%)';
-	superpositionSymbolButton.addEventListener('click', () => {
+	const superpositionAllFullSolveButton = document.createElement('button');
+	superpositionAllFullSolveButton.appendChild(document.createTextNode("A")); // ALL Candidate and Symbol full solve
+	superpositionAllFullSolveButton.style.position = 'absolute';
+	superpositionAllFullSolveButton.style.top = titleHeight / 2 + 'px';
+	superpositionAllFullSolveButton.style.right = '64px';
+	superpositionAllFullSolveButton.style.transform = 'translateY(-50%)';
+	superpositionAllFullSolveButton.addEventListener('click', () => {
 		superpositionMode = 2;
 		superimposeCandidates();
 	});
-	header.appendChild(superpositionSymbolButton);
+	header.appendChild(superpositionAllFullSolveButton);
 }
