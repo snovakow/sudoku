@@ -35,9 +35,10 @@ const puzzleData = {
 Object.seal(puzzleData);
 
 let markerFont = false;
+let pickerMarkerMode = false;
 
 const headerHeight = 32;
-const footerHeight = 16;
+const footerHeight = 22;
 
 let selectedRow = 0;
 let selectedCol = 0;
@@ -51,6 +52,7 @@ const saveData = () => {
 		grid: puzzleData.grid.join(""),
 		markers: puzzleData.markers.join(""),
 		markerFont,
+		pickerMarkerMode,
 		selected,
 		selectedRow,
 		selectedCol
@@ -210,8 +212,6 @@ const orientationchange = (event) => {
 };
 addEventListener("orientationchange", orientationchange);
 
-let pickerMarkerMode = false;
-
 picker.style.position = 'fixed';
 picker.style.width = '192px';
 picker.style.height = '192px';
@@ -229,8 +229,10 @@ board.canvas.style.left = '50%';
 board.canvas.style.touchAction = "manipulation";
 picker.style.touchAction = "manipulation";
 pickerMarker.style.touchAction = "manipulation";
-picker.style.visibility = "visible";
-pickerMarker.style.visibility = "hidden";
+
+const header = document.createElement('DIV');
+const mainBody = document.createElement('DIV');
+const footer = document.createElement('DIV');
 
 const fontCheckbox = document.createElement('input');
 fontCheckbox.type = "checkbox";
@@ -258,10 +260,15 @@ fontLabel.style.left = 8 + 'px';
 fontLabel.style.paddingLeft = footerHeight + 4 + 'px';
 fontLabel.style.transform = 'translateY(50%)';
 fontLabel.style.lineHeight = footerHeight + 'px';
-fontLabel.style.fontSize = footerHeight - 2 + 'px';
+fontLabel.style.fontSize = footerHeight - 6 + 'px';
 fontLabel.style.whiteSpace = 'nowrap';
 fontLabel.for = "id";
 fontLabel.appendChild(fontCheckbox);
+footer.appendChild(fontLabel);
+
+const markerButton = document.createElement('button');
+markerButton.style.margin = '8px';
+markerButton.style.width = '48px';
 
 let loaded = false;
 if (window.name) {
@@ -276,6 +283,8 @@ if (window.name) {
 			setMarkerFont(markerFont);
 			fontCheckbox.checked = markerFont;
 
+			if (metadata.pickerMarkerMode !== undefined) pickerMarkerMode = metadata.pickerMarkerMode;
+
 			if (metadata.id !== undefined) puzzleData.id = metadata.id;
 			if (metadata.transform !== undefined) puzzleData.transform = metadata.transform;
 			if (metadata.grid !== undefined) puzzleData.grid.set(metadata.grid);
@@ -289,6 +298,21 @@ if (window.name) {
 	}
 	draw();
 }
+
+const setMarkerMode = ()=>{
+	while (markerButton.firstChild) markerButton.removeChild(markerButton.firstChild);
+
+	if (pickerMarkerMode) {
+		markerButton.appendChild(document.createTextNode("Place"));
+		picker.style.visibility = "hidden";
+		pickerMarker.style.visibility = "visible";
+	} else {
+		markerButton.appendChild(document.createTextNode("Mark"));
+		picker.style.visibility = "visible";
+		pickerMarker.style.visibility = "hidden";
+	}
+}
+setMarkerMode();
 
 const title = document.createElement('SPAN');
 
@@ -451,10 +475,6 @@ if (strategy === 'swordfish') titleString = "Swordfish";
 if (strategy === 'jellyfish') titleString = "Jellyfish";
 if (titleString) title.appendChild(document.createTextNode(titleString));
 
-const header = document.createElement('DIV');
-const mainBody = document.createElement('DIV');
-const footer = document.createElement('DIV');
-
 const clearPuzzleButton = document.createElement('button');
 clearPuzzleButton.appendChild(document.createTextNode("Reset"));
 clearPuzzleButton.style.position = 'absolute';
@@ -476,23 +496,10 @@ buttonContainer.style.transform = 'translateX(-50%)';
 buttonContainer.style.zIndex = 1;
 mainBody.appendChild(buttonContainer);
 
-const markerButton = document.createElement('button');
-markerButton.appendChild(document.createTextNode("Mark"));
-markerButton.style.margin = '8px';
-markerButton.style.width = '48px';
 markerButton.addEventListener('click', () => {
 	pickerMarkerMode = !pickerMarkerMode;
-	while (markerButton.firstChild) markerButton.removeChild(markerButton.firstChild);
-
-	if (pickerMarkerMode) {
-		markerButton.appendChild(document.createTextNode("Place"));
-		picker.style.visibility = "hidden";
-		pickerMarker.style.visibility = "visible";
-	} else {
-		markerButton.appendChild(document.createTextNode("Mark"));
-		picker.style.visibility = "visible";
-		pickerMarker.style.visibility = "hidden";
-	}
+	setMarkerMode();
+	saveData();
 });
 const fillButton = document.createElement('button');
 fillButton.appendChild(document.createTextNode("Fill"));
@@ -558,10 +565,8 @@ mainBody.style.width = '100%';
 mainBody.style.left = '50%';
 mainBody.style.transform = 'translateX(-50%)';
 
-footer.appendChild(fontLabel);
-
 const copyright = document.createElement('SPAN');
-copyright.style.fontSize = (footerHeight - 4) + 'px';
+copyright.style.fontSize = (footerHeight - 6) + 'px';
 copyright.style.lineHeight = footerHeight + 'px';
 copyright.style.textAlign = 'right';
 copyright.style.position = 'absolute';
@@ -584,6 +589,7 @@ homelink.href = "/";
 header.appendChild(homelink);
 
 footer.style.position = 'absolute';
+footer.style.overflow = 'visible';
 footer.style.bottom = '0%';
 footer.style.width = '100%';
 footer.style.left = '50%';
