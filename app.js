@@ -5,7 +5,7 @@ import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.
 import { candidates } from "../sudokulib/solver.js";
 
 const searchParams = new URLSearchParams(window.location.search);
-const strategy = searchParams.get("strategy") || 'simple';
+const strategy = searchParams.get("strategy");
 if (strategy === null || (
 	strategy !== 'simple' &&
 	strategy !== 'bruteForce' &&
@@ -36,7 +36,8 @@ Object.seal(puzzleData);
 
 let markerFont = false;
 
-const titleHeight = 32;
+const headerHeight = 32;
+const footerHeight = 16;
 
 let selectedRow = 0;
 let selectedCol = 0;
@@ -209,11 +210,27 @@ const orientationchange = (event) => {
 };
 addEventListener("orientationchange", orientationchange);
 
+let pickerMarkerMode = false;
+
+picker.style.position = 'fixed';
+picker.style.width = '192px';
+picker.style.height = '192px';
+picker.style.bottom = '0px';
+picker.style.left = '0px';
+
+pickerMarker.style.position = 'fixed';
+pickerMarker.style.width = '192px';
+pickerMarker.style.height = '192px';
+pickerMarker.style.bottom = '0px';
+pickerMarker.style.left = '0px';
+
 board.canvas.style.position = 'absolute';
 board.canvas.style.left = '50%';
 board.canvas.style.touchAction = "manipulation";
 picker.style.touchAction = "manipulation";
 pickerMarker.style.touchAction = "manipulation";
+picker.style.visibility = "visible";
+pickerMarker.style.visibility = "hidden";
 
 const fontCheckbox = document.createElement('input');
 fontCheckbox.type = "checkbox";
@@ -221,9 +238,9 @@ fontCheckbox.name = "name";
 fontCheckbox.value = "value";
 fontCheckbox.id = "id";
 fontCheckbox.style.position = 'absolute';
-fontCheckbox.style.top = titleHeight / 2 + 'px';
-fontCheckbox.style.left = titleHeight / 2 + 'px';
-fontCheckbox.style.transform = 'translate(-50%, -50%)';
+fontCheckbox.style.bottom = footerHeight / 2 + 'px';
+fontCheckbox.style.left = footerHeight / 2 + 'px';
+fontCheckbox.style.transform = 'translate(-50%, 50%)';
 fontCheckbox.style.margin = '0px';
 fontCheckbox.style.padding = '8px';
 fontCheckbox.addEventListener('change', () => {
@@ -236,10 +253,12 @@ fontCheckbox.addEventListener('change', () => {
 const fontLabel = document.createElement('label')
 fontLabel.appendChild(document.createTextNode('Marker Font'));
 fontLabel.style.position = 'absolute';
-fontLabel.style.top = '0%';
-fontLabel.style.left = '0%';
-fontLabel.style.paddingLeft = titleHeight + 'px';
-fontLabel.style.lineHeight = titleHeight + 'px';
+fontLabel.style.bottom = footerHeight / 2 + 'px';
+fontLabel.style.left = 8 + 'px';
+fontLabel.style.paddingLeft = footerHeight + 4 + 'px';
+fontLabel.style.transform = 'translateY(50%)';
+fontLabel.style.lineHeight = footerHeight + 'px';
+fontLabel.style.fontSize = footerHeight - 2 + 'px';
 fontLabel.style.whiteSpace = 'nowrap';
 fontLabel.for = "id";
 fontLabel.appendChild(fontCheckbox);
@@ -407,14 +426,13 @@ if (!loaded && strategy !== 'custom') {
 	loadSudoku();
 }
 
-title.style.fontSize = (titleHeight - 4) + 'px';
+title.style.fontSize = (headerHeight - 4) + 'px';
 title.style.fontWeight = 'bold';
-title.style.lineHeight = titleHeight + 'px';
+title.style.lineHeight = headerHeight + 'px';
 title.style.textAlign = 'center';
 title.style.position = 'absolute';
-title.style.top = titleHeight / 2 + 'px';
+title.style.top = headerHeight / 2 + 'px';
 title.style.left = '50%';
-// title.style.pointerEvents = 'none';
 title.style.transform = 'translate(-50%, -50%)';
 let titleString = null;
 if (strategy === 'simple') titleString = "Sudoku";
@@ -433,12 +451,16 @@ if (strategy === 'swordfish') titleString = "Swordfish";
 if (strategy === 'jellyfish') titleString = "Jellyfish";
 if (titleString) title.appendChild(document.createTextNode(titleString));
 
+const header = document.createElement('DIV');
+const mainBody = document.createElement('DIV');
+const footer = document.createElement('DIV');
+
 const clearPuzzleButton = document.createElement('button');
 clearPuzzleButton.appendChild(document.createTextNode("Reset"));
 clearPuzzleButton.style.position = 'absolute';
-clearPuzzleButton.style.top = '4px';
-clearPuzzleButton.style.right = '4px';
-clearPuzzleButton.style.height = titleHeight - 8 + 'px';
+clearPuzzleButton.style.top = headerHeight / 2 + 'px';
+clearPuzzleButton.style.right = '8px';
+clearPuzzleButton.style.transform = 'translateY(-50%)';
 clearPuzzleButton.addEventListener('click', () => {
 	selected = false;
 	board.resetGrid();
@@ -452,50 +474,66 @@ buttonContainer.style.bottom = 192 + 8 + 'px';
 buttonContainer.style.left = 192 / 2 + 'px';
 buttonContainer.style.transform = 'translateX(-50%)';
 buttonContainer.style.zIndex = 1;
-document.body.appendChild(buttonContainer);
+mainBody.appendChild(buttonContainer);
 
-const candidateButton = document.createElement('button');
-candidateButton.appendChild(document.createTextNode("Mark"));
-candidateButton.style.margin = '8px';
-candidateButton.style.width = '64px';
-candidateButton.addEventListener('click', () => {
+const markerButton = document.createElement('button');
+markerButton.appendChild(document.createTextNode("Mark"));
+markerButton.style.margin = '8px';
+markerButton.style.width = '48px';
+markerButton.addEventListener('click', () => {
+	pickerMarkerMode = !pickerMarkerMode;
+	while (markerButton.firstChild) markerButton.removeChild(markerButton.firstChild);
+
+	if (pickerMarkerMode) {
+		markerButton.appendChild(document.createTextNode("Place"));
+		picker.style.visibility = "hidden";
+		pickerMarker.style.visibility = "visible";
+	} else {
+		markerButton.appendChild(document.createTextNode("Mark"));
+		picker.style.visibility = "visible";
+		pickerMarker.style.visibility = "hidden";
+	}
+});
+const fillButton = document.createElement('button');
+fillButton.appendChild(document.createTextNode("Fill"));
+fillButton.style.margin = '8px';
+fillButton.style.width = '48px';
+fillButton.style.display = 'block';
+fillButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
 	candidates(board.cells);
 
 	draw();
 	saveData();
 });
-const fillButton = document.createElement('button');
-fillButton.appendChild(document.createTextNode("Fill"));
-fillButton.style.margin = '8px';
-fillButton.style.width = '64px';
-fillButton.style.display = 'block';
-fillButton.addEventListener('click', () => {
-	const now = performance.now();
+const solveButton = document.createElement('button');
+solveButton.appendChild(document.createTextNode("Solve"));
+solveButton.style.margin = '8px';
+solveButton.style.width = '48px';
+solveButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
-	const result = fillSolve(board.cells);
-	console.log("----- " + (performance.now() - now) / 1000);
-	for (const line of consoleOut(result)) console.log(line);
+	fillSolve(board.cells);
+	// const now = performance.now();
+	// const result = fillSolve(board.cells);
+	// console.log("----- " + (performance.now() - now) / 1000);
+	// for (const line of consoleOut(result)) console.log(line);
 
 	draw();
 	saveData();
 });
-buttonContainer.appendChild(candidateButton);
+buttonContainer.appendChild(markerButton);
 buttonContainer.appendChild(fillButton);
-
-const header = document.createElement('DIV');
-const mainBody = document.createElement('DIV');
+buttonContainer.appendChild(solveButton);
 
 header.appendChild(title);
-header.appendChild(fontLabel);
 
 if (strategy !== 'custom') {
 	const newPuzzleButton = document.createElement('button');
 	newPuzzleButton.appendChild(document.createTextNode("New"));
 	newPuzzleButton.style.position = 'absolute';
-	newPuzzleButton.style.top = '4px';
-	newPuzzleButton.style.right = '64px';
-	newPuzzleButton.style.height = titleHeight - 8 + 'px';
+	newPuzzleButton.style.top = headerHeight / 2 + 'px';
+	newPuzzleButton.style.right = '68px';
+	newPuzzleButton.style.transform = 'translateY(-50%)';
 	newPuzzleButton.addEventListener('click', () => {
 		selected = false;
 		loadSudoku();
@@ -507,16 +545,52 @@ header.appendChild(clearPuzzleButton);
 header.style.position = 'absolute';
 header.style.top = '0%';
 header.style.width = '100%';
-header.style.left = '0%';
-header.style.height = titleHeight + 'px';
+header.style.left = '50%';
+header.style.transform = 'translateX(-50%)';
+header.style.height = headerHeight + 'px';
 header.style.borderBottom = '1px solid black'
 header.style.background = 'White'
 
 mainBody.style.position = 'absolute';
-mainBody.style.top = titleHeight + 'px';
+mainBody.style.top = headerHeight + 'px';
+mainBody.style.bottom = footerHeight + 'px';
 mainBody.style.width = '100%';
-mainBody.style.left = '0%';
-mainBody.style.bottom = '0%';
+mainBody.style.left = '50%';
+mainBody.style.transform = 'translateX(-50%)';
+
+footer.appendChild(fontLabel);
+
+const copyright = document.createElement('SPAN');
+copyright.style.fontSize = (footerHeight - 4) + 'px';
+copyright.style.lineHeight = footerHeight + 'px';
+copyright.style.textAlign = 'right';
+copyright.style.position = 'absolute';
+copyright.style.bottom = footerHeight / 2 + 'px';
+copyright.style.right = '8px';
+copyright.style.transform = 'translateY(50%)';
+copyright.appendChild(document.createTextNode("© Scott Novakowski"));
+footer.appendChild(copyright);
+
+const homelink = document.createElement('a');
+homelink.style.fontSize = (headerHeight / 2) + 'px';
+homelink.style.lineHeight = headerHeight + 'px';
+homelink.style.textAlign = 'left';
+homelink.style.position = 'absolute';
+homelink.style.top = headerHeight / 2 + 'px';
+homelink.style.left = '8px';
+homelink.style.transform = 'translateY(-50%)';
+homelink.appendChild(document.createTextNode("Home"));
+homelink.href = "/";
+header.appendChild(homelink);
+
+footer.style.position = 'absolute';
+footer.style.bottom = '0%';
+footer.style.width = '100%';
+footer.style.left = '50%';
+footer.style.transform = 'translateX(-50%)';
+footer.style.height = footerHeight + 'px';
+footer.style.borderTop = '1px solid darkgray'
+footer.style.background = 'White'
 
 document.body.style.userSelect = 'none';
 document.body.style.margin = '0px';
@@ -527,6 +601,7 @@ mainBody.appendChild(board.canvas);
 
 document.body.appendChild(header);
 document.body.appendChild(mainBody);
+document.body.appendChild(footer);
 
 const resize = () => {
 	const boundingClientRect = mainBody.getBoundingClientRect();
@@ -771,7 +846,7 @@ if (strategy === 'custom') {
 	const superpositionCellButton = document.createElement('button');
 	superpositionCellButton.appendChild(document.createTextNode("C"));
 	superpositionCellButton.style.position = 'absolute';
-	superpositionCellButton.style.top = titleHeight / 2 + 'px';
+	superpositionCellButton.style.top = headerHeight / 2 + 'px';
 	superpositionCellButton.style.transform = 'translateY(-50%)';
 	superpositionCellButton.style.right = '120px';
 	superpositionCellButton.addEventListener('click', () => {
@@ -785,7 +860,7 @@ if (strategy === 'custom') {
 	const superpositionAllCellSymbolButton = document.createElement('button');
 	superpositionAllCellSymbolButton.appendChild(document.createTextNode("S"));
 	superpositionAllCellSymbolButton.style.position = 'absolute';
-	superpositionAllCellSymbolButton.style.top = titleHeight / 2 + 'px';
+	superpositionAllCellSymbolButton.style.top = headerHeight / 2 + 'px';
 	superpositionAllCellSymbolButton.style.transform = 'translateY(-50%)';
 	superpositionAllCellSymbolButton.style.right = '92px';
 	superpositionAllCellSymbolButton.addEventListener('click', () => {
@@ -799,7 +874,7 @@ if (strategy === 'custom') {
 	const superpositionAllFullSolveButton = document.createElement('button');
 	superpositionAllFullSolveButton.appendChild(document.createTextNode("A")); // ALL Candidate and Symbol full solve
 	superpositionAllFullSolveButton.style.position = 'absolute';
-	superpositionAllFullSolveButton.style.top = titleHeight / 2 + 'px';
+	superpositionAllFullSolveButton.style.top = headerHeight / 2 + 'px';
 	superpositionAllFullSolveButton.style.right = '64px';
 	superpositionAllFullSolveButton.style.transform = 'translateY(-50%)';
 	superpositionAllFullSolveButton.addEventListener('click', () => {
