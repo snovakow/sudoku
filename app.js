@@ -744,7 +744,7 @@ if (strategy === 'custom') {
 
 			const solve = () => {
 				if (superpositionMode === 1) fillSolve(board.cells, STRATEGY.NONE);
-				else fillSolve(board.cells, STRATEGY.ALL);
+				else fillSolve(board.cells, STRATEGY.ALL_STRICT);
 			}
 
 			// Candidates
