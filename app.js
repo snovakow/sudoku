@@ -206,23 +206,24 @@ const offFocus = () => {
 // window.addEventListener("focus", onFocus);
 // window.addEventListener("blur", offFocus);
 
+const pickerContainer = document.createElement('span');
+pickerContainer.style.position = 'absolute';
+pickerContainer.style.width = '192px';
+pickerContainer.style.height = '192px';
+
 const orientationchange = (event) => {
 	draw();
 	console.log(event);
 };
 addEventListener("orientationchange", orientationchange);
 
-picker.style.position = 'fixed';
+picker.style.position = 'absolute';
 picker.style.width = '192px';
 picker.style.height = '192px';
-picker.style.bottom = '0px';
-picker.style.left = '0px';
 
-pickerMarker.style.position = 'fixed';
+pickerMarker.style.position = 'absolute';
 pickerMarker.style.width = '192px';
 pickerMarker.style.height = '192px';
-pickerMarker.style.bottom = '0px';
-pickerMarker.style.left = '0px';
 
 board.canvas.style.position = 'absolute';
 board.canvas.style.left = '50%';
@@ -267,8 +268,8 @@ fontLabel.appendChild(fontCheckbox);
 footer.appendChild(fontLabel);
 
 const markerButton = document.createElement('button');
-markerButton.style.margin = '8px';
-markerButton.style.width = '48px';
+markerButton.style.margin = '8px 4px';
+markerButton.style.width = '56px';
 
 let loaded = false;
 if (window.name) {
@@ -299,7 +300,7 @@ if (window.name) {
 	draw();
 }
 
-const setMarkerMode = ()=>{
+const setMarkerMode = () => {
 	while (markerButton.firstChild) markerButton.removeChild(markerButton.firstChild);
 
 	if (pickerMarkerMode) {
@@ -490,10 +491,6 @@ clearPuzzleButton.addEventListener('click', () => {
 
 const buttonContainer = document.createElement('span');
 buttonContainer.style.position = 'absolute';
-buttonContainer.style.bottom = 192 + 8 + 'px';
-buttonContainer.style.left = 192 / 2 + 'px';
-buttonContainer.style.transform = 'translateX(-50%)';
-buttonContainer.style.zIndex = 1;
 mainBody.appendChild(buttonContainer);
 
 markerButton.addEventListener('click', () => {
@@ -503,8 +500,8 @@ markerButton.addEventListener('click', () => {
 });
 const fillButton = document.createElement('button');
 fillButton.appendChild(document.createTextNode("Fill"));
-fillButton.style.margin = '8px';
-fillButton.style.width = '48px';
+fillButton.style.margin = '8px 4px';
+fillButton.style.width = '56px';
 fillButton.style.display = 'block';
 fillButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
@@ -515,8 +512,8 @@ fillButton.addEventListener('click', () => {
 });
 const solveButton = document.createElement('button');
 solveButton.appendChild(document.createTextNode("Solve"));
-solveButton.style.margin = '8px';
-solveButton.style.width = '48px';
+solveButton.style.margin = '8px 4px';
+solveButton.style.width = '56px';
 solveButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
 	fillSolve(board.cells);
@@ -601,8 +598,11 @@ footer.style.background = 'White'
 document.body.style.userSelect = 'none';
 document.body.style.margin = '0px';
 
-mainBody.appendChild(picker);
-mainBody.appendChild(pickerMarker);
+pickerContainer.appendChild(picker);
+pickerContainer.appendChild(pickerMarker);
+pickerContainer.appendChild(buttonContainer);
+
+mainBody.appendChild(pickerContainer);
 mainBody.appendChild(board.canvas);
 
 document.body.appendChild(header);
@@ -613,36 +613,37 @@ const resize = () => {
 	const boundingClientRect = mainBody.getBoundingClientRect();
 	let width = boundingClientRect.width;
 	let height = boundingClientRect.height;
-	if (width - 192 > height) {
-		if (width - height < 384) {
-			width = width - 384;
-		}
-		board.canvas.style.top = '0%';
-		board.canvas.style.transform = 'translate(-50%, 0%)';
-	} else {
-		if (height - width < 192) {
-			board.canvas.style.top = '0%';
-		} else {
-			board.canvas.style.top = ((height - 192) - width) * 0.5 + 'px';
-		}
 
-		if (height - width < 384) {
-			height = height - 192;
-		}
+	if (width > height) {
+		if (width - height < 192) width = width - 192;
 
-		board.canvas.style.transform = 'translate(-50%, 0%)';
-	}
+		board.canvas.style.top = '50%';
+		board.canvas.style.left = '0%';
+		board.canvas.style.transform = 'translate(0%, -50%)';
 
-	if (boundingClientRect.width - 192 > boundingClientRect.height) {
-		buttonContainer.style.bottom = 192 + 8 + 'px';
-		buttonContainer.style.left = 192 / 2 + 'px';
-		buttonContainer.style.transform = 'translateX(-50%)';
+		buttonContainer.style.top = '100%';
+		buttonContainer.style.left = '0%';
+		buttonContainer.style.transform = 'translate(0%, 0%)';
 		fillButton.style.display = 'inline';
+
+		pickerContainer.style.bottom = '50%';
+		pickerContainer.style.right = '0%';
+		pickerContainer.style.transform = 'translate(0, 50%)';
 	} else {
-		buttonContainer.style.bottom = 192 / 2 + 'px';
-		buttonContainer.style.left = 192 + 8 + 'px';
-		buttonContainer.style.transform = 'translateY(50%)';
+		if (height - width < 192) height = height - 192;
+
+		board.canvas.style.top = '0%';
+		board.canvas.style.left = '50%';
+		board.canvas.style.transform = 'translate(-50%, 0%)';
+
+		buttonContainer.style.top = '50%';
+		buttonContainer.style.left = '100%';
+		buttonContainer.style.transform = 'translate(0%, -50%)';
 		fillButton.style.display = 'block';
+
+		pickerContainer.style.bottom = '0%';
+		pickerContainer.style.right = '50%';
+		pickerContainer.style.transform = 'translate(50%, 0%)';
 	}
 
 	const size = Math.min(width, height);
