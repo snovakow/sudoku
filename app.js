@@ -1,8 +1,13 @@
 import { FONT, board, loadGrid, saveGrid, setMarkerFont } from "../sudokulib/board.js";
 import { generateFromSeed, generateTransform, fillSolve, consoleOut, STRATEGY } from "../sudokulib/generator.js";
 import { CellCandidate, Grid } from "../sudokulib/Grid.js";
-import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
+import * as PICKER from "../sudokulib/picker.js";
 import { candidates } from "../sudokulib/solver.js";
+
+const picker = PICKER.picker;
+const pickerDraw = PICKER.pickerDraw;
+const pickerMarker = PICKER.pickerMarker;
+const pixAlign = PICKER.pixAlign;
 
 const searchParams = new URLSearchParams(window.location.search);
 const strategy = searchParams.get("strategy");
@@ -63,8 +68,8 @@ const draw = () => {
 	board.draw(selected, selectedRow, selectedCol);
 
 	if (FONT.initialized) {
-		const font = pixAlign(64 * window.devicePixelRatio) + "px " + FONT.marker;
-		const fontMarker = pixAlign(24 * window.devicePixelRatio) + "px " + FONT.marker;
+		const font = pixAlign(PICKER.cellSize * window.devicePixelRatio) + "px " + FONT.marker;
+		const fontMarker = pixAlign(PICKER.cellSize * 3 / 8 * window.devicePixelRatio) + "px " + FONT.marker;
 		pickerDraw(font, fontMarker);
 	} else {
 		pickerDraw();
@@ -208,8 +213,8 @@ const offFocus = () => {
 
 const pickerContainer = document.createElement('span');
 pickerContainer.style.position = 'absolute';
-pickerContainer.style.width = '192px';
-pickerContainer.style.height = '192px';
+pickerContainer.style.width = PICKER.cellsSize + 'px';
+pickerContainer.style.height = PICKER.cellsSize + 'px';
 
 const orientationchange = (event) => {
 	draw();
@@ -218,12 +223,12 @@ const orientationchange = (event) => {
 addEventListener("orientationchange", orientationchange);
 
 picker.style.position = 'absolute';
-picker.style.width = '192px';
-picker.style.height = '192px';
+picker.style.width = PICKER.cellsSize + 'px';
+picker.style.height = PICKER.cellsSize + 'px';
 
 pickerMarker.style.position = 'absolute';
-pickerMarker.style.width = '192px';
-pickerMarker.style.height = '192px';
+pickerMarker.style.width = PICKER.cellsSize + 'px';
+pickerMarker.style.height = PICKER.cellsSize + 'px';
 
 board.canvas.style.position = 'absolute';
 board.canvas.style.left = '50%';
@@ -516,11 +521,10 @@ solveButton.style.margin = '8px 4px';
 solveButton.style.width = '56px';
 solveButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
-	fillSolve(board.cells);
-	// const now = performance.now();
-	// const result = fillSolve(board.cells);
-	// console.log("----- " + (performance.now() - now) / 1000);
-	// for (const line of consoleOut(result)) console.log(line);
+	const now = performance.now();
+	const result = fillSolve(board.cells);
+	console.log("----- " + (performance.now() - now) / 1000);
+	for (const line of consoleOut(result)) console.log(line);
 
 	draw();
 	saveData();
@@ -611,14 +615,32 @@ document.body.appendChild(footer);
 
 const resize = () => {
 	const boundingClientRect = mainBody.getBoundingClientRect();
-	let width = boundingClientRect.width;
-	let height = boundingClientRect.height;
 
-	if (width > height) {
-		if (width - height < 192) width = width - 192;
+	const width = boundingClientRect.width;
+	const height = boundingClientRect.height;
+
+	const padding = 8;
+
+	const landscapeWidth = width - PICKER.cellsSize - padding * 3;
+	const landscapeHeight = height;
+	const landscapeSize = Math.min(landscapeWidth, landscapeHeight);
+
+	const portraitWidth = width;
+	const portraitHeight = height - PICKER.cellsSize - padding * 2;
+	const portraitSize = Math.min(portraitWidth, portraitHeight);
+
+	let boxSize;
+	if (landscapeSize > portraitSize) {
+		boxSize = landscapeSize;
+
+		let inset = padding;
+		if (boxSize < landscapeWidth) {
+			inset += Math.floor((landscapeWidth - boxSize) / 2);
+		}
+
 
 		board.canvas.style.top = '50%';
-		board.canvas.style.left = '0%';
+		board.canvas.style.left = inset + 'px';
 		board.canvas.style.transform = 'translate(0%, -50%)';
 
 		buttonContainer.style.top = '100%';
@@ -627,12 +649,17 @@ const resize = () => {
 		fillButton.style.display = 'inline';
 
 		pickerContainer.style.bottom = '50%';
-		pickerContainer.style.right = '0%';
+		pickerContainer.style.right = padding + 'px';
 		pickerContainer.style.transform = 'translate(0, 50%)';
 	} else {
-		if (height - width < 192) height = height - 192;
+		boxSize = portraitSize;
 
-		board.canvas.style.top = '0%';
+		let inset = 0;
+		if (boxSize < portraitHeight) {
+			inset = Math.floor((portraitHeight - boxSize) / 2);
+		}
+
+		board.canvas.style.top = inset + 'px';
 		board.canvas.style.left = '50%';
 		board.canvas.style.transform = 'translate(-50%, 0%)';
 
@@ -641,16 +668,15 @@ const resize = () => {
 		buttonContainer.style.transform = 'translate(0%, -50%)';
 		fillButton.style.display = 'block';
 
-		pickerContainer.style.bottom = '0%';
+		pickerContainer.style.bottom = padding + 'px';
 		pickerContainer.style.right = '50%';
 		pickerContainer.style.transform = 'translate(50%, 0%)';
 	}
 
-	const size = Math.min(width, height);
-	board.canvas.style.width = size + 'px';
-	board.canvas.style.height = size + 'px';
-	board.canvas.width = Math.floor(size * window.devicePixelRatio / 1) * 2;
-	board.canvas.height = Math.floor(size * window.devicePixelRatio / 1) * 2;
+	board.canvas.style.width = boxSize + 'px';
+	board.canvas.style.height = boxSize + 'px';
+	board.canvas.width = Math.floor(boxSize * window.devicePixelRatio / 1) * 2;
+	board.canvas.height = Math.floor(boxSize * window.devicePixelRatio / 1) * 2;
 
 	draw();
 };
