@@ -43,7 +43,7 @@ let markerFont = false;
 let pickerMarkerMode = false;
 
 const headerHeight = 32;
-const footerHeight = 22;
+const footerHeight = 8;
 
 let selectedRow = 0;
 let selectedCol = 0;
@@ -67,12 +67,27 @@ const saveData = () => {
 const draw = () => {
 	board.draw(selected, selectedRow, selectedCol);
 
+	const selectedSet = new Set();
+	if (selected) {
+		const selectedIndex = selectedRow * 9 + selectedCol;
+		const cell = board.cells[selectedIndex];
+		if (pickerMarkerMode) {
+			if (cell.symbol === 0) {
+				for (let x = 1; x <= 9; x++) {
+					if (cell.has(x)) selectedSet.add(x);
+				}
+			}
+		} else {
+			if (cell.symbol !== 0) selectedSet.add(cell.symbol);
+		}
+	}
+
 	if (FONT.initialized) {
 		const font = pixAlign(PICKER.cellSize * window.devicePixelRatio) + "px " + FONT.marker;
 		const fontMarker = pixAlign(PICKER.cellSize * 3 / 8 * window.devicePixelRatio) + "px " + FONT.marker;
-		pickerDraw(font, fontMarker);
+		pickerDraw(selectedSet, font, fontMarker);
 	} else {
-		pickerDraw();
+		pickerDraw(selectedSet);
 	}
 }
 
@@ -273,7 +288,7 @@ fontLabel.appendChild(fontCheckbox);
 footer.appendChild(fontLabel);
 
 const markerButton = document.createElement('button');
-markerButton.style.margin = '8px 4px';
+markerButton.style.position = 'absolute';
 markerButton.style.width = '56px';
 
 let loaded = false;
@@ -456,7 +471,7 @@ if (!loaded && strategy !== 'custom') {
 	loadSudoku();
 }
 
-title.style.fontSize = (headerHeight - 4) + 'px';
+title.style.fontSize = (headerHeight - 6) + 'px';
 title.style.fontWeight = 'bold';
 title.style.lineHeight = headerHeight + 'px';
 title.style.textAlign = 'center';
@@ -496,18 +511,19 @@ clearPuzzleButton.addEventListener('click', () => {
 
 const buttonContainer = document.createElement('span');
 buttonContainer.style.position = 'absolute';
+// buttonContainer.style.width = '120px';
+
 mainBody.appendChild(buttonContainer);
 
 markerButton.addEventListener('click', () => {
 	pickerMarkerMode = !pickerMarkerMode;
 	setMarkerMode();
 	saveData();
+	draw();
 });
 const fillButton = document.createElement('button');
 fillButton.appendChild(document.createTextNode("Fill"));
-fillButton.style.margin = '8px 4px';
 fillButton.style.width = '56px';
-fillButton.style.display = 'block';
 fillButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
 	candidates(board.cells);
@@ -517,7 +533,6 @@ fillButton.addEventListener('click', () => {
 });
 const solveButton = document.createElement('button');
 solveButton.appendChild(document.createTextNode("Solve"));
-solveButton.style.margin = '8px 4px';
 solveButton.style.width = '56px';
 solveButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
@@ -529,7 +544,6 @@ solveButton.addEventListener('click', () => {
 	draw();
 	saveData();
 });
-buttonContainer.appendChild(markerButton);
 buttonContainer.appendChild(fillButton);
 buttonContainer.appendChild(solveButton);
 
@@ -605,6 +619,7 @@ document.body.style.margin = '0px';
 pickerContainer.appendChild(picker);
 pickerContainer.appendChild(pickerMarker);
 pickerContainer.appendChild(buttonContainer);
+pickerContainer.appendChild(markerButton);
 
 mainBody.appendChild(pickerContainer);
 mainBody.appendChild(board.canvas);
@@ -638,14 +653,19 @@ const resize = () => {
 			inset += Math.floor((landscapeWidth - boxSize) / 2);
 		}
 
-
 		board.canvas.style.top = '50%';
 		board.canvas.style.left = inset + 'px';
 		board.canvas.style.transform = 'translate(0%, -50%)';
 
-		buttonContainer.style.top = '100%';
-		buttonContainer.style.left = '0%';
-		buttonContainer.style.transform = 'translate(0%, 0%)';
+		buttonContainer.style.top = -16+'px';
+		buttonContainer.style.left = '50%';
+		buttonContainer.style.transform = 'translate(-50%, -100%)';
+
+		markerButton.style.top = '100%';
+		markerButton.style.margin = '8px 0px 0px 0px';
+		markerButton.style.left = '50%';
+		markerButton.style.transform = 'translate(-50%, 0%)';
+
 		fillButton.style.display = 'inline';
 
 		pickerContainer.style.bottom = '50%';
@@ -656,7 +676,7 @@ const resize = () => {
 
 		let inset = 0;
 		if (boxSize < portraitHeight) {
-			inset = Math.floor((portraitHeight - boxSize) / 2);
+			inset += Math.floor((portraitHeight - boxSize) / 2);
 		}
 
 		board.canvas.style.top = inset + 'px';
@@ -664,8 +684,14 @@ const resize = () => {
 		board.canvas.style.transform = 'translate(-50%, 0%)';
 
 		buttonContainer.style.top = '50%';
-		buttonContainer.style.left = '100%';
-		buttonContainer.style.transform = 'translate(0%, -50%)';
+		buttonContainer.style.left = -16 + 'px';
+		buttonContainer.style.transform = 'translate(-100%, -50%)';
+
+		markerButton.style.top = '50%';
+		markerButton.style.margin = '0px 0px 0px 8px';
+		markerButton.style.left = '100%';
+		markerButton.style.transform = 'translate(0%, -50%)';
+
 		fillButton.style.display = 'block';
 
 		pickerContainer.style.bottom = padding + 'px';
