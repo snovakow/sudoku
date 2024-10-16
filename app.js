@@ -253,7 +253,6 @@ pickerMarker.style.touchAction = "manipulation";
 
 const header = document.createElement('DIV');
 const mainBody = document.createElement('DIV');
-const footer = document.createElement('DIV');
 
 const fontCheckbox = document.createElement('input');
 fontCheckbox.type = "checkbox";
@@ -261,11 +260,11 @@ fontCheckbox.name = "name";
 fontCheckbox.value = "value";
 fontCheckbox.id = "id";
 fontCheckbox.style.position = 'absolute';
-fontCheckbox.style.bottom = footerHeight / 2 + 'px';
-fontCheckbox.style.left = footerHeight / 2 + 'px';
-fontCheckbox.style.transform = 'translate(-50%, 50%)';
-fontCheckbox.style.margin = '0px';
-fontCheckbox.style.padding = '8px';
+fontCheckbox.style.bottom = 0 + 'px';
+fontCheckbox.style.left = 0 + 'px';
+// fontCheckbox.style.transform = 'translate(0%, 100%)';
+// fontCheckbox.style.margin = '0px';
+// fontCheckbox.style.padding = '8px';
 fontCheckbox.addEventListener('change', () => {
 	markerFont = fontCheckbox.checked;
 	setMarkerFont(markerFont);
@@ -276,16 +275,13 @@ fontCheckbox.addEventListener('change', () => {
 const fontLabel = document.createElement('label')
 fontLabel.appendChild(document.createTextNode('Marker Font'));
 fontLabel.style.position = 'absolute';
-fontLabel.style.bottom = footerHeight / 2 + 'px';
-fontLabel.style.left = 8 + 'px';
-fontLabel.style.paddingLeft = footerHeight + 4 + 'px';
-fontLabel.style.transform = 'translateY(50%)';
-fontLabel.style.lineHeight = footerHeight + 'px';
-fontLabel.style.fontSize = footerHeight - 6 + 'px';
+fontLabel.style.bottom = 0 + 'px';
+fontLabel.style.left = 0 + 'px';
+fontLabel.style.paddingLeft = 24 + 'px';
+fontLabel.style.transform = 'translate(0%, 100%)';
 fontLabel.style.whiteSpace = 'nowrap';
 fontLabel.for = "id";
 fontLabel.appendChild(fontCheckbox);
-footer.appendChild(fontLabel);
 
 const markerButton = document.createElement('button');
 markerButton.style.position = 'absolute';
@@ -580,17 +576,6 @@ mainBody.style.width = '100%';
 mainBody.style.left = '50%';
 mainBody.style.transform = 'translateX(-50%)';
 
-const copyright = document.createElement('SPAN');
-copyright.style.fontSize = (footerHeight - 6) + 'px';
-copyright.style.lineHeight = footerHeight + 'px';
-copyright.style.textAlign = 'right';
-copyright.style.position = 'absolute';
-copyright.style.bottom = footerHeight / 2 + 'px';
-copyright.style.right = '8px';
-copyright.style.transform = 'translateY(50%)';
-copyright.appendChild(document.createTextNode("© Scott Novakowski"));
-footer.appendChild(copyright);
-
 const homelink = document.createElement('a');
 homelink.style.fontSize = (headerHeight / 2) + 'px';
 homelink.style.lineHeight = headerHeight + 'px';
@@ -603,30 +588,20 @@ homelink.appendChild(document.createTextNode("Home"));
 homelink.href = "/";
 header.appendChild(homelink);
 
-footer.style.position = 'absolute';
-footer.style.overflow = 'visible';
-footer.style.bottom = '0%';
-footer.style.width = '100%';
-footer.style.left = '50%';
-footer.style.transform = 'translateX(-50%)';
-footer.style.height = footerHeight + 'px';
-footer.style.borderTop = '1px solid darkgray'
-footer.style.background = 'White'
-
 document.body.style.userSelect = 'none';
 document.body.style.margin = '0px';
 
 pickerContainer.appendChild(picker);
 pickerContainer.appendChild(pickerMarker);
-pickerContainer.appendChild(buttonContainer);
 pickerContainer.appendChild(markerButton);
+pickerContainer.appendChild(fontLabel);
+pickerContainer.appendChild(buttonContainer);
 
 mainBody.appendChild(pickerContainer);
 mainBody.appendChild(board.canvas);
 
 document.body.appendChild(header);
 document.body.appendChild(mainBody);
-document.body.appendChild(footer);
 
 const resize = () => {
 	const boundingClientRect = mainBody.getBoundingClientRect();
@@ -641,7 +616,7 @@ const resize = () => {
 	const landscapeSize = Math.min(landscapeWidth, landscapeHeight);
 
 	const portraitWidth = width;
-	const portraitHeight = height - PICKER.cellsSize - padding * 2;
+	const portraitHeight = height - PICKER.cellsSize - padding * 1;
 	const portraitSize = Math.min(portraitWidth, portraitHeight);
 
 	let boxSize;
@@ -657,7 +632,7 @@ const resize = () => {
 		board.canvas.style.left = inset + 'px';
 		board.canvas.style.transform = 'translate(0%, -50%)';
 
-		buttonContainer.style.top = -16+'px';
+		buttonContainer.style.top = -16 + 'px';
 		buttonContainer.style.left = '50%';
 		buttonContainer.style.transform = 'translate(-50%, -100%)';
 
@@ -694,7 +669,7 @@ const resize = () => {
 
 		fillButton.style.display = 'block';
 
-		pickerContainer.style.bottom = padding + 'px';
+		pickerContainer.style.bottom = 0 + 'px';
 		pickerContainer.style.right = '50%';
 		pickerContainer.style.transform = 'translate(50%, 0%)';
 	}
