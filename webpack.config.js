@@ -20,6 +20,9 @@ module.exports = {
 				{ from: '../sudokulib/generate.php', to: '../sudokulib/generate.php' },
 				{ from: '../sudokulib/stats.html', to: '../sudokulib/stats.html' },
 				{ from: '../sudokulib/worker.js', to: '../sudokulib/worker.js' },
+				{ from: '../sudokulib/Grid.js', to: '../sudokulib/Grid.js' },
+				{ from: '../sudokulib/generator.js', to: '../sudokulib/generator.js' },
+				{ from: '../sudokulib/solver.js', to: '../sudokulib/solver.js' },
 				{ from: 'about.html', to: 'about.html' },
 				{ from: 'index.html', to: 'index.html' }
 			]
