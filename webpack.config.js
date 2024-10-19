@@ -14,6 +14,7 @@ module.exports = {
 	plugins: [
 		new CopyPlugin({
 			patterns: [
+				{ from: 'icons', to: 'icons' },
 				{ from: '../sudokulib/sudoku.php', to: '../sudokulib/sudoku.php' },
 				{ from: '../sudokulib/feed.php', to: '../sudokulib/feed.php' },
 				{ from: '../sudokulib/generate.html', to: '../sudokulib/generate.html' },
