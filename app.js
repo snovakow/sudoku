@@ -3,6 +3,7 @@ import { generateFromSeed, generateTransform, fillSolve, consoleOut, STRATEGY } 
 import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import * as PICKER from "../sudokulib/picker.js";
 import { candidates } from "../sudokulib/solver.js";
+import * as Menu from "./menu.js";
 
 const picker = PICKER.picker;
 const pickerDraw = PICKER.pickerDraw;
@@ -42,7 +43,7 @@ Object.seal(puzzleData);
 let markerFont = false;
 let pickerMarkerMode = false;
 
-const headerHeight = 32;
+const headerHeight = Menu.headerHeight;
 const footerHeight = 8;
 
 let selectedRow = 0;
@@ -275,17 +276,17 @@ fontCheckbox.addEventListener('change', () => {
 const fontLabel = document.createElement('label')
 fontLabel.appendChild(document.createTextNode('Marker Font'));
 fontLabel.style.position = 'absolute';
-fontLabel.style.bottom = 0 + 'px';
-fontLabel.style.left = 0 + 'px';
+fontLabel.style.top = 0 + 'px';
+fontLabel.style.right = 0 + 'px';
 fontLabel.style.paddingLeft = 24 + 'px';
-fontLabel.style.transform = 'translate(0%, 100%)';
+fontLabel.style.paddingTop = 8 + 'px';
+fontLabel.style.paddingRight = 8 + 'px';
 fontLabel.style.whiteSpace = 'nowrap';
 fontLabel.for = "id";
 fontLabel.appendChild(fontCheckbox);
 
-const markerButton = document.createElement('button');
+const markerButton = Menu.markerButton;
 markerButton.style.position = 'absolute';
-markerButton.style.width = '56px';
 
 let loaded = false;
 if (window.name) {
@@ -317,14 +318,14 @@ if (window.name) {
 }
 
 const setMarkerMode = () => {
-	while (markerButton.firstChild) markerButton.removeChild(markerButton.firstChild);
+	// while (markerButton.firstChild) markerButton.removeChild(markerButton.firstChild);
 
 	if (pickerMarkerMode) {
-		markerButton.appendChild(document.createTextNode("Place"));
+		// markerButton.appendChild(document.createTextNode("Place"));
 		picker.style.visibility = "hidden";
 		pickerMarker.style.visibility = "visible";
 	} else {
-		markerButton.appendChild(document.createTextNode("Mark"));
+		// markerButton.appendChild(document.createTextNode("Mark"));
 		picker.style.visibility = "visible";
 		pickerMarker.style.visibility = "hidden";
 	}
@@ -492,19 +493,6 @@ if (strategy === 'swordfish') titleString = "Swordfish";
 if (strategy === 'jellyfish') titleString = "Jellyfish";
 if (titleString) title.appendChild(document.createTextNode(titleString));
 
-const clearPuzzleButton = document.createElement('button');
-clearPuzzleButton.appendChild(document.createTextNode("Reset"));
-clearPuzzleButton.style.position = 'absolute';
-clearPuzzleButton.style.top = headerHeight / 2 + 'px';
-clearPuzzleButton.style.right = '8px';
-clearPuzzleButton.style.transform = 'translateY(-50%)';
-clearPuzzleButton.addEventListener('click', () => {
-	selected = false;
-	board.resetGrid();
-	saveData();
-	draw();
-});
-
 const buttonContainer = document.createElement('span');
 buttonContainer.style.position = 'absolute';
 // buttonContainer.style.width = '120px';
@@ -545,21 +533,6 @@ buttonContainer.appendChild(solveButton);
 
 header.appendChild(title);
 
-if (strategy !== 'custom') {
-	const newPuzzleButton = document.createElement('button');
-	newPuzzleButton.appendChild(document.createTextNode("New"));
-	newPuzzleButton.style.position = 'absolute';
-	newPuzzleButton.style.top = headerHeight / 2 + 'px';
-	newPuzzleButton.style.right = '68px';
-	newPuzzleButton.style.transform = 'translateY(-50%)';
-	newPuzzleButton.addEventListener('click', () => {
-		selected = false;
-		loadSudoku();
-	});
-	header.appendChild(newPuzzleButton);
-}
-header.appendChild(clearPuzzleButton);
-
 header.style.position = 'absolute';
 header.style.top = '0%';
 header.style.width = '100%';
@@ -576,25 +549,12 @@ mainBody.style.width = '100%';
 mainBody.style.left = '50%';
 mainBody.style.transform = 'translateX(-50%)';
 
-const homelink = document.createElement('a');
-homelink.style.fontSize = (headerHeight / 2) + 'px';
-homelink.style.lineHeight = headerHeight + 'px';
-homelink.style.textAlign = 'left';
-homelink.style.position = 'absolute';
-homelink.style.top = headerHeight / 2 + 'px';
-homelink.style.left = '8px';
-homelink.style.transform = 'translateY(-50%)';
-homelink.appendChild(document.createTextNode("Home"));
-homelink.href = "/";
-header.appendChild(homelink);
-
 document.body.style.userSelect = 'none';
 document.body.style.margin = '0px';
 
 pickerContainer.appendChild(picker);
 pickerContainer.appendChild(pickerMarker);
 pickerContainer.appendChild(markerButton);
-pickerContainer.appendChild(fontLabel);
 pickerContainer.appendChild(buttonContainer);
 
 mainBody.appendChild(pickerContainer);
@@ -602,6 +562,41 @@ mainBody.appendChild(board.canvas);
 
 document.body.appendChild(header);
 document.body.appendChild(mainBody);
+
+// document.body.appendChild(Menu.backing);
+
+Menu.mainBar.style.top = "0%";
+Menu.mainBar.style.left = "0%";
+Menu.mainBar.style.paddingLeft = "8px";
+document.body.appendChild(Menu.mainBar);
+
+Menu.toolBar.style.top = "0%";
+Menu.toolBar.style.right = "0%";
+Menu.toolBar.style.paddingRight = "8px";
+document.body.appendChild(Menu.toolBar);
+
+if (strategy === 'custom') {
+	Menu.newPuzzle.style.display = 'none';
+} else {
+	Menu.newPuzzle.addEventListener('click', () => {
+		if (!window.confirm("Do you want to start a new puzzle?")) return;
+		selected = false;
+		loadSudoku();
+	});
+}
+
+Menu.reset.addEventListener('click', () => {
+	if (!window.confirm("Do you want to restart the puzzle?")) return;
+	selected = false;
+	board.resetGrid();
+	saveData();
+	draw();
+});
+
+Menu.settings.addEventListener('click', () => {
+	if (fontLabel.parentElement) fontLabel.parentElement.removeChild(fontLabel);
+	else mainBody.appendChild(fontLabel);
+});
 
 const resize = () => {
 	const boundingClientRect = mainBody.getBoundingClientRect();
