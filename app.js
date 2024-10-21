@@ -167,12 +167,15 @@ const pickerClick = (event) => {
 	const index = r * 3 + c + 1;
 	const selectedIndex = selectedRow * 9 + selectedCol;
 	const symbol = board.cells[selectedIndex].symbol;
-	if (symbol === index) {
-		const cell = board.cells[selectedIndex];
-		cell.setSymbol(0);
-	} else {
-		board.cells[selectedIndex].setSymbol(index);
-	}
+
+	if (index === symbol) return;
+	board.cells[selectedIndex].setSymbol(index);
+	// if (symbol === index) {
+	// 	const cell = board.cells[selectedIndex];
+	// 	cell.setSymbol(0);
+	// } else {
+	// 	board.cells[selectedIndex].setSymbol(index);
+	// }
 
 	saveData();
 	draw();
@@ -285,9 +288,6 @@ fontLabel.style.whiteSpace = 'nowrap';
 fontLabel.for = "id";
 fontLabel.appendChild(fontCheckbox);
 
-const markerButton = Menu.markerButton;
-markerButton.style.position = 'absolute';
-
 let loaded = false;
 if (window.name) {
 	const metadata = loadGrid();
@@ -318,14 +318,10 @@ if (window.name) {
 }
 
 const setMarkerMode = () => {
-	// while (markerButton.firstChild) markerButton.removeChild(markerButton.firstChild);
-
 	if (pickerMarkerMode) {
-		// markerButton.appendChild(document.createTextNode("Place"));
 		picker.style.visibility = "hidden";
 		pickerMarker.style.visibility = "visible";
 	} else {
-		// markerButton.appendChild(document.createTextNode("Mark"));
 		picker.style.visibility = "visible";
 		pickerMarker.style.visibility = "hidden";
 	}
@@ -499,12 +495,22 @@ buttonContainer.style.position = 'absolute';
 
 mainBody.appendChild(buttonContainer);
 
-markerButton.addEventListener('click', () => {
+Menu.markerButton.addEventListener('click', () => {
 	pickerMarkerMode = !pickerMarkerMode;
 	setMarkerMode();
 	saveData();
 	draw();
 });
+Menu.deleteButton.addEventListener('click', () => {
+	if (!selected) return;
+
+	const cell = board.cells[selectedRow * 9 + selectedCol];
+	cell.symbol = 0;
+	cell.mask = 0x0000;
+	saveData();
+	draw();
+});
+
 const fillButton = document.createElement('button');
 fillButton.appendChild(document.createTextNode("Fill"));
 fillButton.style.width = '56px';
@@ -554,7 +560,7 @@ document.body.style.margin = '0px';
 
 pickerContainer.appendChild(picker);
 pickerContainer.appendChild(pickerMarker);
-pickerContainer.appendChild(markerButton);
+pickerContainer.appendChild(Menu.pickerBar);
 pickerContainer.appendChild(buttonContainer);
 
 mainBody.appendChild(pickerContainer);
@@ -631,10 +637,11 @@ const resize = () => {
 		buttonContainer.style.left = '50%';
 		buttonContainer.style.transform = 'translate(-50%, -100%)';
 
-		markerButton.style.top = '100%';
-		markerButton.style.margin = '8px 0px 0px 0px';
-		markerButton.style.left = '50%';
-		markerButton.style.transform = 'translate(-50%, 0%)';
+		Menu.pickerBar.style.top = '100%';
+		Menu.pickerBar.style.margin = '8px 0px 0px 0px';
+		Menu.pickerBar.style.left = '50%';
+		Menu.pickerBar.style.transform = 'translate(-50%, 0%)';
+		Menu.pickerBarLandscape(true);
 
 		fillButton.style.display = 'inline';
 
@@ -657,10 +664,11 @@ const resize = () => {
 		buttonContainer.style.left = -16 + 'px';
 		buttonContainer.style.transform = 'translate(-100%, -50%)';
 
-		markerButton.style.top = '50%';
-		markerButton.style.margin = '0px 0px 0px 8px';
-		markerButton.style.left = '100%';
-		markerButton.style.transform = 'translate(0%, -50%)';
+		Menu.pickerBar.style.top = '50%';
+		Menu.pickerBar.style.margin = '0px 0px 0px 8px';
+		Menu.pickerBar.style.left = '100%';
+		Menu.pickerBar.style.transform = 'translate(0%, -50%)';
+		Menu.pickerBarLandscape(false);
 
 		fillButton.style.display = 'block';
 
