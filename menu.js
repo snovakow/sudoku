@@ -1,27 +1,59 @@
 const headerHeight = 32;
 const iconSize = headerHeight;
+const buttonSize = 48;
 
 const mainBar = document.createElement('DIV');
 const toolBar = document.createElement('DIV');
+const pickerBar = document.createElement('DIV');
+const autoBar = document.createElement('DIV');
 
 mainBar.style.position = 'absolute';
-mainBar.style.height = headerHeight + 'px';
+mainBar.style.height = iconSize + 'px';
 mainBar.style.display = 'flex';
 mainBar.style.flexDirection = 'row';
 mainBar.style.flexWrap = 'nowrap';
 
 toolBar.style.position = 'absolute';
-toolBar.style.height = headerHeight + 'px';
+toolBar.style.height = iconSize + 'px';
 toolBar.style.display = 'flex';
 toolBar.style.flexDirection = 'row';
 toolBar.style.flexWrap = 'nowrap';
 
-const createIcon = (src) => {
-	const backing = document.createElement("DIV");
-	backing.style.width = iconSize + "px";
-	backing.style.height = iconSize + "px";
+pickerBar.style.position = 'absolute';
+pickerBar.style.display = 'flex';
+pickerBar.style.flexWrap = 'nowrap';
 
-	const ratio = iconSize * 0.8;
+pickerBar.style.height = buttonSize + 'px';
+pickerBar.style.flexDirection = 'row';
+const pickerBarLandscape = (state) => {
+	if (state) {
+		pickerBar.style.removeProperty('width');
+		pickerBar.style.height = buttonSize + 'px';
+		pickerBar.style.flexDirection = 'row';
+	} else {
+		pickerBar.style.removeProperty('height');
+		pickerBar.style.width = buttonSize + 'px';
+		pickerBar.style.flexDirection = 'column';
+	}
+}
+
+autoBar.style.position = 'absolute';
+autoBar.style.display = 'flex';
+autoBar.style.flexWrap = 'nowrap';
+const autoBarLandscape = (state) => {
+	if (state) {
+		autoBar.style.flexDirection = 'row';
+	} else {
+		autoBar.style.flexDirection = 'column';
+	}
+}
+
+const createIcon = (src, size = iconSize) => {
+	const backing = document.createElement("DIV");
+	backing.style.width = size + "px";
+	backing.style.height = size + "px";
+
+	const ratio = size * 0.8;
 	const icon = new Image();
 	icon.src = src;
 	icon.style.position = "relative";
@@ -35,8 +67,6 @@ const createIcon = (src) => {
 	return backing;
 }
 
-const markerButton = createIcon("./icons/edit.svg");
-
 const backing = document.createElement('DIV');
 backing.style.position = 'fixed';
 backing.style.top = '10%';
@@ -46,8 +76,6 @@ backing.style.zIndex = 1;
 
 const menu = createIcon("./icons/menu.svg");
 const home = createIcon("./icons/home.svg");
-const fullscreen = createIcon("./icons/fullscreen.svg");
-const fullscreenExit = createIcon("./icons/fullscreen_exit.svg");
 const settings = createIcon("./icons/settings.svg");
 const reset = createIcon("./icons/replay.svg");
 const newPuzzle = createIcon("./icons/add_box.svg");
@@ -73,39 +101,54 @@ mainBar.appendChild(menu);
 mainBar.appendChild(newPuzzle);
 mainBar.appendChild(reset);
 
+const markerButton = createIcon("./icons/edit.svg", buttonSize);
+const deleteButton = createIcon("./icons/backspace.svg", buttonSize);
+pickerBar.appendChild(markerButton);
+pickerBar.appendChild(deleteButton);
+
+// autoBar.appendChild(markerButton);
+// autoBar.appendChild(deleteButton);
+
 toolBar.appendChild(settings);
-toolBar.appendChild(fullscreen);
-toolBar.appendChild(fullscreenExit);
+if (document.fullscreenEnabled) {
+	const fullscreen = createIcon("./icons/fullscreen.svg");
+	const fullscreenExit = createIcon("./icons/fullscreen_exit.svg");
 
-const updateFullscreen = () => {
-	if (document.fullscreenElement) {
-		fullscreen.style.display = 'none';
-		fullscreenExit.style.display = 'block';
-	} else {
-		fullscreen.style.display = 'block';
-		fullscreenExit.style.display = 'none';
-	}
-}
-const toggleFullscreen = () => {
-	if (!document.fullscreenElement) {
-		document.documentElement.requestFullscreen();
-	} else if (document.exitFullscreen) {
-		document.exitFullscreen();
-	}
-}
-updateFullscreen();
+	toolBar.appendChild(fullscreen);
+	toolBar.appendChild(fullscreenExit);
 
-fullscreen.addEventListener("click", () => {
-	toggleFullscreen();
-});
-fullscreenExit.addEventListener("click", () => {
-	toggleFullscreen();
-});
-document.addEventListener("fullscreenchange", (event) => {
+	const updateFullscreen = () => {
+		if (document.fullscreenElement) {
+			fullscreen.style.display = 'none';
+			fullscreenExit.style.display = 'block';
+		} else {
+			fullscreen.style.display = 'block';
+			fullscreenExit.style.display = 'none';
+		}
+	}
+	const toggleFullscreen = () => {
+		if (!document.fullscreenElement) {
+			document.documentElement.requestFullscreen();
+		} else if (document.exitFullscreen) {
+			document.exitFullscreen();
+		}
+	}
 	updateFullscreen();
-});
-// document.addEventListener("fullscreenerror", (event) => {
-// 	console.log(event);
-// });
 
-export { backing, mainBar, toolBar, newPuzzle, reset, settings, menu, markerButton, headerHeight };
+	fullscreen.addEventListener("click", () => {
+		toggleFullscreen();
+	});
+	fullscreenExit.addEventListener("click", () => {
+		toggleFullscreen();
+	});
+	document.addEventListener("fullscreenchange", () => {
+		updateFullscreen();
+	});
+	document.addEventListener("fullscreenerror", () => {
+		updateFullscreen();
+	});
+}
+
+export { backing, mainBar, toolBar, pickerBar, autoBar, headerHeight };
+export { newPuzzle, reset, settings, menu, markerButton, deleteButton };
+export { pickerBarLandscape };
