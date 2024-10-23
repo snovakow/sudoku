@@ -106,9 +106,6 @@ const deleteButton = createIcon("./icons/backspace.svg", buttonSize);
 pickerBar.appendChild(markerButton);
 pickerBar.appendChild(deleteButton);
 
-// autoBar.appendChild(markerButton);
-// autoBar.appendChild(deleteButton);
-
 toolBar.appendChild(settings);
 if (document.fullscreenEnabled) {
 	const fullscreen = createIcon("./icons/fullscreen.svg");
@@ -151,4 +148,4 @@ if (document.fullscreenEnabled) {
 
 export { backing, mainBar, toolBar, pickerBar, autoBar, headerHeight };
 export { newPuzzle, reset, settings, menu, markerButton, deleteButton };
-export { pickerBarLandscape };
+export { pickerBarLandscape, autoBarLandscape };

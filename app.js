@@ -29,7 +29,7 @@ if (strategy === null || (
 	strategy !== 'swordfish' &&
 	strategy !== 'jellyfish' &&
 	strategy !== 'custom')
-) window.location.href = "/";
+) window.location.search = "?strategy=simple";
 
 const puzzleData = {
 	id: 0,
@@ -455,7 +455,7 @@ const loadSudoku = () => {
 			draw();
 		}
 	};
-	const search = window.location.search ? window.location.search : "?strategy=simple";
+	const search = window.location.search;
 	xhttp.open("GET", "../sudokulib/sudoku.php" + search, true);
 	xhttp.send();
 };
@@ -473,27 +473,21 @@ title.style.top = headerHeight / 2 + 'px';
 title.style.left = '50%';
 title.style.transform = 'translate(-50%, -50%)';
 let titleString = null;
-if (strategy === 'simple') titleString = "Sudoku";
-if (strategy === 'naked2') titleString = "Naked Pairs";
-if (strategy === 'naked3') titleString = "Naked Triples";
-if (strategy === 'naked4') titleString = "Naked Quads";
-if (strategy === 'hidden2') titleString = "Hidden Pairs";
-if (strategy === 'hidden3') titleString = "Hidden Triples";
-if (strategy === 'hidden4') titleString = "Hidden Quads";
-if (strategy === 'omissions') titleString = "Intersection Removals";
-if (strategy === 'uniqueRectangle') titleString = "Deadly Patterns";
-if (strategy === 'yWing') titleString = "Y Wings";
-if (strategy === 'xyzWing') titleString = "XYZ Wings";
-if (strategy === 'xWing') titleString = "X Wings";
+if (strategy === 'simple') titleString = "Singles";
+if (strategy === 'naked2') titleString = "Naked Pair";
+if (strategy === 'naked3') titleString = "Naked Triple";
+if (strategy === 'naked4') titleString = "Naked Quad";
+if (strategy === 'hidden2') titleString = "Hidden Pair";
+if (strategy === 'hidden3') titleString = "Hidden Triple";
+if (strategy === 'hidden4') titleString = "Hidden Quad";
+if (strategy === 'omissions') titleString = "Intersection Removal";
+if (strategy === 'uniqueRectangle') titleString = "Deadly Pattern";
+if (strategy === 'yWing') titleString = "Y Wing";
+if (strategy === 'xyzWing') titleString = "XYZ Wing";
+if (strategy === 'xWing') titleString = "X Wing";
 if (strategy === 'swordfish') titleString = "Swordfish";
 if (strategy === 'jellyfish') titleString = "Jellyfish";
 if (titleString) title.appendChild(document.createTextNode(titleString));
-
-const buttonContainer = document.createElement('span');
-buttonContainer.style.position = 'absolute';
-// buttonContainer.style.width = '120px';
-
-mainBody.appendChild(buttonContainer);
 
 Menu.markerButton.addEventListener('click', () => {
 	pickerMarkerMode = !pickerMarkerMode;
@@ -512,8 +506,8 @@ Menu.deleteButton.addEventListener('click', () => {
 });
 
 const fillButton = document.createElement('button');
-fillButton.appendChild(document.createTextNode("Fill"));
-fillButton.style.width = '56px';
+fillButton.appendChild(document.createTextNode("Mark"));
+fillButton.style.width = '48px';
 fillButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
 	candidates(board.cells);
@@ -522,8 +516,8 @@ fillButton.addEventListener('click', () => {
 	saveData();
 });
 const solveButton = document.createElement('button');
-solveButton.appendChild(document.createTextNode("Solve"));
-solveButton.style.width = '56px';
+solveButton.appendChild(document.createTextNode("Fill"));
+solveButton.style.width = '48px';
 solveButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
 	const now = performance.now();
@@ -534,8 +528,9 @@ solveButton.addEventListener('click', () => {
 	draw();
 	saveData();
 });
-buttonContainer.appendChild(fillButton);
-buttonContainer.appendChild(solveButton);
+Menu.autoBar.appendChild(fillButton);
+Menu.autoBar.appendChild(solveButton);
+pickerContainer.appendChild(Menu.autoBar);
 
 header.appendChild(title);
 
@@ -561,7 +556,7 @@ document.body.style.margin = '0px';
 pickerContainer.appendChild(picker);
 pickerContainer.appendChild(pickerMarker);
 pickerContainer.appendChild(Menu.pickerBar);
-pickerContainer.appendChild(buttonContainer);
+pickerContainer.appendChild(Menu.autoBar);
 
 mainBody.appendChild(pickerContainer);
 mainBody.appendChild(board.canvas);
@@ -633,17 +628,19 @@ const resize = () => {
 		board.canvas.style.left = inset + 'px';
 		board.canvas.style.transform = 'translate(0%, -50%)';
 
-		buttonContainer.style.top = -16 + 'px';
-		buttonContainer.style.left = '50%';
-		buttonContainer.style.transform = 'translate(-50%, -100%)';
-
 		Menu.pickerBar.style.top = '100%';
 		Menu.pickerBar.style.margin = '8px 0px 0px 0px';
 		Menu.pickerBar.style.left = '50%';
 		Menu.pickerBar.style.transform = 'translate(-50%, 0%)';
 		Menu.pickerBarLandscape(true);
 
-		fillButton.style.display = 'inline';
+		Menu.autoBar.style.bottom = '100%';
+		Menu.autoBar.style.margin = '0px 0px 16px 0px';
+		Menu.autoBar.style.right = '50%';
+		Menu.autoBar.style.transform = 'translate(50%, 0%)';
+		Menu.autoBarLandscape(true);
+
+		Menu.autoBar.style.gap = '16px';
 
 		pickerContainer.style.bottom = '50%';
 		pickerContainer.style.right = padding + 'px';
@@ -660,17 +657,19 @@ const resize = () => {
 		board.canvas.style.left = '50%';
 		board.canvas.style.transform = 'translate(-50%, 0%)';
 
-		buttonContainer.style.top = '50%';
-		buttonContainer.style.left = -16 + 'px';
-		buttonContainer.style.transform = 'translate(-100%, -50%)';
-
 		Menu.pickerBar.style.top = '50%';
 		Menu.pickerBar.style.margin = '0px 0px 0px 8px';
 		Menu.pickerBar.style.left = '100%';
 		Menu.pickerBar.style.transform = 'translate(0%, -50%)';
 		Menu.pickerBarLandscape(false);
 
-		fillButton.style.display = 'block';
+		Menu.autoBar.style.bottom = '50%';
+		Menu.autoBar.style.margin = '0px 16px 0px 0px';
+		Menu.autoBar.style.right = '100%';
+		Menu.autoBar.style.transform = 'translate(0%, 50%)';
+		Menu.autoBarLandscape(false);
+
+		Menu.autoBar.style.gap = '16px';
 
 		pickerContainer.style.bottom = 0 + 'px';
 		pickerContainer.style.right = '50%';
