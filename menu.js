@@ -77,6 +77,7 @@ backing.style.background = 'white';
 backing.style.border = '1px solid gray';
 backing.style.padding = '4px';
 backing.style.overflowY = 'auto';
+backing.style.boxSizing = "border-box";
 
 const menu = createIcon("./icons/menu.svg");
 const settings = createIcon("./icons/settings.svg");

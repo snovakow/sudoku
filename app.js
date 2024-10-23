@@ -583,12 +583,22 @@ Menu.toolBar.style.right = "0%";
 Menu.toolBar.style.paddingRight = "8px";
 document.body.appendChild(Menu.toolBar);
 
+const sizeMenu = () => {
+	if (!Menu.backing.parentElement) return;
+	const boundingClientRect = mainBody.getBoundingClientRect();
+	const maxPoint = boundingClientRect.top + boundingClientRect.height;
+	const menuClientRect = Menu.backing.getBoundingClientRect();
+	const maxHeight = maxPoint - menuClientRect.top;
+	Menu.backing.style.maxHeight = maxHeight + footerHeight + "px";
+}
+
 Menu.menu.addEventListener('click', () => {
 	if (Menu.backing.parentElement) {
 		Menu.backing.parentElement.removeChild(Menu.backing);
 		return;
 	}
 	mainBody.appendChild(Menu.backing);
+	sizeMenu();
 });
 
 document.body.addEventListener('click', (event) => {
@@ -653,6 +663,10 @@ const resize = () => {
 		board.canvas.style.left = inset + 'px';
 		board.canvas.style.transform = 'translate(0%, -50%)';
 
+		pickerContainer.style.bottom = '50%';
+		pickerContainer.style.right = padding + 'px';
+		pickerContainer.style.transform = 'translate(0, 50%)';
+
 		Menu.pickerBar.style.top = '100%';
 		Menu.pickerBar.style.margin = '8px 0px 0px 0px';
 		Menu.pickerBar.style.left = '50%';
@@ -666,10 +680,6 @@ const resize = () => {
 		Menu.autoBarLandscape(true);
 
 		Menu.autoBar.style.gap = '16px';
-
-		pickerContainer.style.bottom = '50%';
-		pickerContainer.style.right = padding + 'px';
-		pickerContainer.style.transform = 'translate(0, 50%)';
 	} else {
 		boxSize = portraitSize;
 
@@ -681,6 +691,10 @@ const resize = () => {
 		board.canvas.style.top = inset + 'px';
 		board.canvas.style.left = '50%';
 		board.canvas.style.transform = 'translate(-50%, 0%)';
+
+		pickerContainer.style.bottom = 0 + 'px';
+		pickerContainer.style.right = '50%';
+		pickerContainer.style.transform = 'translate(50%, 0%)';
 
 		Menu.pickerBar.style.top = '50%';
 		Menu.pickerBar.style.margin = '0px 0px 0px 8px';
@@ -695,10 +709,6 @@ const resize = () => {
 		Menu.autoBarLandscape(false);
 
 		Menu.autoBar.style.gap = '16px';
-
-		pickerContainer.style.bottom = 0 + 'px';
-		pickerContainer.style.right = '50%';
-		pickerContainer.style.transform = 'translate(50%, 0%)';
 	}
 
 	board.canvas.style.width = boxSize + 'px';
@@ -706,6 +716,7 @@ const resize = () => {
 	board.canvas.width = Math.floor(boxSize * window.devicePixelRatio / 1) * 2;
 	board.canvas.height = Math.floor(boxSize * window.devicePixelRatio / 1) * 2;
 
+	sizeMenu();
 	draw();
 };
 
