@@ -602,6 +602,7 @@ Menu.menu.addEventListener('click', () => {
 });
 
 document.body.addEventListener('click', (event) => {
+	if (!Menu.backing.parentElement) return;
 	let parent = event.target;
 	while (parent) {
 		if (parent === Menu.menu) return;
