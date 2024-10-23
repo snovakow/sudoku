@@ -313,9 +313,17 @@ if (window.name) {
 			metadata.strategy = strategy;
 			saveData();
 		}
+		Menu.setMenuItem(strategy);
 	}
 	draw();
 }
+
+Menu.setMenuReponse((responseStrategy, responseTitle) => {
+	if (strategy === responseStrategy) return false;
+	if (!window.confirm("Do you want to start a new " + responseTitle + " puzzle?")) return false;
+	window.location.search = "?strategy=" + responseStrategy;
+	return true;
+});
 
 const setMarkerMode = () => {
 	if (pickerMarkerMode) {
@@ -487,6 +495,7 @@ if (strategy === 'xyzWing') titleString = "XYZ Wing";
 if (strategy === 'xWing') titleString = "X Wing";
 if (strategy === 'swordfish') titleString = "Swordfish";
 if (strategy === 'jellyfish') titleString = "Jellyfish";
+if (strategy === 'bruteForce') titleString = "Other Strategies";
 if (titleString) title.appendChild(document.createTextNode(titleString));
 
 Menu.markerButton.addEventListener('click', () => {
@@ -564,8 +573,6 @@ mainBody.appendChild(board.canvas);
 document.body.appendChild(header);
 document.body.appendChild(mainBody);
 
-// document.body.appendChild(Menu.backing);
-
 Menu.mainBar.style.top = "0%";
 Menu.mainBar.style.left = "0%";
 Menu.mainBar.style.paddingLeft = "8px";
@@ -575,6 +582,24 @@ Menu.toolBar.style.top = "0%";
 Menu.toolBar.style.right = "0%";
 Menu.toolBar.style.paddingRight = "8px";
 document.body.appendChild(Menu.toolBar);
+
+Menu.menu.addEventListener('click', () => {
+	if (Menu.backing.parentElement) {
+		Menu.backing.parentElement.removeChild(Menu.backing);
+		return;
+	}
+	mainBody.appendChild(Menu.backing);
+});
+
+document.body.addEventListener('click', (event) => {
+	let parent = event.target;
+	while (parent) {
+		if (parent === Menu.menu) return;
+		if (parent === Menu.backing) return;
+		parent = parent.parentElement;
+	}
+	Menu.backing.parentElement.removeChild(Menu.backing);
+});
 
 if (strategy === 'custom') {
 	Menu.newPuzzle.style.display = 'none';

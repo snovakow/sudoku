@@ -68,34 +68,70 @@ const createIcon = (src, size = iconSize) => {
 }
 
 const backing = document.createElement('DIV');
-backing.style.position = 'fixed';
-backing.style.top = '10%';
+backing.style.position = 'absolute';
+backing.style.display = 'flex';
+backing.style.flexDirection = 'column';
+backing.style.flexWrap = 'nowrap';
 backing.style.left = '0%';
-backing.style.backgroundColor = 'blue';
-backing.style.zIndex = 1;
+backing.style.background = 'white';
+backing.style.border = '1px solid gray';
+backing.style.padding = '4px';
+backing.style.overflowY = 'auto';
 
 const menu = createIcon("./icons/menu.svg");
-const home = createIcon("./icons/home.svg");
 const settings = createIcon("./icons/settings.svg");
 const reset = createIcon("./icons/replay.svg");
 const newPuzzle = createIcon("./icons/add_box.svg");
-backing.appendChild(home);
-backing.appendChild(document.createTextNode("Home"));
-backing.appendChild(document.createTextNode("Singles"));
-backing.appendChild(document.createTextNode("Naked Pairs"));
-backing.appendChild(document.createTextNode("Naked Triples"));
-backing.appendChild(document.createTextNode("Naked Quads"));
-backing.appendChild(document.createTextNode("Hidden Pairs"));
-backing.appendChild(document.createTextNode("Hidden Triples"));
-backing.appendChild(document.createTextNode("Hidden Quads"));
-backing.appendChild(document.createTextNode("Intersection Removal (Omissions)"));
-backing.appendChild(document.createTextNode("Deadly Pattern (Unique Rectangle)"));
-backing.appendChild(document.createTextNode("Y Wing"));
-backing.appendChild(document.createTextNode("XYZ Wing"));
-backing.appendChild(document.createTextNode("X Wing"));
-backing.appendChild(document.createTextNode("Swordfish"));
-backing.appendChild(document.createTextNode("Jellyfish"));
-backing.appendChild(document.createTextNode("Puzzles none of these techniques can solve"));
+
+const menuMap = new Map();
+let menuResponse = null;
+const setMenuReponse = (response) => {
+	menuResponse = response;
+}
+const setMenuItem = (strategy) => {
+	const item = menuMap.get(strategy);
+	if (!item) return;
+
+	for (const item of menuMap.values()) {
+		item.style.background = null;
+	}
+	item.style.background = 'LightCyan';
+}
+const addMenuItem = (title, strategy) => {
+	const item = document.createElement('span');
+
+	if (backing.firstChild) item.style.borderTop = '1px solid lightgray';
+	item.style.padding = '4px';
+
+	item.style.whiteSpace = 'nowrap';
+	item.style.font = '18px sans-serif';
+	item.appendChild(document.createTextNode(title));
+
+	item.addEventListener("click", () => {
+		if (!menuResponse) return;
+		if (!menuResponse(strategy, title)) return;
+		setMenuItem(strategy);
+	});
+
+	backing.appendChild(item);
+
+	menuMap.set(strategy, item);
+}
+addMenuItem("Naked Hidden Singles", 'simple');
+addMenuItem("Naked Pair", 'naked2');
+addMenuItem("Naked Triple", 'naked3');
+addMenuItem("Naked Quad", 'naked4');
+addMenuItem("Hidden Pair", 'hidden2');
+addMenuItem("Hidden Triple", 'hidden3');
+addMenuItem("Hidden Quad", 'hidden4');
+addMenuItem("Intersection Removal (Omissions)", 'omissions');
+addMenuItem("Deadly Pattern (Unique Rectangle)", 'uniqueRectangle');
+addMenuItem("Y Wing", 'yWing');
+addMenuItem("XYZ Wing", 'xyzWing');
+addMenuItem("X Wing", 'xWing');
+addMenuItem("Swordfish", 'swordfish');
+addMenuItem("Jellyfish", 'jellyfish');
+addMenuItem("Other Strategies", 'bruteForce');
 
 mainBar.appendChild(menu);
 mainBar.appendChild(newPuzzle);
@@ -148,4 +184,4 @@ if (document.fullscreenEnabled) {
 
 export { backing, mainBar, toolBar, pickerBar, autoBar, headerHeight };
 export { newPuzzle, reset, settings, menu, markerButton, deleteButton };
-export { pickerBarLandscape, autoBarLandscape };
+export { pickerBarLandscape, autoBarLandscape, setMenuItem, setMenuReponse };
