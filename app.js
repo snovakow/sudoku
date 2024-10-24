@@ -297,18 +297,19 @@ if (window.name) {
 			if (metadata.selectedRow !== undefined) selectedRow = metadata.selectedRow;
 			if (metadata.selectedCol !== undefined) selectedCol = metadata.selectedCol;
 
-			if (metadata.markerFont !== undefined) markerFont = metadata.markerFont;
-			setMarkerFont(markerFont);
-			fontCheckbox.checked = markerFont;
-
-			if (metadata.pickerMarkerMode !== undefined) pickerMarkerMode = metadata.pickerMarkerMode;
-
 			if (metadata.id !== undefined) puzzleData.id = metadata.id;
 			if (metadata.transform !== undefined) puzzleData.transform = metadata.transform;
 			if (metadata.grid !== undefined) puzzleData.grid.set(metadata.grid);
 
 			loaded = true;
 		}
+
+		if (metadata.markerFont !== undefined) markerFont = metadata.markerFont;
+		setMarkerFont(markerFont);
+		fontCheckbox.checked = markerFont;
+
+		if (metadata.pickerMarkerMode !== undefined) pickerMarkerMode = metadata.pickerMarkerMode;
+
 		if (metadata.strategy !== strategy) {
 			metadata.strategy = strategy;
 			saveData();
