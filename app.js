@@ -531,7 +531,7 @@ solveButton.style.width = '48px';
 solveButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
 	const now = performance.now();
-	const result = fillSolve(board.cells);
+	const result = fillSolve(board.cells, STRATEGY.ALL);
 	console.log("----- " + (performance.now() - now) / 1000);
 	for (const line of consoleOut(result)) console.log(line);
 
