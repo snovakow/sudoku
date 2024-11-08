@@ -356,8 +356,7 @@ if (strategy === 'custom') {
 		return select;
 	};
 
-	const search = "?strategy=" + strategy;
-	fetch("../sudokulib/sudoku.php" + search).then(response => {
+	fetch("../sudokulib/sudoku.php?strategy=" + strategy).then(response => {
 		response.text().then((string) => {
 			const results = string.split(":");
 			const entries = [];
@@ -433,17 +432,20 @@ if (strategy === 'custom') {
 }
 
 const loadSudoku = () => {
-	const xhttp = new XMLHttpRequest();
-	xhttp.onreadystatechange = () => {
-		if (xhttp.readyState == 4 && xhttp.status == 200) {
-			const fields = xhttp.responseText.split(":");
+	fetch("../sudokulib/sudoku.php" + window.location.search).then(response => {
+		response.text().then((string) => {
+			const fields = string.split(":");
 			if (fields.length !== 3) return;
 
 			const puzzleId = parseInt(fields[0]);
 			const puzzle = fields[1];
 			if (puzzle.length !== 81) return;
-			const grid = fields[2];
-			if (grid.length !== 81) return;
+			const gridSeed = fields[2];
+			if (gridSeed.length !== 72) return;
+
+			const grid = new Uint8Array(81);
+			for (let i = 0; i < 9; i++) grid[i] = i + 1;
+			for (let i = 0; i < 72; i++) grid[i + 9] = parseInt(gridSeed[i]);
 
 			const transform = generateTransform();
 			const puzzleTransformed = generateFromSeed(puzzle, transform);
@@ -462,11 +464,8 @@ const loadSudoku = () => {
 
 			saveData();
 			draw();
-		}
-	};
-	const search = window.location.search;
-	xhttp.open("GET", "../sudokulib/sudoku.php" + search, true);
-	xhttp.send();
+		});
+	});
 };
 
 if (!loaded && strategy !== 'custom') {
