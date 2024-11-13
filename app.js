@@ -431,6 +431,55 @@ if (strategy === 'custom') {
 	});
 }
 
+const hexClues = (hexString, grid) => {
+	const clues = [];
+	if (hexString[1] === "0") clues[0] = 0;
+	else clues[0] = grid[0];
+	let index = 1;
+	for (let i = 2; i < 22; i++) {
+		const hex = parseInt(hexString[i], 16);
+
+		let shift = 3;
+		for (let offset = 0; offset < 4; offset++) {
+			const clue = (hex >>> shift) & 0x1;
+			if (clue === 0x1) clues[index] = grid[index];
+			else clues[index] = 0;
+			shift--;
+			index++;
+		}
+	}
+	return clues.join('');
+}
+const hexGrid = (hexString) => {
+	const bits = [];
+	for (let i = 0; i < 54; i++) {
+		const hex = parseInt(hexString[i], 16);
+
+		let shift = 3;
+		for (let offset = 0; offset < 4; offset++) {
+			bits.push((hex >>> shift) & 0x01);
+			shift--;
+		}
+	}
+	const grid = [];
+	for (let row = 0; row < 8; row++) {
+		for (let i = 0; i < 9; i++) {
+			const index = (row * 9 + i) * 3;
+
+			const bit3 = bits[index + 0];
+			const bit2 = bits[index + 1];
+			const bit1 = bits[index + 2];
+
+			const symbol = bit1 | (bit2 << 1) | (bit3 << 2);
+			let encode = symbol;
+			if (i <= encode) encode++;
+			encode++;
+			grid.push(encode);
+		}
+	}
+	return grid.join('');
+}
+
 const loadSudoku = () => {
 	fetch("../sudokulib/sudoku.php" + window.location.search).then(response => {
 		response.text().then((string) => {
@@ -438,14 +487,16 @@ const loadSudoku = () => {
 			if (fields.length !== 3) return;
 
 			const puzzleId = parseInt(fields[0]);
-			const puzzle = fields[1];
-			if (puzzle.length !== 81) return;
-			const gridSeed = fields[2];
-			if (gridSeed.length !== 72) return;
+			const puzzleHex = fields[1];
+			if (puzzleHex.length !== 22) return;
+			const gridSeedHex = fields[2];
+			if (gridSeedHex.length !== 54) return;
+
+			const gridSeed = '123456789' + hexGrid(gridSeedHex);
+			const puzzle = hexClues(puzzleHex, gridSeed);
 
 			const grid = new Uint8Array(81);
-			for (let i = 0; i < 9; i++) grid[i] = i + 1;
-			for (let i = 0; i < 72; i++) grid[i + 9] = parseInt(gridSeed[i]);
+			for (let i = 0; i < 81; i++) grid[i] = parseInt(gridSeed[i]);
 
 			const transform = generateTransform();
 			const puzzleTransformed = generateFromSeed(puzzle, transform);
