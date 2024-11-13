@@ -772,7 +772,7 @@ if (strategy === 'custom') {
 					const solutionCell = solution[index];
 					if (solutionCell.symbol === 0) {
 						for (let x = 1; x <= 9; x++) {
-							if (((solutionCell.mask >> x) & 0x0001) === 0x0001) {
+							if (((solutionCell.mask >>> x) & 0x0001) === 0x0001) {
 								unionCell.add(x)
 							}
 						}
@@ -846,7 +846,7 @@ if (strategy === 'custom') {
 						const solutionCell = solution[index];
 						if (solutionCell.symbol === 0) {
 							for (let x = 1; x <= 9; x++) {
-								if (((solutionCell.mask >> x) & 0x0001) === 0x0001) {
+								if (((solutionCell.mask >>> x) & 0x0001) === 0x0001) {
 									unionCell.add(x)
 								}
 							}
@@ -891,7 +891,7 @@ if (strategy === 'custom') {
 							const solutionCell = solution[index];
 							if (solutionCell.symbol === 0) {
 								for (let x = 1; x <= 9; x++) {
-									if (((solutionCell.mask >> x) & 0x0001) === 0x0001) {
+									if (((solutionCell.mask >>> x) & 0x0001) === 0x0001) {
 										unionCell.add(x)
 									}
 								}
