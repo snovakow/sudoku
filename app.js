@@ -452,7 +452,7 @@ const hexClues = (hexString, grid) => {
 }
 const hexGrid = (hexString) => {
 	const bits = [];
-	for (let i = 0; i < 54; i++) {
+	for (let i = 0; i < 42; i++) {
 		const hex = parseInt(hexString[i], 16);
 
 		let shift = 3;
@@ -461,11 +461,11 @@ const hexGrid = (hexString) => {
 			shift--;
 		}
 	}
-	const grid = [];
-	for (let row = 0; row < 8; row++) {
-		for (let i = 0; i < 9; i++) {
-			const index = (row * 9 + i) * 3;
-
+	const grid = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+	let index = 0;
+	for (let row = 1; row < 8; row++) {
+		let found = 0x0000;
+		for (let i = 0; i < 8; i++) {
 			const bit3 = bits[index + 0];
 			const bit2 = bits[index + 1];
 			const bit1 = bits[index + 2];
@@ -473,10 +473,29 @@ const hexGrid = (hexString) => {
 			const symbol = bit1 | (bit2 << 1) | (bit3 << 2);
 			let encode = symbol;
 			if (i <= encode) encode++;
-			encode++;
 			grid.push(encode);
+			found |= 0x0001 << encode;
+
+			index += 3;
+		}
+		for (let i = 0; i < 9; i++) {
+			if (((found >>> i) & 0x0001) === 0x0000) {
+				grid.push(i);
+				break;
+			}
 		}
 	}
+	for (let col = 0; col < 9; col++) {
+		let found = 0x0000;
+		for (let i = 0; i < 8; i++) found |= 0x0001 << grid[i * 9 + col];
+		for (let i = 0; i < 9; i++) {
+			if (((found >>> i) & 0x0001) === 0x0000) {
+				grid.push(i);
+				break;
+			}
+		}
+	}
+	for (let i = 0; i < 81; i++) grid[i]++;
 	return grid.join('');
 }
 
