@@ -484,16 +484,14 @@ const loadSudoku = () => {
 	fetch("../sudokulib/sudoku.php" + window.location.search).then(response => {
 		response.text().then((string) => {
 			const fields = string.split(":");
-			if (fields.length !== 3) return;
+			if (fields.length !== 2) return;
 
 			const puzzleId = parseInt(fields[0]);
-			const puzzleHex = fields[1];
-			if (puzzleHex.length !== 22) return;
-			const gridSeedHex = fields[2];
-			if (gridSeedHex.length !== 54) return;
+			const puzzleDataHex = fields[1];
+			if (puzzleDataHex.length !== 64) return;
 
-			const gridSeed = '123456789' + hexGrid(gridSeedHex);
-			const puzzle = hexClues(puzzleHex, gridSeed);
+			const gridSeed = hexGrid(puzzleDataHex.substring(22));
+			const puzzle = hexClues(puzzleDataHex.substring(0, 22), gridSeed);
 
 			const grid = new Uint8Array(81);
 			for (let i = 0; i < 81; i++) grid[i] = parseInt(gridSeed[i]);
