@@ -4,6 +4,7 @@ import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import * as PICKER from "../sudokulib/picker.js";
 import { candidates } from "../sudokulib/solver.js";
 import * as Menu from "./menu.js";
+import * as SudokuProcess from "../sudokulib/process.js";
 
 const picker = PICKER.picker;
 const pickerDraw = PICKER.pickerDraw;
@@ -431,64 +432,6 @@ if (strategy === 'custom') {
 	});
 }
 
-const hexClues = (hexString, grid) => {
-	const clues = [];
-	if (hexString[1] === "0") clues[0] = 0;
-	else clues[0] = grid[0];
-	let index = 1;
-	for (let i = 2; i < 22; i++) {
-		const hex = parseInt(hexString[i], 16);
-
-		let shift = 3;
-		for (let offset = 0; offset < 4; offset++) {
-			const clue = (hex >>> shift) & 0x1;
-			if (clue === 0x1) clues[index] = grid[index];
-			else clues[index] = 0;
-			shift--;
-			index++;
-		}
-	}
-	return clues.join('');
-}
-const remainingTotal = 36; // 0+1+2+3+4+5+6+7+8
-const hexGrid = (hexString) => {
-	const bits = [];
-	for (let i = 0; i < 42; i++) {
-		const hex = parseInt(hexString[i], 16);
-
-		let shift = 3;
-		for (let offset = 0; offset < 4; offset++) {
-			bits.push((hex >>> shift) & 0x01);
-			shift--;
-		}
-	}
-	const grid = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-	let index = 0;
-	for (let row = 1; row < 8; row++) {
-		let remaining = remainingTotal;
-		for (let i = 0; i < 8; i++) {
-			const bit3 = bits[index];
-			const bit2 = bits[index + 1];
-			const bit1 = bits[index + 2];
-
-			const symbol = bit1 | (bit2 << 1) | (bit3 << 2);
-			let encode = symbol;
-			if (i <= encode) encode++;
-			grid.push(encode);
-			remaining -= encode;
-			index += 3;
-		}
-		grid.push(remaining);
-	}
-	for (let col = 0; col < 9; col++) {
-		let remaining = remainingTotal;
-		for (let i = col; i < 72; i += 9) remaining -= grid[i];
-		grid.push(remaining);
-	}
-	for (let i = 0; i < 81; i++) grid[i]++;
-	return grid.join('');
-}
-
 const loadSudoku = () => {
 	fetch("../sudokulib/sudoku.php" + window.location.search).then(response => {
 		response.text().then((string) => {
@@ -497,13 +440,9 @@ const loadSudoku = () => {
 
 			const puzzleId = parseInt(fields[0]);
 			const puzzleDataHex = fields[1];
+
 			if (puzzleDataHex.length !== 64) return;
-
-			const gridSeed = hexGrid(puzzleDataHex.substring(22));
-			const puzzle = hexClues(puzzleDataHex.substring(0, 22), gridSeed);
-
-			const grid = new Uint8Array(81);
-			for (let i = 0; i < 81; i++) grid[i] = parseInt(gridSeed[i]);
+			const [puzzle, grid] = SudokuProcess.puzzleHexGrid(puzzleDataHex);
 
 			const transform = generateTransform();
 			const puzzleTransformed = generateFromSeed(puzzle, transform);
