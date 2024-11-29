@@ -15,11 +15,11 @@ module.exports = {
 		new CopyPlugin({
 			patterns: [
 				{ from: 'icons', to: 'icons' },
+				{ from: '../sudokulib/generate.html', to: '../sudokulib/generate.html' },
 				{ from: '../sudokulib/sudoku.php', to: '../sudokulib/sudoku.php' },
 				{ from: '../sudokulib/feed.php', to: '../sudokulib/feed.php' },
-				{ from: '../sudokulib/generate.html', to: '../sudokulib/generate.html' },
 				{ from: '../sudokulib/generate.php', to: '../sudokulib/generate.php' },
-				{ from: '../sudokulib/stats.html', to: '../sudokulib/stats.html' },
+				{ from: '../sudokulib/tables.php', to: '../sudokulib/tables.php' },
 				{ from: '../sudokulib/worker.js', to: '../sudokulib/worker.js' },
 				{ from: '../sudokulib/Grid.js', to: '../sudokulib/Grid.js' },
 				{ from: '../sudokulib/generator.js', to: '../sudokulib/generator.js' },
