@@ -17,7 +17,7 @@ module.exports = {
 				{ from: 'icons', to: 'icons' },
 				{ from: '../sudokulib/generate.html', to: '../sudokulib/generate.html' },
 				{ from: '../sudokulib/sudoku.php', to: '../sudokulib/sudoku.php' },
-				{ from: '../sudokulib/feed.php', to: '../sudokulib/feed.php' },
+				{ from: '../sudokulib/stats.php', to: '../sudokulib/stats.php' },
 				{ from: '../sudokulib/generate.php', to: '../sudokulib/generate.php' },
 				{ from: '../sudokulib/tables.php', to: '../sudokulib/tables.php' },
 				{ from: '../sudokulib/worker.js', to: '../sudokulib/worker.js' },
