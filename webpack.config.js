@@ -16,9 +16,12 @@ module.exports = {
 			patterns: [
 				{ from: 'icons', to: 'icons' },
 				{ from: '../sudokulib/generate.html', to: '../sudokulib/generate.html' },
+				{ from: '../sudokulib/update.html', to: '../sudokulib/update.html' },
+				{ from: '../sudokulib/generate.php', to: '../sudokulib/generate.php' },
+				{ from: '../sudokulib/update.php', to: '../sudokulib/update.php' },
+				{ from: '../sudokulib/updateFeed.php', to: '../sudokulib/updateFeed.php' },
 				{ from: '../sudokulib/sudoku.php', to: '../sudokulib/sudoku.php' },
 				{ from: '../sudokulib/stats.php', to: '../sudokulib/stats.php' },
-				{ from: '../sudokulib/generate.php', to: '../sudokulib/generate.php' },
 				{ from: '../sudokulib/tables.php', to: '../sudokulib/tables.php' },
 				{ from: '../sudokulib/worker.js', to: '../sudokulib/worker.js' },
 				{ from: '../sudokulib/Grid.js', to: '../sudokulib/Grid.js' },
