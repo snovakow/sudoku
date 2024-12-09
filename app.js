@@ -182,7 +182,7 @@ const pickerClick = (event) => {
 	draw();
 
 	if (running) {
-		fillSolve(board.cells);
+		fillSolve(board.cells, null, []);
 		saveData();
 		if (superimposeCandidates) superimposeCandidates();
 	}
@@ -214,7 +214,7 @@ const pickerMarkerClick = (event) => {
 	draw();
 
 	if (running) {
-		fillSolve(board.cells);
+		fillSolve(board.cells, null, []);
 		saveData();
 		if (superimposeCandidates) superimposeCandidates();
 	}
@@ -527,7 +527,7 @@ solveButton.style.width = '48px';
 solveButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
 	const now = performance.now();
-	const result = fillSolve(board.cells);
+	const result = fillSolve(board.cells, null, []);
 	console.log("----- " + (performance.now() - now) / 1000);
 	for (const line of consoleOut(result)) console.log(line);
 
@@ -753,7 +753,7 @@ if (strategy === 'custom') {
 				if (superCell.has(x)) {
 					// cell.delete(x);
 					superCell.setSymbol(x);
-					fillSolve(board.cells, STRATEGY.NONE);
+					fillSolve(board.cells, null, []);
 					supers.push(board.cells.toData());
 					board.cells.fromData(startBoard);
 				}
@@ -807,8 +807,8 @@ if (strategy === 'custom') {
 			}
 
 			const solve = () => {
-				if (superpositionMode === 1) fillSolve(board.cells, STRATEGY.NONE);
-				else fillSolve(board.cells, STRATEGY.ALL);
+				if (superpositionMode === 1) fillSolve(board.cells, null, []);
+				else fillSolve(board.cells, null, null);
 			}
 
 			// Candidates
