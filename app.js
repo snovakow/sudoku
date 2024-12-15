@@ -13,28 +13,42 @@ const pixAlign = PICKER.pixAlign;
 
 const searchParams = new URLSearchParams(window.location.search);
 const strategy = searchParams.get("strategy");
-if (strategy === null || (
-	strategy !== 'simple' &&
-	strategy !== 'bruteForce' &&
-	strategy !== 'naked2' &&
-	strategy !== 'naked3' &&
-	strategy !== 'naked4' &&
-	strategy !== 'hidden2' &&
-	strategy !== 'hidden3' &&
-	strategy !== 'hidden4' &&
-	strategy !== 'omissions' &&
-	strategy !== 'uniqueRectangle' &&
-	strategy !== 'yWing' &&
-	strategy !== 'xyzWing' &&
-	strategy !== 'xWing' &&
-	strategy !== 'swordfish' &&
-	strategy !== 'jellyfish' &&
-	strategy !== 'custom')
-) window.location.search = "?strategy=simple";
+const tableNames = [
+	"simple_hidden",
+	"simple_omission",
+	"simple_naked",
+	"candidate_visible",
+	"candidate_naked2",
+	"candidate_naked3",
+	"candidate_naked4",
+	"candidate_hidden1",
+	"candidate_hidden2",
+	"candidate_hidden3",
+	"candidate_hidden4",
+	"candidate_omissions",
+	"candidate_uniqueRectangle",
+	"candidate_yWing",
+	"candidate_xyzWing",
+	"candidate_xWing",
+	"candidate_swordfish",
+	"candidate_jellyfish",
+	"unsolvable",
+	"unsolvable_filled",
+	"custom",
+	"hardcoded",
+];
+let search = "?strategy=" + tableNames[0];
+for (const tableName of tableNames) {
+	if (strategy === tableName) {
+		search = null;
+		break;
+	}
+}
+if (search !== null) window.location.search = search;
 
 const puzzleData = {
-	id: 0,
-	strategy: strategy,
+	id: null,
+	strategy: null,
 	transform: null,
 	grid: new Uint8Array(81),
 	markers: new Uint16Array(81),
@@ -54,7 +68,7 @@ let selected = false;
 const saveData = () => {
 	saveGrid({
 		id: puzzleData.id,
-		strategy: strategy,
+		strategy: puzzleData.strategy,
 		transform: puzzleData.transform,
 		grid: puzzleData.grid.join(""),
 		markers: puzzleData.markers.join(""),
@@ -341,7 +355,7 @@ setMarkerMode();
 const title = document.createElement('SPAN');
 
 let customSelector = null;
-if (strategy === 'custom') {
+if (strategy === 'custom' || strategy === 'hardcoded') {
 	const createSelect = (options, onChange) => {
 		const select = document.createElement('select');
 
@@ -357,21 +371,25 @@ if (strategy === 'custom') {
 		return select;
 	};
 
-	fetch("../sudokulib/sudoku.php?strategy=" + strategy).then(response => {
-		response.text().then((string) => {
-			const results = string.split(":");
+	fetch("../sudokulib/sudoku.php?version=2&strategy=" + strategy).then(response => {
+		response.json().then((json) => {
 			const entries = [];
 			const names = [];
-			for (const result of results) {
-				const fields = result.split(",");
-				if (fields.length !== 3) continue;
+			for (const result of json) {
+				const id = result.id;
+				const title = result.title;
+				let puzzleData = result.puzzleData;
 
-				const id = parseInt(fields[0]);
-				const title = fields[1];
-				const puzzle = fields[2];
+				if (strategy === 'custom') {
+					if (puzzleData.length !== 64) return;
+					const [puzzle, grid] = SudokuProcess.puzzleHexGrid(puzzleData);
+					puzzleData = puzzle;
+				}
+				if (strategy === 'hardcoded') {
+					if (puzzleData.length !== 81) return;
+				}
+				entries.push({ id, title, puzzleData });
 
-				if (puzzle.length !== 81) return;
-				entries.push({ id, title, puzzle });
 				names.push(title);
 			}
 
@@ -385,13 +403,13 @@ if (strategy === 'custom') {
 					}
 					for (const cell of board.startCells) cell.symbol = 0;
 
-					puzzleData.id = 0;
+					puzzleData.id = "";
 					puzzleData.grid.fill(0);
 					puzzleData.markers.fill(0);
 				} else {
 					const index = select.selectedIndex - 1;
 					const entry = entries[index];
-					board.setGrid(entry.puzzle);
+					board.setGrid(entry.puzzleData);
 
 					const grid = new Uint8Array(81);
 					const markers = new Uint16Array(81);
@@ -400,7 +418,7 @@ if (strategy === 'custom') {
 						markers[i] = board.cells[i].mask;
 					}
 
-					puzzleData.id = select.selectedIndex;
+					puzzleData.id = entry.id;
 					puzzleData.grid = grid;
 					puzzleData.markers = markers;
 				}
@@ -415,8 +433,7 @@ if (strategy === 'custom') {
 			customSelector.style.top = 0 + 'px';
 			title.appendChild(customSelector);
 
-			if (!puzzleData.transform && puzzleData.id > 0) {
-				let selectedIndex = 1;
+			if (!puzzleData.transform && puzzleData.id !== "") {
 				for (let i = 0; i < entries.length; i++) {
 					const entry = entries[i];
 					if (entry.id === puzzleData.id) {
@@ -424,22 +441,16 @@ if (strategy === 'custom') {
 						break;
 					}
 				}
-				for (const entry of entries) {
-					selectedIndex++;
-				}
 			}
 		});
 	});
 }
 
 const loadSudoku = () => {
-	fetch("../sudokulib/sudoku.php" + window.location.search).then(response => {
-		response.text().then((string) => {
-			const fields = string.split(":");
-			if (fields.length !== 2) return;
-
-			const puzzleId = parseInt(fields[0]);
-			const puzzleDataHex = fields[1];
+	fetch("../sudokulib/sudoku.php?version=2&strategy=" + strategy).then(response => {
+		response.json().then((json) => {
+			const puzzleId = json.id;
+			const puzzleDataHex = json.puzzleData;
 
 			if (puzzleDataHex.length !== 64) return;
 			const [puzzle, grid] = SudokuProcess.puzzleHexGrid(puzzleDataHex);
@@ -465,7 +476,7 @@ const loadSudoku = () => {
 	});
 };
 
-if (!loaded && strategy !== 'custom') {
+if (!loaded && strategy !== 'custom' && strategy !== 'hardcoded') {
 	loadSudoku();
 }
 
@@ -478,21 +489,26 @@ title.style.top = headerHeight / 2 + 'px';
 title.style.left = '50%';
 title.style.transform = 'translate(-50%, -50%)';
 let titleString = null;
-if (strategy === 'simple') titleString = "Singles";
-if (strategy === 'naked2') titleString = "Naked Pair";
-if (strategy === 'naked3') titleString = "Naked Triple";
-if (strategy === 'naked4') titleString = "Naked Quad";
-if (strategy === 'hidden2') titleString = "Hidden Pair";
-if (strategy === 'hidden3') titleString = "Hidden Triple";
-if (strategy === 'hidden4') titleString = "Hidden Quad";
-if (strategy === 'omissions') titleString = "Intersection Removal";
-if (strategy === 'uniqueRectangle') titleString = "Deadly Pattern";
-if (strategy === 'yWing') titleString = "Y Wing";
-if (strategy === 'xyzWing') titleString = "XYZ Wing";
-if (strategy === 'xWing') titleString = "X Wing";
-if (strategy === 'swordfish') titleString = "Swordfish";
-if (strategy === 'jellyfish') titleString = "Jellyfish";
-if (strategy === 'bruteForce') titleString = "Other Strategies";
+if (strategy === 'simple_hidden') titleString = "Hidden Single";
+if (strategy === 'simple_omission') titleString = "Intersection Removal";
+if (strategy === 'simple_naked') titleString = "Naked Single";
+if (strategy === 'candidate_visible') titleString = "Basic Candidtates";
+if (strategy === 'candidate_naked2') titleString = "Naked Pair";
+if (strategy === 'candidate_naked3') titleString = "Naked Triple";
+if (strategy === 'candidate_naked4') titleString = "Naked Quad";
+if (strategy === 'candidate_hidden1') titleString = "Hidden Single";
+if (strategy === 'candidate_hidden2') titleString = "Hidden Pair";
+if (strategy === 'candidate_hidden3') titleString = "Hidden Triple";
+if (strategy === 'candidate_hidden4') titleString = "Hidden Quad";
+if (strategy === 'candidate_omissions') titleString = "Intersection Removal";
+if (strategy === 'candidate_uniqueRectangle') titleString = "Deadly Pattern";
+if (strategy === 'candidate_yWing') titleString = "Y Wing";
+if (strategy === 'candidate_xyzWing') titleString = "XYZ Wing";
+if (strategy === 'candidate_xWing') titleString = "X Wing";
+if (strategy === 'candidate_swordfish') titleString = "Swordfish";
+if (strategy === 'candidate_jellyfish') titleString = "Jellyfish";
+if (strategy === 'unsolvable') titleString = "Difficult";
+if (strategy === 'unsolvable_filled') titleString = "End Game";
 if (titleString) title.appendChild(document.createTextNode(titleString));
 
 Menu.markerButton.addEventListener('click', () => {
