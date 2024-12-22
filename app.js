@@ -1,5 +1,5 @@
 import { FONT, board, loadGrid, saveGrid, setMarkerFont } from "../sudokulib/board.js";
-import { generateFromSeed, generateTransform, fillSolve, consoleOut, STRATEGY } from "../sudokulib/generator.js";
+import { generateFromSeed, generateTransform, fillSolve, consoleOut } from "../sudokulib/generator.js";
 import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import * as PICKER from "../sudokulib/picker.js";
 import { candidates } from "../sudokulib/solver.js";
@@ -16,7 +16,6 @@ const strategy = searchParams.get("strategy");
 const tableNames = [
 	"simple_hidden",
 	"simple_omission",
-	"simple_naked",
 	"candidate_visible",
 	"candidate_naked2",
 	"candidate_naked3",
@@ -196,7 +195,7 @@ const pickerClick = (event) => {
 	draw();
 
 	if (running) {
-		fillSolve(board.cells, null, []);
+		fillSolve(board.cells, null, null, []);
 		saveData();
 		if (superimposeCandidates) superimposeCandidates();
 	}
@@ -228,7 +227,7 @@ const pickerMarkerClick = (event) => {
 	draw();
 
 	if (running) {
-		fillSolve(board.cells, null, []);
+		fillSolve(board.cells, null, null, []);
 		saveData();
 		if (superimposeCandidates) superimposeCandidates();
 	}
@@ -491,7 +490,6 @@ title.style.transform = 'translate(-50%, -50%)';
 let titleString = null;
 if (strategy === 'simple_hidden') titleString = "Hidden Single";
 if (strategy === 'simple_omission') titleString = "Intersection Removal";
-if (strategy === 'simple_naked') titleString = "Naked Single";
 if (strategy === 'candidate_visible') titleString = "Basic Candidtates";
 if (strategy === 'candidate_naked2') titleString = "Naked Pair";
 if (strategy === 'candidate_naked3') titleString = "Naked Triple";
@@ -543,7 +541,7 @@ solveButton.style.width = '48px';
 solveButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
 	const now = performance.now();
-	const result = fillSolve(board.cells, null, []);
+	const result = fillSolve(board.cells, null, null, []);
 	console.log("----- " + (performance.now() - now) / 1000);
 	for (const line of consoleOut(result)) console.log(line);
 
@@ -769,7 +767,7 @@ if (strategy === 'custom') {
 				if (superCell.has(x)) {
 					// cell.delete(x);
 					superCell.setSymbol(x);
-					fillSolve(board.cells, null, []);
+					fillSolve(board.cells, null, null, []);
 					supers.push(board.cells.toData());
 					board.cells.fromData(startBoard);
 				}
@@ -823,8 +821,8 @@ if (strategy === 'custom') {
 			}
 
 			const solve = () => {
-				if (superpositionMode === 1) fillSolve(board.cells, null, []);
-				else fillSolve(board.cells, null, null);
+				if (superpositionMode === 1) fillSolve(board.cells, null, null, []);
+				else fillSolve(board.cells, null, null, null);
 			}
 
 			// Candidates
