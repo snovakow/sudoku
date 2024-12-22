@@ -67,7 +67,7 @@ let selected = false;
 const saveData = () => {
 	saveGrid({
 		id: puzzleData.id,
-		strategy: puzzleData.strategy,
+		strategy: strategy,
 		transform: puzzleData.transform,
 		grid: puzzleData.grid.join(""),
 		markers: puzzleData.markers.join(""),
@@ -435,7 +435,7 @@ if (strategy === 'custom' || strategy === 'hardcoded') {
 			if (!puzzleData.transform && puzzleData.id !== "") {
 				for (let i = 0; i < entries.length; i++) {
 					const entry = entries[i];
-					if (entry.id === puzzleData.id) {
+					if (parseInt(entry.id) === parseInt(puzzleData.id)) {
 						customSelector.selectedIndex = i + 1;
 						break;
 					}
