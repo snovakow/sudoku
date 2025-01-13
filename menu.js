@@ -135,7 +135,8 @@ addMenuItem("XYZ Wing", 'candidate_xyzWing');
 addMenuItem("X Wing", 'candidate_xWing');
 addMenuItem("Swordfish", 'candidate_swordfish');
 addMenuItem("Jellyfish", 'candidate_jellyfish');
-addMenuItem("Difficult", 'unsolvable');
+addMenuItem("Other Strategies", 'super_min');
+addMenuItem("Difficult", 'super_max');
 
 mainBar.appendChild(menu);
 mainBar.appendChild(newPuzzle);
