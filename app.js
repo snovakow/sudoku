@@ -31,8 +31,8 @@ const tableNames = [
 	"candidate_xWing",
 	"candidate_swordfish",
 	"candidate_jellyfish",
-	"unsolvable",
-	"unsolvable_filled",
+	"super_min",
+	"super_max",
 	"custom",
 	"hardcoded",
 ];
@@ -505,8 +505,8 @@ if (strategy === 'candidate_xyzWing') titleString = "XYZ Wing";
 if (strategy === 'candidate_xWing') titleString = "X Wing";
 if (strategy === 'candidate_swordfish') titleString = "Swordfish";
 if (strategy === 'candidate_jellyfish') titleString = "Jellyfish";
-if (strategy === 'unsolvable') titleString = "Difficult";
-if (strategy === 'unsolvable_filled') titleString = "End Game";
+if (strategy === 'super_min') titleString = "Other Strategies";
+if (strategy === 'super_max') titleString = "Difficult";
 if (titleString) title.appendChild(document.createTextNode(titleString));
 
 Menu.markerButton.addEventListener('click', () => {
