@@ -1,4 +1,4 @@
-const headerHeight = 32;
+const headerHeight = 40;
 const iconSize = headerHeight;
 const buttonSize = 48;
 
@@ -21,6 +21,7 @@ toolBar.style.flexWrap = 'nowrap';
 
 pickerBar.style.position = 'absolute';
 pickerBar.style.display = 'flex';
+pickerBar.style.gap = '8px';
 pickerBar.style.flexWrap = 'nowrap';
 
 pickerBar.style.height = buttonSize + 'px';
@@ -79,11 +80,19 @@ backing.style.padding = '4px';
 backing.style.overflowY = 'auto';
 backing.style.boxSizing = "border-box";
 
-const menu = createIcon("./icons/menu.svg");
-const settings = createIcon("./icons/settings.svg");
-const reset = createIcon("./icons/replay.svg");
-const newPuzzle = createIcon("./icons/add_box.svg");
+const menu = createIcon("./icons/menu_40dp_000000_FILL0_wght400_GRAD0_opsz40.svg");
+const reset = createIcon("./icons/replay_40dp_000000_FILL0_wght400_GRAD0_opsz40.svg");
+const newPuzzle = createIcon("./icons/add_40dp_000000_FILL0_wght400_GRAD0_opsz40.svg");
+menu.title = "Menu";
+reset.title = "Restart Puzzle";
+newPuzzle.title = "New Puzzle";
 
+class MenuItem {
+	constructor(title) {
+		this.title = title;
+		this.view = document.createElement('span');
+	}
+}
 const menuMap = new Map();
 let menuResponse = null;
 const setMenuReponse = (response) => {
@@ -94,63 +103,86 @@ const setMenuItem = (strategy) => {
 	if (!item) return;
 
 	for (const item of menuMap.values()) {
-		item.style.background = null;
+		item.view.style.background = null;
 	}
-	item.style.background = 'LightCyan';
+	item.view.style.background = 'LightCyan';
 }
 const addMenuItem = (title, strategy) => {
-	const item = document.createElement('span');
+	const item = new MenuItem(title);
 
-	if (backing.firstChild) item.style.borderTop = '1px solid lightgray';
-	item.style.padding = '4px';
+	if (backing.firstChild) item.view.style.borderTop = '1px solid lightgray';
+	item.view.style.padding = '4px';
 
-	item.style.whiteSpace = 'nowrap';
-	item.style.font = '18px sans-serif';
-	item.appendChild(document.createTextNode(title));
+	item.view.style.whiteSpace = 'nowrap';
+	item.view.style.font = '18px sans-serif';
+	item.view.appendChild(document.createTextNode(title));
 
-	item.addEventListener("click", () => {
-		if (!menuResponse) return;
-		if (!menuResponse(strategy, title)) return;
-		setMenuItem(strategy);
+	item.view.addEventListener("click", () => {
+		if (menuResponse) menuResponse(strategy);
 	});
 
-	backing.appendChild(item);
+	backing.appendChild(item.view);
 
 	menuMap.set(strategy, item);
 }
-addMenuItem("Hidden Single", 'simple_hidden');
-addMenuItem("Intersection Removal", 'simple_omission');
-addMenuItem("Basic Candidtates", 'candidate_visible');
-addMenuItem("Naked Pair", 'candidate_naked2');
-addMenuItem("Naked Triple", 'candidate_naked3');
-addMenuItem("Naked Quad", 'candidate_naked4');
-addMenuItem("Hidden Single", 'candidate_hidden1');
-addMenuItem("Hidden Pair", 'candidate_hidden2');
-addMenuItem("Hidden Triple", 'candidate_hidden3');
-addMenuItem("Hidden Quad", 'candidate_hidden4');
-addMenuItem("Intersection Removal (Omissions)", 'candidate_omissions');
-addMenuItem("Deadly Pattern (Unique Rectangle)", 'candidate_uniqueRectangle');
-addMenuItem("Y Wing", 'candidate_yWing');
-addMenuItem("XYZ Wing", 'candidate_xyzWing');
-addMenuItem("X Wing", 'candidate_xWing');
-addMenuItem("Swordfish", 'candidate_swordfish');
-addMenuItem("Jellyfish", 'candidate_jellyfish');
-addMenuItem("Other Strategies", 'super_min');
-addMenuItem("Difficult", 'super_max');
+addMenuItem("Naked Pair", 'naked2');
+addMenuItem("Naked Triple", 'naked3');
+addMenuItem("Naked Quad", 'naked4');
+addMenuItem("Hidden Single", 'hidden1');
+addMenuItem("Hidden Pair", 'hidden2');
+addMenuItem("Hidden Triple", 'hidden3');
+addMenuItem("Hidden Quad", 'hidden4');
+addMenuItem("Intersection Removal (Omissions)", 'omissions');
+addMenuItem("Deadly Pattern (Unique Rectangle)", 'uniqueRectangle');
+addMenuItem("Y Wing", 'yWing');
+addMenuItem("XYZ Wing", 'xyzWing');
+addMenuItem("X Wing", 'xWing');
+addMenuItem("Swordfish", 'swordfish');
+addMenuItem("Jellyfish", 'jellyfish');
+
+const menuTitle = (strategy) => {
+	return menuMap.get(strategy)?.title ?? "";
+}
 
 mainBar.appendChild(menu);
 mainBar.appendChild(newPuzzle);
 mainBar.appendChild(reset);
 
-const markerButton = createIcon("./icons/edit.svg", buttonSize);
-const deleteButton = createIcon("./icons/backspace.svg", buttonSize);
+const infoButton = createIcon("./icons/question_mark_40dp_000000_FILL0_wght400_GRAD0_opsz40.svg");
+infoButton.title = "Info";
+mainBar.appendChild(infoButton);
+
+const markerButton = createIcon("./icons/edit_48dp_000000_FILL0_wght400_GRAD0_opsz48.svg", buttonSize);
+const deleteButton = createIcon("./icons/disabled_by_default_48dp_000000_FILL0_wght400_GRAD0_opsz48.svg", buttonSize);
+deleteButton.title = "Clear (delete)";
 pickerBar.appendChild(markerButton);
 pickerBar.appendChild(deleteButton);
 
-toolBar.appendChild(settings);
+const checkButton = createIcon("./icons/check_box_40dp_000000_FILL0_wght400_GRAD0_opsz40.svg");
+checkButton.title = "Check Puzzle";
+toolBar.appendChild(checkButton);
+
+const undoIcons = {
+	undo_on: createIcon("./icons/undo_40dp_000000_FILL0_wght400_GRAD0_opsz40.svg"),
+	redo_on: createIcon("./icons/redo_40dp_000000_FILL0_wght400_GRAD0_opsz40.svg"),
+	undo_off: createIcon("./icons/undo_40dp_D3D3D3_FILL0_wght400_GRAD0_opsz40.svg"),
+	redo_off: createIcon("./icons/redo_40dp_D3D3D3_FILL0_wght400_GRAD0_opsz40.svg"),
+};
+undoIcons.undo_on.title = "Undo";
+undoIcons.undo_off.title = "Undo";
+undoIcons.redo_on.title = "Redo";
+undoIcons.redo_off.title = "Redo";
+
+toolBar.appendChild(undoIcons.undo_on);
+toolBar.appendChild(undoIcons.undo_off);
+toolBar.appendChild(undoIcons.redo_on);
+toolBar.appendChild(undoIcons.redo_off);
+
 if (document.fullscreenEnabled) {
-	const fullscreen = createIcon("./icons/fullscreen.svg");
-	const fullscreenExit = createIcon("./icons/fullscreen_exit.svg");
+	const fullscreen = createIcon("./icons/fullscreen_40dp_000000_FILL0_wght400_GRAD0_opsz40.svg");
+	const fullscreenExit = createIcon("./icons/fullscreen_exit_40dp_000000_FILL0_wght400_GRAD0_opsz40.svg");
+	fullscreen.title = "Full Screen";
+	fullscreenExit.title = "Exit Full Screen";
 
 	toolBar.appendChild(fullscreen);
 	toolBar.appendChild(fullscreenExit);
@@ -185,8 +217,20 @@ if (document.fullscreenEnabled) {
 	document.addEventListener("fullscreenerror", () => {
 		updateFullscreen();
 	});
+
+	// fullscreen.style.display = "none";
 }
 
-export { backing, mainBar, toolBar, pickerBar, autoBar, headerHeight };
-export { newPuzzle, reset, settings, menu, markerButton, deleteButton };
-export { pickerBarLandscape, autoBarLandscape, setMenuItem, setMenuReponse };
+menu.style.display = "none";
+markerButton.style.display = "none";
+autoBar.style.display = "none";
+infoButton.style.display = "none";
+checkButton.style.display = "none";
+newPuzzle.style.display = "none";
+
+export { backing, mainBar, toolBar, pickerBar, autoBar, headerHeight, buttonSize };
+export { newPuzzle, reset, menu, markerButton, deleteButton, infoButton, checkButton };
+export {
+	pickerBarLandscape, autoBarLandscape, setMenuItem, setMenuReponse,
+	menuTitle, undoIcons
+};

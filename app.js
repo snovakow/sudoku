@@ -1,65 +1,67 @@
-import { FONT, board, loadGrid, saveGrid, setMarkerFont } from "../sudokulib/board.js";
+import { FONT, board, clearGrid, loadGrid, saveGrid } from "../sudokulib/board.js";
 import { generateFromSeed, generateTransform, fillSolve, consoleOut } from "../sudokulib/generator.js";
 import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import * as PICKER from "../sudokulib/picker.js";
 import { candidates } from "../sudokulib/solver.js";
 import * as Menu from "./menu.js";
+import * as Undo from "./undo.js";
 import * as SudokuProcess from "../sudokulib/process.js";
+import { Animator } from "./Animator.js";
+import { Panel, AlertPanel, FramePanel } from "./Panel.js";
 
 const picker = PICKER.picker;
 const pickerDraw = PICKER.pickerDraw;
 const pickerMarker = PICKER.pickerMarker;
 const pixAlign = PICKER.pixAlign;
 
-const searchParams = new URLSearchParams(window.location.search);
-const strategy = searchParams.get("strategy");
-const tableNames = [
-	"simple_hidden",
-	"simple_omission",
-	"candidate_visible",
-	"candidate_naked2",
-	"candidate_naked3",
-	"candidate_naked4",
-	"candidate_hidden1",
-	"candidate_hidden2",
-	"candidate_hidden3",
-	"candidate_hidden4",
-	"candidate_omissions",
-	"candidate_uniqueRectangle",
-	"candidate_yWing",
-	"candidate_xyzWing",
-	"candidate_xWing",
-	"candidate_swordfish",
-	"candidate_jellyfish",
-	"super_min",
-	"super_max",
-	"custom",
-	"hardcoded",
-];
-let search = "?strategy=" + tableNames[0];
-for (const tableName of tableNames) {
-	if (strategy === tableName) {
-		search = null;
-		break;
+let levelMode = true;
+let strategy = "level";
+{
+	const searchParams = new URLSearchParams(window.location.search);
+	const strategySearch = searchParams.get("strategy");
+	const strategyNames = [
+		"naked2",
+		"naked3",
+		"naked4",
+		"hidden1",
+		"hidden2",
+		"hidden3",
+		"hidden4",
+		"omissions",
+		"uniqueRectangle",
+		"yWing",
+		"xyzWing",
+		"xWing",
+		"swordfish",
+		"jellyfish",
+		"hardcoded",
+	];
+	for (const tableName of strategyNames) {
+		if (strategySearch === tableName) {
+			strategy = tableName;
+			levelMode = false;
+			break;
+		}
 	}
 }
-if (search !== null) window.location.search = search;
+
+Menu.markerButton.style.display = "block";
+if (!levelMode) {
+	Menu.menu.style.display = "block";
+	Menu.autoBar.style.display = "block flex";
+}
 
 const puzzleData = {
 	id: null,
-	strategy: null,
 	transform: null,
-	grid: new Uint8Array(81),
-	markers: new Uint16Array(81),
 }
 Object.seal(puzzleData);
 
-let markerFont = false;
-let pickerMarkerMode = false;
-
 const headerHeight = Menu.headerHeight;
 const footerHeight = 8;
+const spacing = 8;
 
+let pickerMarkerMode = false;
 let selectedRow = 0;
 let selectedCol = 0;
 let selected = false;
@@ -69,14 +71,13 @@ const saveData = () => {
 		id: puzzleData.id,
 		strategy: strategy,
 		transform: puzzleData.transform,
-		grid: puzzleData.grid.join(""),
-		markers: puzzleData.markers.join(""),
-		markerFont,
 		pickerMarkerMode,
 		selected,
 		selectedRow,
-		selectedCol
-	});
+		selectedCol,
+		errorCells: [...board.errorCells],
+		undo: Undo.saveData()
+	}, strategy === 'hardcoded');
 };
 
 const draw = () => {
@@ -97,40 +98,33 @@ const draw = () => {
 		}
 	}
 
-	if (FONT.initialized) {
-		const font = pixAlign(PICKER.cellSize * window.devicePixelRatio) + "px " + FONT.marker;
-		const fontMarker = pixAlign(PICKER.cellSize * 3 / 8 * window.devicePixelRatio) + "px " + FONT.marker;
-		pickerDraw(selectedSet, font, fontMarker);
-	} else {
-		pickerDraw(selectedSet);
-	}
-}
-
-{
-	const urlComicSans = 'url(../snovakow/assets/fonts/comic-sans-ms/COMIC.TTF)';
-	const urlOpenSansRegular = 'url(../snovakow/assets/fonts/Open_Sans/static/OpenSans-Regular.ttf)';
-
-	const fontOpenSansRegular = new FontFace("REGULAR", urlOpenSansRegular);
-	const fontComicSans = new FontFace("COMIC", urlComicSans);
-
-	document.fonts.add(fontOpenSansRegular);
-	document.fonts.add(fontComicSans);
-
-	fontOpenSansRegular.load();
-	fontComicSans.load();
-
-	document.fonts.ready.then(() => {
-		FONT.initialized = true;
-		draw();
-	});
+	const font = pixAlign(PICKER.cellSize * window.devicePixelRatio) + "px " + FONT;
+	const fontMarker = pixAlign(PICKER.cellSize * 3 / 8 * window.devicePixelRatio) + "px " + FONT;
+	pickerDraw(selectedSet, font, fontMarker);
 }
 
 let timer = 0;
 let superpositionMode = 0;
 let superimposeCandidates = null;
 
+const puzzleFinished = () => {
+	if (board.puzzleSolved) {
+		for (let i = 0; i < 81; i++) {
+			if (board.cells[i].symbol !== board.puzzleSolved[i]) return false;
+		}
+	} else {
+		for (const group of Grid.groupTypes) {
+			let set = 0x0000;
+			for (const i of group) set |= (0x0001 << board.cells[i].symbol);
+			if (set !== 0x03FE) return false;
+		}
+	}
+	return true;
+}
+
 const click = (event) => {
 	// event.preventDefault();
+	if (findAnimating) return;
 
 	const rect = event.target.getBoundingClientRect();
 	const x = event.clientX - rect.left;
@@ -168,74 +162,101 @@ const clickLocation = (event) => {
 	return [r, c];
 };
 
-const pickerClick = (event) => {
-	// event.preventDefault();
-
-	if (!selected) return;
-
+const numberEntry = (pickerSymbol) => {
 	const running = timer ? true : false;
 	if (timer && superimposeCandidates) superimposeCandidates(false);
 
-	const [r, c] = clickLocation(event);
-
-	const index = r * 3 + c + 1;
-	const selectedIndex = selectedRow * 9 + selectedCol;
-	const symbol = board.cells[selectedIndex].symbol;
-
-	if (index === symbol) return;
-	board.cells[selectedIndex].setSymbol(index);
-	// if (symbol === index) {
-	// 	const cell = board.cells[selectedIndex];
-	// 	cell.setSymbol(0);
-	// } else {
-	// 	board.cells[selectedIndex].setSymbol(index);
-	// }
-
-	saveData();
-	draw();
-
-	if (running) {
-		fillSolve(board.cells, null, null, []);
-		saveData();
-		if (superimposeCandidates) superimposeCandidates();
-	}
-};
-picker.addEventListener('click', pickerClick);
-
-const pickerMarkerClick = (event) => {
-	// event.preventDefault();
-
-	if (!selected) return;
-
-	const running = timer ? true : false;
-	if (timer) superimposeCandidates(false);
-
-	const [r, c] = clickLocation(event);
-
-	const symbol = r * 3 + c + 1;
 	const selectedIndex = selectedRow * 9 + selectedCol;
 	const cell = board.cells[selectedIndex];
-	if (cell.symbol === 0) {
-		const had = cell.delete(symbol);
-		if (!had) cell.add(symbol);
+	if (pickerMarkerMode) {
+		if (pickerSymbol === 0) {
+			if (cell.symbol === 0 && cell.mask === 0x0000) return;
+			cell.setSymbol(0);
+		} else {
+			if (cell.symbol === 0) {
+				const had = cell.delete(pickerSymbol);
+				if (!had) cell.add(pickerSymbol);
+			} else {
+				cell.setSymbol(0);
+				cell.add(pickerSymbol);
+			}
+		}
 	} else {
-		cell.setSymbol(0);
-		cell.add(symbol);
+		if (pickerSymbol === cell.symbol) return;
+		cell.setSymbol(pickerSymbol);
+		// Toggle
+		// if (pickerSymbol === cell.symbol) cell.setSymbol(0);
+		// else cell.setSymbol(pickerSymbol);
 	}
+	board.errorCells.delete(selectedIndex);
 
+	Undo.add(board, selectedIndex);
 	saveData();
 	draw();
 
 	if (running) {
-		fillSolve(board.cells, null, null, []);
+		fillSolve(board.cells, null, []);
 		saveData();
 		if (superimposeCandidates) superimposeCandidates();
 	}
+
+	if (!pickerMarkerMode && puzzleFinished()) {
+		AlertPanel.alert("Puzzle Complete!!!");
+	}
+}
+const pickerClick = (event) => {
+	if (!selected) return;
+	const [r, c] = clickLocation(event);
+	numberEntry(r * 3 + c + 1);
 };
-pickerMarker.addEventListener('click', pickerMarkerClick);
+picker.addEventListener('click', pickerClick);
+pickerMarker.addEventListener('click', pickerClick);
+
+const setMarkerButton = () => {
+	Menu.markerButton.title = pickerMarkerMode ? "Digits" : "Candidates";
+}
+const toggleMarkerMode = () => {
+	pickerMarkerMode = !pickerMarkerMode;
+	setMarkerButton();
+	setMarkerMode();
+	saveData();
+	draw();
+}
+Menu.markerButton.addEventListener('click', () => {
+	toggleMarkerMode();
+});
+setMarkerButton();
+
+document.body.addEventListener('keydown', event => {
+	if (event.key === " ") {
+		event.preventDefault();
+		toggleMarkerMode();
+		return;
+	}
+	// if (event.key === "Backspace") {
+	// 	event.preventDefault();
+	// 	numberEntry(0);
+	// 	return;
+	// }
+
+	if (!selected) return;
+	switch (event.key) {
+		case "1":
+		case "2":
+		case "3":
+		case "4":
+		case "5":
+		case "6":
+		case "7":
+		case "8":
+		case "9":
+			event.preventDefault();
+			numberEntry(parseInt(event.key));
+	}
+});
 
 const onFocus = () => {
-	// console.log("onFocus");
+	resize();
 	draw();
 };
 const offFocus = () => {
@@ -264,7 +285,6 @@ pickerMarker.style.width = PICKER.cellsSize + 'px';
 pickerMarker.style.height = PICKER.cellsSize + 'px';
 
 board.canvas.style.position = 'absolute';
-board.canvas.style.left = '50%';
 board.canvas.style.touchAction = "manipulation";
 picker.style.touchAction = "manipulation";
 pickerMarker.style.touchAction = "manipulation";
@@ -272,72 +292,79 @@ pickerMarker.style.touchAction = "manipulation";
 const header = document.createElement('DIV');
 const mainBody = document.createElement('DIV');
 
-const fontCheckbox = document.createElement('input');
-fontCheckbox.type = "checkbox";
-fontCheckbox.name = "name";
-fontCheckbox.value = "value";
-fontCheckbox.id = "id";
-fontCheckbox.style.position = 'absolute';
-fontCheckbox.style.bottom = 0 + 'px';
-fontCheckbox.style.left = 0 + 'px';
-// fontCheckbox.style.transform = 'translate(0%, 100%)';
-// fontCheckbox.style.margin = '0px';
-// fontCheckbox.style.padding = '8px';
-fontCheckbox.addEventListener('change', () => {
-	markerFont = fontCheckbox.checked;
-	setMarkerFont(markerFont);
-	saveData();
-	draw();
-});
-
-const fontLabel = document.createElement('label')
-fontLabel.appendChild(document.createTextNode('Marker Font'));
-fontLabel.style.position = 'absolute';
-fontLabel.style.top = 0 + 'px';
-fontLabel.style.right = 0 + 'px';
-fontLabel.style.paddingLeft = 24 + 'px';
-fontLabel.style.paddingTop = 8 + 'px';
-fontLabel.style.paddingRight = 8 + 'px';
-fontLabel.style.whiteSpace = 'nowrap';
-fontLabel.for = "id";
-fontLabel.appendChild(fontCheckbox);
-
 let loaded = false;
-if (window.name) {
-	const metadata = loadGrid();
-	if (metadata) {
-		if (metadata.strategy === strategy) {
-			if (metadata.selected !== undefined) selected = metadata.selected;
-			if (metadata.selectedRow !== undefined) selectedRow = metadata.selectedRow;
-			if (metadata.selectedCol !== undefined) selectedCol = metadata.selectedCol;
+const clearData = () => {
+	pickerMarkerMode = false;
+	selected = false;
+	selectedRow = 0;
+	selectedCol = 0;
+	board.errorCells.clear();
+	clearGrid();
+};
 
-			if (metadata.id !== undefined) puzzleData.id = metadata.id;
-			if (metadata.transform !== undefined) puzzleData.transform = metadata.transform;
-			if (metadata.grid !== undefined) puzzleData.grid.set(metadata.grid);
+const loadGridData = (hash) => {
+	if (!levelMode && strategy !== 'hardcoded') Menu.setMenuItem(strategy);
 
-			loaded = true;
-		}
+	const loadGridData = loadGrid(hash, strategy === 'hardcoded');
+	if (!loadGridData) return;
 
-		if (metadata.markerFont !== undefined) markerFont = metadata.markerFont;
-		setMarkerFont(markerFont);
-		fontCheckbox.checked = markerFont;
+	if (loadGridData.metadata) {
+		const metadata = loadGridData.metadata;
+		if (metadata.strategy !== strategy) return;
+
+		if (metadata.selected !== undefined) selected = metadata.selected;
+		if (metadata.selectedRow !== undefined) selectedRow = metadata.selectedRow;
+		if (metadata.selectedCol !== undefined) selectedCol = metadata.selectedCol;
+
+		if (metadata.id !== undefined) puzzleData.id = metadata.id;
+		if (metadata.transform !== undefined) puzzleData.transform = metadata.transform;
 
 		if (metadata.pickerMarkerMode !== undefined) pickerMarkerMode = metadata.pickerMarkerMode;
 
-		if (metadata.strategy !== strategy) {
-			metadata.strategy = strategy;
-			saveData();
-		}
-		Menu.setMenuItem(strategy);
+		board.errorCells.clear();
+		for (const error of metadata.errorCells) board.errorCells.add(error);
+
+		Undo.loadData(metadata.undo);
+
+		loaded = true;
+	} else {
+		loaded = loadGridData.coded;
+		if (loaded) Undo.set(board);
 	}
 	draw();
 }
+loadGridData(window.location.hash.substring(1));
 
-Menu.setMenuReponse((responseStrategy, responseTitle) => {
+window.addEventListener("hashchange", (event) => {
+	const url = new URL(event.newURL);
+	clearData();
+	loadGridData(url.hash.substring(1));
+	saveData();
+
+	if (foundPanel) {
+		foundPanel.hide();
+		foundPanel = null;
+	}
+	if (infoPanel) {
+		infoPanel.hide();
+	}
+	AlertPanel.hide();
+
+	draw();
+});
+
+Menu.setMenuReponse((responseStrategy) => {
 	if (strategy === responseStrategy) return false;
-	if (!window.confirm("Do you want to start a new " + responseTitle + " puzzle?")) return false;
-	window.location.search = "?strategy=" + responseStrategy;
-	return true;
+	const message = "Do you want to start a " + Menu.menuTitle(responseStrategy) + " puzzle?";
+	Menu.setMenuItem(responseStrategy);
+	AlertPanel.confirm(message, confirmed => {
+		if (confirmed) {
+			history.replaceState(null, "", "?strategy=" + responseStrategy);
+			window.location.reload();
+		} else {
+			Menu.setMenuItem(strategy);
+		}
+	});
 });
 
 const setMarkerMode = () => {
@@ -354,7 +381,7 @@ setMarkerMode();
 const title = document.createElement('SPAN');
 
 let customSelector = null;
-if (strategy === 'custom' || strategy === 'hardcoded') {
+if (strategy === 'hardcoded') {
 	const createSelect = (options, onChange) => {
 		const select = document.createElement('select');
 
@@ -379,52 +406,46 @@ if (strategy === 'custom' || strategy === 'hardcoded') {
 				const title = result.title;
 				let puzzleData = result.puzzleData;
 
-				if (strategy === 'custom') {
-					if (puzzleData.length !== 64) return;
-					const [puzzle, grid] = SudokuProcess.puzzleHexGrid(puzzleData);
-					puzzleData = puzzle;
-				}
-				if (strategy === 'hardcoded') {
-					if (puzzleData.length !== 81) return;
-				}
+				if (puzzleData.length !== 81) return;
 				entries.push({ id, title, puzzleData });
 
 				names.push(title);
 			}
 
 			customSelector = createSelect(["-", ...names], (select) => {
-				selected = false;
-
-				if (select.selectedIndex === 0) {
-					for (const cell of board.cells) {
-						cell.symbol = 0;
-						cell.mask = 0x0000;
-					}
-					for (const cell of board.startCells) cell.symbol = 0;
-
-					puzzleData.id = "";
-					puzzleData.grid.fill(0);
-					puzzleData.markers.fill(0);
-				} else {
-					const index = select.selectedIndex - 1;
-					const entry = entries[index];
-					board.setGrid(entry.puzzleData);
-
-					const grid = new Uint8Array(81);
-					const markers = new Uint16Array(81);
-					for (let i = 0; i < 81; i++) {
-						grid[i] = board.cells[i].symbol;
-						markers[i] = board.cells[i].mask;
+				let message = "Do you want to clear the puzzle?";
+				if (select.selectedIndex > 0) message = `Do you want to load "${names[select.selectedIndex - 1]}"?`;
+				AlertPanel.confirm(message, confirmed => {
+					if (!confirmed) {
+						select.selectedIndex = puzzleData.id ?? 0;
+						return;
 					}
 
-					puzzleData.id = entry.id;
-					puzzleData.grid = grid;
-					puzzleData.markers = markers;
-				}
-				puzzleData.transform = null;
+					selected = false;
 
-				saveData();
-				draw();
+					if (select.selectedIndex === 0) {
+						for (const cell of board.cells) {
+							cell.symbol = 0;
+							cell.mask = 0x0000;
+						}
+						for (const cell of board.startCells) cell.symbol = 0;
+
+						puzzleData.id = "";
+					} else {
+						const index = select.selectedIndex - 1;
+						const entry = entries[index];
+						board.setGrid(entry.puzzleData);
+
+						puzzleData.id = entry.id;
+					}
+					puzzleData.transform = null;
+					board.puzzleSolved.fill(0);
+					board.errorCells.clear();
+
+					Undo.set(board);
+					saveData();
+					draw();
+				});
 			});
 
 			customSelector.style.transform = 'translate(-50%, -50%)';
@@ -445,8 +466,95 @@ if (strategy === 'custom' || strategy === 'hardcoded') {
 	});
 }
 
+let findAnimating = false;
+let foundPanel = null;
+let infoPanel = null;
+
+const loadLevel = () => {
+	const worker_url = new URL("./worker_finder.js", import.meta.url);
+	const worker = new Worker(worker_url, { type: "module" });
+	const animator = new Animator();
+	findAnimating = true;
+
+	let tickMark = -1;
+
+	board.errorCells.clear();
+	Undo.clear();
+	selected = false;
+
+	const animation = (timestamp) => {
+		const animationId = requestAnimationFrame(animation);
+
+		const tick = Math.floor(timestamp / Animator.TICK_RATE);
+		if (tick === tickMark) return;
+		tickMark = tick;
+
+		const complete = animator.update(timestamp);
+		if (complete) {
+			cancelAnimationFrame(animationId);
+			const data = complete.data;
+			const puzzleId = data.id;
+
+			const transform = complete.transform;
+			const puzzleTransformed = complete.puzzleTransformed;
+			const gridTransformed = complete.gridTransformed;
+
+			const puzzleString = puzzleTransformed.join("");
+			board.cells.fromString(puzzleString);
+			board.puzzleSolved.set(gridTransformed);
+			for (const cell of board.cells) {
+				const startCell = board.startCells[cell.index];
+				startCell.symbol = cell.symbol;
+			}
+
+			puzzleData.id = puzzleId;
+			puzzleData.transform = transform;
+
+			Undo.set(board);
+			saveData();
+			findAnimating = false;
+
+			const messageClues = `Found a ${data.clueCount} clue Sudoku`;
+			let messageNaked;
+			if (data.nakedCount === 0) messageNaked = `, solvable using only Hidden Singles.`;
+			else messageNaked = `, solvable using Singles, ${data.nakedCount} found only as Naked.`;
+
+			if (foundPanel) foundPanel.hide();
+			foundPanel = new Panel(messageClues + messageNaked);
+			foundPanel.show();
+		}
+		draw();
+	}
+	requestAnimationFrame(animation);
+
+	let findCount = 0;
+	let findStartTime = performance.now();
+	worker.onmessage = (e) => {
+		const data = e.data;
+		animator.add(data);
+		findCount++;
+		if (data.solved) {
+			const time = performance.now() - findStartTime;
+			console.log(`${findCount} tries in ${time / 1000}s`);
+			console.log(`${findCount / time * 1000}/s`);
+			console.log(`${time / findCount / 1000}s avg`);
+
+			worker.terminate();
+		}
+	};
+	const workerData = {};
+	worker.postMessage(workerData);
+}
+
 const loadSudoku = () => {
-	fetch("../sudokulib/sudoku.php?version=2&strategy=" + strategy).then(response => {
+	if (strategy === "level") {
+		loadLevel();
+		return;
+	} else {
+		if (strategy === 'hardcoded') return;
+	}
+
+	fetch("../sudokulib/sudoku.php?version=2&strategy=candidate_" + strategy).then(response => {
 		response.json().then((json) => {
 			const puzzleId = json.id;
 			const puzzleDataHex = json.puzzleData;
@@ -460,91 +568,159 @@ const loadSudoku = () => {
 
 			const puzzleString = puzzleTransformed.join("");
 			board.cells.fromString(puzzleString);
+			board.puzzleSolved.set(gridTransformed);
 			for (const cell of board.cells) {
 				const startCell = board.startCells[cell.index];
 				startCell.symbol = cell.symbol;
 			}
+			board.errorCells.clear();
 
 			puzzleData.id = puzzleId;
 			puzzleData.transform = transform;
-			puzzleData.grid = gridTransformed;
 
+			Undo.set(board);
 			saveData();
 			draw();
 		});
 	});
 };
 
-if (!loaded && strategy !== 'custom' && strategy !== 'hardcoded') {
-	loadSudoku();
-}
+if (!loaded) loadSudoku();
 
-title.style.fontSize = (headerHeight - 6) + 'px';
+title.style.fontFamily = 'sans-serif';
 title.style.fontWeight = 'bold';
-title.style.lineHeight = headerHeight + 'px';
+title.style.whiteSpace = 'nowrap';
 title.style.textAlign = 'center';
 title.style.position = 'absolute';
 title.style.top = headerHeight / 2 + 'px';
 title.style.left = '50%';
 title.style.transform = 'translate(-50%, -50%)';
 let titleString = null;
-if (strategy === 'simple_hidden') titleString = "Hidden Single";
-if (strategy === 'simple_omission') titleString = "Intersection Removal";
-if (strategy === 'candidate_visible') titleString = "Basic Candidtates";
-if (strategy === 'candidate_naked2') titleString = "Naked Pair";
-if (strategy === 'candidate_naked3') titleString = "Naked Triple";
-if (strategy === 'candidate_naked4') titleString = "Naked Quad";
-if (strategy === 'candidate_hidden1') titleString = "Hidden Single";
-if (strategy === 'candidate_hidden2') titleString = "Hidden Pair";
-if (strategy === 'candidate_hidden3') titleString = "Hidden Triple";
-if (strategy === 'candidate_hidden4') titleString = "Hidden Quad";
-if (strategy === 'candidate_omissions') titleString = "Intersection Removal";
-if (strategy === 'candidate_uniqueRectangle') titleString = "Deadly Pattern";
-if (strategy === 'candidate_yWing') titleString = "Y Wing";
-if (strategy === 'candidate_xyzWing') titleString = "XYZ Wing";
-if (strategy === 'candidate_xWing') titleString = "X Wing";
-if (strategy === 'candidate_swordfish') titleString = "Swordfish";
-if (strategy === 'candidate_jellyfish') titleString = "Jellyfish";
-if (strategy === 'super_min') titleString = "Other Strategies";
-if (strategy === 'super_max') titleString = "Difficult";
-if (titleString) title.appendChild(document.createTextNode(titleString));
+if (strategy === 'naked2') titleString = "Naked Pair";
+if (strategy === 'naked3') titleString = "Naked Triple";
+if (strategy === 'naked4') titleString = "Naked Quad";
+if (strategy === 'hidden1') titleString = "Hidden Single";
+if (strategy === 'hidden2') titleString = "Hidden Pair";
+if (strategy === 'hidden3') titleString = "Hidden Triple";
+if (strategy === 'hidden4') titleString = "Hidden Quad";
+if (strategy === 'omissions') titleString = "Intersection Removal";
+if (strategy === 'uniqueRectangle') titleString = "Deadly Pattern";
+if (strategy === 'yWing') titleString = "Y Wing";
+if (strategy === 'xyzWing') titleString = "XYZ Wing";
+if (strategy === 'xWing') titleString = "X Wing";
+if (strategy === 'swordfish') titleString = "Swordfish";
+if (strategy === 'jellyfish') titleString = "Jellyfish";
+if (titleString === null) titleString = "Singles";
+if (strategy === 'level') {
+	title.style.fontSize = (headerHeight * 0.75) + 'px';
+	title.style.lineHeight = headerHeight + 'px';
+	title.appendChild(document.createTextNode(titleString));
+} else if (strategy !== 'hardcoded') {
+	const scale = 0.6;
+	title.style.fontSize = (headerHeight * 0.75 * scale) + 'px';
+	title.style.lineHeight = (headerHeight * scale) + 'px';
+	title.appendChild(document.createTextNode(titleString));
+}
 
-Menu.markerButton.addEventListener('click', () => {
-	pickerMarkerMode = !pickerMarkerMode;
-	setMarkerMode();
+const applyUndo = (reverse) => {
+	const selectedIndex = reverse ? Undo.redo(board) : Undo.undo(board);
+	if (selectedIndex >= 0) {
+		selected = true;
+		selectedRow = Math.floor(selectedIndex / 9);
+		selectedCol = selectedIndex % 9;
+	} else {
+		selected = false;
+	}
+	board.errorCells.clear();
 	saveData();
 	draw();
-});
+};
+Menu.undoIcons.undo_on.addEventListener('click', () => { applyUndo(false) });
+Menu.undoIcons.redo_on.addEventListener('click', () => { applyUndo(true) });
+const preventDefault = event => { event.preventDefault() };
+Menu.undoIcons.undo_on.addEventListener("dblclick", preventDefault);
+Menu.undoIcons.redo_on.addEventListener('dblclick', preventDefault);
+Menu.undoIcons.undo_off.addEventListener("dblclick", preventDefault);
+Menu.undoIcons.redo_off.addEventListener('dblclick', preventDefault);
+
 Menu.deleteButton.addEventListener('click', () => {
 	if (!selected) return;
 
-	const cell = board.cells[selectedRow * 9 + selectedCol];
+	const selectedIndex = selectedRow * 9 + selectedCol;
+	const cell = board.cells[selectedIndex];
+	if (cell.symbol === 0 && cell.mask === 0x0000) return;
+
 	cell.symbol = 0;
 	cell.mask = 0x0000;
+	board.errorCells.delete(selectedIndex);
+	Undo.add(board, selectedIndex);
 	saveData();
 	draw();
 });
 
+if (strategy !== 'hardcoded') {
+	Menu.checkButton.style.display = "block";
+	Menu.checkButton.addEventListener('click', () => {
+		if (findAnimating) return;
+
+		let errorCount = 0;
+		let solved = true;
+		board.errorCells.clear();
+		for (let i = 0; i < 81; i++) {
+			const cell = board.cells[i];
+			if (cell.symbol === 0) {
+				solved = false;
+				continue;
+			}
+			if (cell.symbol !== board.puzzleSolved[i]) {
+				board.errorCells.add(i);
+				errorCount++;
+				solved = false;
+			}
+		}
+		saveData();
+		draw();
+		if (solved) {
+			AlertPanel.alert("Puzzle Complete!!!");
+		} else if (errorCount > 0) {
+			if (errorCount === 1) AlertPanel.alert(errorCount + " Error!");
+			else AlertPanel.alert(errorCount + " Errors!");
+		} else {
+			AlertPanel.alert("No Errors!");
+		}
+	});
+}
+
+if (levelMode) {
+	Menu.infoButton.style.display = "block";
+	Menu.infoButton.addEventListener('click', () => {
+		if (!infoPanel) infoPanel = new FramePanel("./info.html");
+		infoPanel.show();
+	});
+}
+
 const fillButton = document.createElement('button');
-fillButton.appendChild(document.createTextNode("Mark"));
-fillButton.style.width = '48px';
+fillButton.appendChild(document.createTextNode("Candidates"));
+// fillButton.style.width = '48px';
 fillButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
 	candidates(board.cells);
 
+	Undo.add(board, -1);
 	draw();
 	saveData();
 });
 const solveButton = document.createElement('button');
 solveButton.appendChild(document.createTextNode("Fill"));
-solveButton.style.width = '48px';
+// solveButton.style.width = '48px';
 solveButton.addEventListener('click', () => {
 	for (const cell of board.cells) if (cell.symbol === 0 && cell.mask === 0x0000) cell.fill();
 	const now = performance.now();
-	const result = fillSolve(board.cells, null, null, []);
+	const result = fillSolve(board.cells, null, []);
 	console.log("----- " + (performance.now() - now) / 1000);
 	for (const line of consoleOut(result)) console.log(line);
 
+	Undo.add(board, -1);
 	draw();
 	saveData();
 });
@@ -594,9 +770,15 @@ Menu.toolBar.style.right = "0%";
 Menu.toolBar.style.paddingRight = "8px";
 document.body.appendChild(Menu.toolBar);
 
+const mainBodySize = () => {
+	const width = window.innerWidth;
+	const height = window.innerHeight - headerHeight - footerHeight;
+	return { width, height };
+};
+
 const sizeMenu = () => {
 	if (!Menu.backing.parentElement) return;
-	const boundingClientRect = mainBody.getBoundingClientRect();
+	const boundingClientRect = mainBodySize();
 	const maxPoint = boundingClientRect.top + boundingClientRect.height;
 	const menuClientRect = Menu.backing.getBoundingClientRect();
 	const maxHeight = maxPoint - menuClientRect.top;
@@ -623,61 +805,68 @@ document.body.addEventListener('click', (event) => {
 	Menu.backing.parentElement.removeChild(Menu.backing);
 });
 
-if (strategy === 'custom') {
-	Menu.newPuzzle.style.display = 'none';
-} else {
+if (strategy !== 'hardcoded') {
+	Menu.newPuzzle.style.display = "block";
 	Menu.newPuzzle.addEventListener('click', () => {
-		if (!window.confirm("Do you want to start a new puzzle?")) return;
-		selected = false;
-		loadSudoku();
+		if (findAnimating) return;
+
+		const name = levelMode ? titleString : Menu.menuTitle(strategy);
+		const message = "Do you want to find a new " + name + " puzzle?";
+		AlertPanel.confirm(message, confirmed => {
+			if (!confirmed) return;
+
+			if (foundPanel) {
+				foundPanel.hide();
+				foundPanel = null;
+			}
+
+			selected = false;
+			loadSudoku();
+		});
 	});
 }
 
 Menu.reset.addEventListener('click', () => {
-	if (!window.confirm("Do you want to restart the puzzle?")) return;
-	selected = false;
-	board.resetGrid();
-	saveData();
-	draw();
-});
+	if (findAnimating) return;
 
-Menu.settings.addEventListener('click', () => {
-	if (fontLabel.parentElement) fontLabel.parentElement.removeChild(fontLabel);
-	else mainBody.appendChild(fontLabel);
+	const name = levelMode ? titleString : Menu.menuTitle(strategy);
+	const message = "Do you want to restart this " + name + " puzzle?";
+	AlertPanel.confirm(message, confirmed => {
+		if (!confirmed) return;
+
+		selected = false;
+		board.resetGrid();
+		Undo.set(board);
+		saveData();
+		draw();
+	});
 });
 
 const resize = () => {
-	const boundingClientRect = mainBody.getBoundingClientRect();
+	const boundingClientRect = mainBodySize();
 
 	const width = boundingClientRect.width;
 	const height = boundingClientRect.height;
 
-	const padding = 8;
+	const portraitWidth = width;
+	const portraitHeight = height - PICKER.cellsSize - spacing * 1;
+	const portraitSize = Math.min(portraitWidth, portraitHeight);
 
-	const landscapeWidth = width - PICKER.cellsSize - padding * 3;
+	const landscapeWidth = width - PICKER.cellsSize - spacing * 3;
 	const landscapeHeight = height;
 	const landscapeSize = Math.min(landscapeWidth, landscapeHeight);
 
-	const portraitWidth = width;
-	const portraitHeight = height - PICKER.cellsSize - padding * 1;
-	const portraitSize = Math.min(portraitWidth, portraitHeight);
-
-	let boxSize;
+	const boxSize = Math.max(portraitSize, landscapeSize);
 	if (landscapeSize > portraitSize) {
-		boxSize = landscapeSize;
-
-		let inset = padding;
-		if (boxSize < landscapeWidth) {
-			inset += Math.floor((landscapeWidth - boxSize) / 2);
-		}
+		const buffer = (landscapeWidth > landscapeSize) ? (landscapeWidth - landscapeSize) / 2 : 0;
 
 		board.canvas.style.top = '50%';
-		board.canvas.style.left = inset + 'px';
+		board.canvas.style.left = spacing + buffer + 'px';
 		board.canvas.style.transform = 'translate(0%, -50%)';
 
-		pickerContainer.style.bottom = '50%';
-		pickerContainer.style.right = padding + 'px';
-		pickerContainer.style.transform = 'translate(0, 50%)';
+		pickerContainer.style.top = '50%';
+		pickerContainer.style.left = width - (spacing + buffer) + 'px';
+		pickerContainer.style.transform = 'translate(-100%, -50%)';
 
 		Menu.pickerBar.style.top = '100%';
 		Menu.pickerBar.style.margin = '8px 0px 0px 0px';
@@ -693,20 +882,15 @@ const resize = () => {
 
 		Menu.autoBar.style.gap = '16px';
 	} else {
-		boxSize = portraitSize;
+		const buffer = (portraitHeight > portraitSize) ? (portraitHeight - portraitSize) / 2 : 0;
 
-		let inset = 0;
-		if (boxSize < portraitHeight) {
-			inset += Math.floor((portraitHeight - boxSize) / 2);
-		}
-
-		board.canvas.style.top = inset + 'px';
+		board.canvas.style.top = buffer + 'px';
 		board.canvas.style.left = '50%';
 		board.canvas.style.transform = 'translate(-50%, 0%)';
 
-		pickerContainer.style.bottom = 0 + 'px';
-		pickerContainer.style.right = '50%';
-		pickerContainer.style.transform = 'translate(50%, 0%)';
+		pickerContainer.style.top = height - buffer + 'px';
+		pickerContainer.style.left = '50%';
+		pickerContainer.style.transform = 'translate(-50%, -100%)';
 
 		Menu.pickerBar.style.top = '50%';
 		Menu.pickerBar.style.margin = '0px 0px 0px 8px';
@@ -735,7 +919,7 @@ const resize = () => {
 resize();
 window.addEventListener('resize', resize);
 
-if (strategy === 'custom') {
+/* if (strategy === 'hardcoded') {
 	superimposeCandidates = (reset = false) => {
 		if (timer) {
 			window.clearInterval(timer);
@@ -767,7 +951,7 @@ if (strategy === 'custom') {
 				if (superCell.has(x)) {
 					// cell.delete(x);
 					superCell.setSymbol(x);
-					fillSolve(board.cells, null, null, []);
+					fillSolve(board.cells, null, []);
 					supers.push(board.cells.toData());
 					board.cells.fromData(startBoard);
 				}
@@ -821,8 +1005,8 @@ if (strategy === 'custom') {
 			}
 
 			const solve = () => {
-				if (superpositionMode === 1) fillSolve(board.cells, null, null, []);
-				else fillSolve(board.cells, null, null, null);
+				if (superpositionMode === 1) fillSolve(board.cells, null, []);
+				else fillSolve(board.cells, null, null);
 			}
 
 			// Candidates
@@ -969,3 +1153,4 @@ if (strategy === 'custom') {
 	});
 	header.appendChild(superpositionAllFullSolveButton);
 }
+*/
