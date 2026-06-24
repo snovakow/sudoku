@@ -262,7 +262,7 @@ const onFocus = () => {
 const offFocus = () => {
 
 };
-// window.addEventListener("focus", onFocus);
+window.addEventListener("focus", onFocus);
 // window.addEventListener("blur", offFocus);
 
 const pickerContainer = document.createElement('span');
